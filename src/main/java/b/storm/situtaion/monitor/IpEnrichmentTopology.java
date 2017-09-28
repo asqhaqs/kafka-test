@@ -28,9 +28,6 @@ public class IpEnrichmentTopology {
 	private final static String GEO_IP_SPOUT_ID = "geo_ip-spout";
 	private final static String IP_ENRICHMENT_BOLT_ID = "ipenrichment-bolt";
 	
-	// tolopy_name
-	private final static String TOPOLOGY_NAME = "ip_enrichment_topology";
-
 	private static Properties pro = new Properties();
 	
 	static {
@@ -74,7 +71,7 @@ public class IpEnrichmentTopology {
 		if (args != null && args.length > 0) {
 			conf.setNumWorkers(Integer.parseInt(pro.getProperty("nimbus_worker_num")));
 			conf.setMaxSpoutPending(Integer.parseInt(pro.getProperty("MaxSpoutPending")));
-			StormSubmitter.submitTopologyWithProgressBar(TOPOLOGY_NAME, conf, topologyBuilder.createTopology());
+			StormSubmitter.submitTopologyWithProgressBar(pro.getProperty("topology_name"), conf, topologyBuilder.createTopology());
 		} else {
 			// 设置一个spout task中处于pending状态的最大的tuples数量
 			conf.put(Config.TOPOLOGY_MAX_SPOUT_PENDING, 1);

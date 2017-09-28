@@ -53,20 +53,20 @@ public class IpEnrichmentSolt extends BaseRichBolt {
 	private static Properties pro = new Properties();
 	static {
 		try {
+			//加载配置文件
+			InputStream input = IpEnrichmentTopology.class.getResourceAsStream("/app.properties");
+			pro.load(input);
 			kafkaProducerProperties = new Properties();
 			// 发送avro数据到kafka
-			kafkaProducerProperties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
+			kafkaProducerProperties.put("bootstrap.servers",pro.getProperty("broker_url"));
 			kafkaProducerProperties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 			kafkaProducerProperties.put("value.serializer","org.apache.kafka.common.serialization.ByteArraySerializer");
-			kafkaProducerProperties.put("batch.	size", 1);
+			kafkaProducerProperties.put("batch.size", 1);
 			kafkaProducerProperties.put("linger.ms", 1);
 			kafkaProducerProperties.put("buffer.memory", 33554432);
 			kafkaProducerProperties.put("acks", "0");
 			kafkaProducerProperties.put("topic.properties.fetch.enable", "true");
 			producer=new KafkaProducer<String, byte[]>(kafkaProducerProperties);
-			//加载配置文件
-			InputStream input = IpEnrichmentTopology.class.getResourceAsStream("/app.properties");
-			pro.load(input);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException("kafka producer初始化失败");
