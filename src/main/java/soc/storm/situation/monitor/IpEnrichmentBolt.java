@@ -3,6 +3,7 @@ package soc.storm.situation.monitor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -56,17 +57,17 @@ public class IpEnrichmentBolt extends BaseRichBolt {
                 if (null != skyeyeWebFlowLog) {
 
                     // TODO:数字转换为字符串？？？？
-                    // for (Entry<String, Object> entry2 : skyeyeWebFlowLog.entrySet()) {
-                    // if (entry2.getValue() != null) {
-                    // try {
-                    // skyeyeWebFlowLog.put(entry2.getKey(), entry2.getValue().toString());
-                    // } catch (Exception e) {
-                    // skyeyeWebFlowLog.put(entry2.getKey(), "");
-                    // }
-                    // } else {
-                    // skyeyeWebFlowLog.put(entry2.getKey(), "");
-                    // }
-                    // }
+                    for (Entry<String, Object> entry2 : skyeyeWebFlowLog.entrySet()) {
+                        if (entry2.getValue() != null) {
+                            try {
+                                skyeyeWebFlowLog.put(entry2.getKey(), entry2.getValue().toString());
+                            } catch (Exception e) {
+                                skyeyeWebFlowLog.put(entry2.getKey(), "");
+                            }
+                        } else {
+                            skyeyeWebFlowLog.put(entry2.getKey(), "");
+                        }
+                    }
 
                     String sipStr = (null == skyeyeWebFlowLog.get("sip")) ? null : skyeyeWebFlowLog.get("sip").toString();
                     String dipStr = (null == skyeyeWebFlowLog.get("dip")) ? null : skyeyeWebFlowLog.get("dip").toString();
