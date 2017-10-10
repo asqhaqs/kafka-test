@@ -180,8 +180,7 @@ public class IpEnrichmentBoltBAK extends BaseRichBolt {
             datumWriter.write(record, encoder);
             encoder.flush();
             byte[] sendData = out.toByteArray();
-            Future<RecordMetadata> future = producer
-                    .send(new ProducerRecord<String, byte[]>("ty_dns_enrichment", null, sendData));
+            Future<RecordMetadata> future = producer.send(new ProducerRecord<String, byte[]>("ty_dns_enrichment", null, sendData));
             future.get(4, TimeUnit.SECONDS);
 
             log.error("success------" + future.isDone() + sendData.toString());
