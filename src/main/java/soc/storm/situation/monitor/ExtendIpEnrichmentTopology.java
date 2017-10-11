@@ -4,6 +4,8 @@ package soc.storm.situation.monitor;
 import java.util.HashMap;
 import java.util.Map;
 
+import kafka.api.OffsetRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +63,8 @@ public class ExtendIpEnrichmentTopology {
                 // spoutConfig.ignoreZkOffsets = true;// 从头开始消费
                 // spoutConfig.forceFromStart = false; // 从头开始消费
                 spoutConfig.socketTimeoutMs = 60 * 1000;
+                // TODO:online delete
+                spoutConfig.startOffsetTime = OffsetRequest.LatestTime();
 
                 // （1）KafkaConsumerSpout
                 topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, new KafkaSpout(spoutConfig),

@@ -12,6 +12,20 @@
 	</properties>
 
 	<dependencies>
+		<!-- protobuf 20170221 -->
+		<dependency>
+		    <groupId>com.google.protobuf</groupId>
+		    <artifactId>protobuf-java</artifactId>
+		    <version>3.4.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.googlecode.protobuf-java-format/protobuf-java-format -->
+		<dependency>
+		    <groupId>com.googlecode.protobuf-java-format</groupId>
+		    <artifactId>protobuf-java-format</artifactId>
+		    <version>1.2</version>
+		</dependency>
+		
+		
 		<dependency>
 			<groupId>org.apache.storm</groupId>
 			<artifactId>storm-core</artifactId>
@@ -69,6 +83,7 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.12</version>
         </dependency>
+        
 	</dependencies>
 	<build>
 		<plugins>

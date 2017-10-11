@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
 import soc.storm.situation.utils.JsonUtils;
+import soc.stormengine.protocolbuffer.AddressBookProtos.DNS;
+import soc.stormengine.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -19,6 +21,8 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
+
+import com.googlecode.protobuf.format.JsonFormat;
 
 /**
  * 富化ip信息
@@ -43,10 +47,27 @@ public class IpEnrichmentBolt extends BaseRichBolt {
     }
 
     public void execute(Tuple tuple) {
+        // String skyeyeWebFlowLogStr = (String) tuple.getValue(0);
+        byte[] skyeyeWebFlowLogByteArray = (byte[]) tuple.getValue(0);
 
-        String skyeyeWebFlowLogStr = (String) tuple.getValue(0);
+        // DNS.Builder builder = DNS.newBuilder();
+        // builder.setDip("114.114.114.114");
+        // builder.setDport(1);
+        // builder.setSerialNum("serial_num");
+        // builder.setSport(1);
+        // builder.setAccessTime("aaa");
+        // builder.setDnsType(1);
+        // builder.setHost("host");
+        // DNS dns = builder.build();
+        // byte[] skyeyeWebFlowLogByteArray = dns.toByteArray();
 
         try {
+            // logger.error("====" + new String(skyeyeWebFlowLogByteArray, "utf-8"));
+            SENSOR_LOG log = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArray);
+            DNS skyeyeWebFlowLogPB = log.getSkyeyeDns();
+            // DNS skyeyeWebFlowLogPB = DNS.parseFrom(skyeyeWebFlowLogByteArray);
+            // System.out.println("after:\n" + skyeyeWebFlowLogPB.toString());
+            String skyeyeWebFlowLogStr = JsonFormat.printToString(skyeyeWebFlowLogPB);
 
             // 查找ip相关的信息
             if (StringUtils.isNotBlank(skyeyeWebFlowLogStr)) {
@@ -55,7 +76,6 @@ public class IpEnrichmentBolt extends BaseRichBolt {
                 Map<String, Object> skyeyeWebFlowLog = JsonUtils.jsonToMap(skyeyeWebFlowLogStr);
 
                 if (null != skyeyeWebFlowLog) {
-
                     // TODO:数字转换为字符串？？？？
                     for (Entry<String, Object> entry2 : skyeyeWebFlowLog.entrySet()) {
                         if (entry2.getValue() != null) {
@@ -100,8 +120,9 @@ public class IpEnrichmentBolt extends BaseRichBolt {
             }
 
         } catch (Exception e) {
-            logger.error("skyeyeWebFlowLog:{}", skyeyeWebFlowLogStr, e);
-            this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLogStr));
+            logger.error("skyeyeWebFlowLog", e);
+            // logger.error("skyeyeWebFlowLog:{}", skyeyeWebFlowLogStr, e);
+            // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLogStr));
         }
 
         // 更新kafka中partitionManager对应的offset
