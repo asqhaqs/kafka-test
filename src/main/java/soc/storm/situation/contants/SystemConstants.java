@@ -26,6 +26,7 @@ public class SystemConstants extends ConfigurableContants {
 
     public static final String TOPIC_NAME_INPUT = getProperty("topic_name_input", "ty_tcpflow");
     public static final String TOPIC_NAME_OUTPUT = getProperty("topic_name_output", "ty_tcpflow_output");
+    public static final String TOPIC_TO_METHOD = getProperty("topic_to_method", "getSkyeyeDns");
     public static final String FILE_PATH = getProperty("file_path", "/home/storm/geoipdata");
 
     public static final String KAFKA_SPOUT_THREADS = getProperty("kafka_spout_threads", "5");

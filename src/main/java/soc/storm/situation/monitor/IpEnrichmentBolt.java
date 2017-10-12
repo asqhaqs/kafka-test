@@ -1,6 +1,7 @@
 
 package soc.storm.situation.monitor;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -9,11 +10,11 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
 import soc.storm.situation.utils.JsonUtils;
-import soc.stormengine.protocolbuffer.AddressBookProtos.DNS;
-import soc.stormengine.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.utils.TopicMethodUtil;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -22,6 +23,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
+import com.google.protobuf.Message;
 import com.googlecode.protobuf.format.JsonFormat;
 
 /**
@@ -40,6 +42,13 @@ public class IpEnrichmentBolt extends BaseRichBolt {
     private static final Logger logger = LoggerFactory.getLogger(IpEnrichmentBolt.class);
 
     private OutputCollector outputCollector;
+    // private String topic;// = "ty_tcpflow";
+    private String topicMethod;// = "getSkyeyeTcpflow";
+
+    public IpEnrichmentBolt(String topicNameInput) {
+        // topic = topicNameInput;
+        topicMethod = TopicMethodUtil.getTopicMethod(topicNameInput);
+    }
 
     @SuppressWarnings("rawtypes")
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
@@ -50,24 +59,18 @@ public class IpEnrichmentBolt extends BaseRichBolt {
         // String skyeyeWebFlowLogStr = (String) tuple.getValue(0);
         byte[] skyeyeWebFlowLogByteArray = (byte[]) tuple.getValue(0);
 
-        // DNS.Builder builder = DNS.newBuilder();
-        // builder.setDip("114.114.114.114");
-        // builder.setDport(1);
-        // builder.setSerialNum("serial_num");
-        // builder.setSport(1);
-        // builder.setAccessTime("aaa");
-        // builder.setDnsType(1);
-        // builder.setHost("host");
-        // DNS dns = builder.build();
-        // byte[] skyeyeWebFlowLogByteArray = dns.toByteArray();
-
         try {
             // logger.error("====" + new String(skyeyeWebFlowLogByteArray, "utf-8"));
             SENSOR_LOG log = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArray);
-            DNS skyeyeWebFlowLogPB = log.getSkyeyeDns();
-            // DNS skyeyeWebFlowLogPB = DNS.parseFrom(skyeyeWebFlowLogByteArray);
-            // System.out.println("after:\n" + skyeyeWebFlowLogPB.toString());
-            String skyeyeWebFlowLogStr = JsonFormat.printToString(skyeyeWebFlowLogPB);
+            // DNS skyeyeWebFlowLogPB = log.getSkyeyeDns();
+            Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
+            // Method getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod("getSkyeyeDns");
+            // Method getSkyeyeWebFlowLogObjectMethod =
+            // skyeyeWebFlowLogClass.getMethod(TopicMethodUtil.getTopicMethod("ty_dns"));
+            Method getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
+            Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
+
+            String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
 
             // 查找ip相关的信息
             if (StringUtils.isNotBlank(skyeyeWebFlowLogStr)) {

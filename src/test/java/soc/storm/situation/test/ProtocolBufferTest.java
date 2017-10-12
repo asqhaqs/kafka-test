@@ -1,12 +1,12 @@
 
-package soc.stormengine.protocolbuffer;
+package soc.storm.situation.test;
 
-import soc.stormengine.protocolbuffer.AddressBookProtos.DNS;
-import soc.stormengine.protocolbuffer.AddressBookProtos.TCPFLOW;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
-public class TestProtocolBuffer {
+public class ProtocolBufferTest {
 
     public static void main(String[] args) throws InvalidProtocolBufferException {
         // testTCPFLOW();

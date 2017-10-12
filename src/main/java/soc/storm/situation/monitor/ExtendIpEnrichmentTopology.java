@@ -1,6 +1,19 @@
 
 package soc.storm.situation.monitor;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import kafka.api.OffsetRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import soc.storm.situation.contants.SystemConstants;
+import storm.kafka.BrokerHosts;
+import storm.kafka.KafkaSpout;
+import storm.kafka.SpoutConfig;
+import storm.kafka.ZkHosts;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
@@ -9,17 +22,6 @@ import backtype.storm.generated.AuthorizationException;
 import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
-import kafka.api.OffsetRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import soc.storm.situation.contants.SystemConstants;
-import storm.kafka.BrokerHosts;
-import storm.kafka.KafkaSpout;
-import storm.kafka.SpoutConfig;
-import storm.kafka.ZkHosts;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ExtendIpEnrichmentTopology {
 
@@ -66,13 +68,13 @@ public class ExtendIpEnrichmentTopology {
 
                 // （1）KafkaConsumerSpout
                 topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, new KafkaSpout(spoutConfig),
-                        KAFKA_SPOUT_THREADS);
+                    KAFKA_SPOUT_THREADS);
                 // KafkaConsumerSpout kafkaConsumerSpout = new KafkaConsumerSpout(topicNameInput);
                 // topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, kafkaConsumerSpout,
                 // KAFKA_SPOUT_THREADS);
 
                 // （2）IpEnrichmentBolt
-                IpEnrichmentBolt ipEnrichmentBolt = new IpEnrichmentBolt();
+                IpEnrichmentBolt ipEnrichmentBolt = new IpEnrichmentBolt(topicNameInput);
                 topologyBuilder.setBolt(IP_ENRICHMENT_BOLT_ID + topicNameInput, ipEnrichmentBolt, IP_ENRICHMENT_BOLT_THREADS)
                         .shuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
 
