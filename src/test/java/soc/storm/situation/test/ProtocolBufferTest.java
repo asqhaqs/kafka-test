@@ -90,18 +90,4 @@ public class ProtocolBufferTest {
     }
 }
 
-// ------------before:
-// id: 1
-// name: "L_rigidity"
-// email: "zhongsanmu@126.com"
-//
-// 8 1 18 10 76 95 114 105 103 105 100 105 116 121 26 18 122 104 111 110 103 115 97 110 109 117 64 49 50 54 46 99 111
-// 109
-// ------------person.toByteArray().length:34
-// <ByteString@63d5d048 size=34>
-// ==============================
-// after:
-// id: 1
-// name: "L_rigidity"
-// email: "zhongsanmu@126.com"
 
