@@ -10,7 +10,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 // import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 import soc.storm.situation.utils.Geoip;
@@ -45,6 +44,7 @@ public class IpEnrichmentBolt extends BaseRichBolt {
 
     private OutputCollector outputCollector;
     private String topicMethod;// = "getSkyeyeTcpflow";
+    private Method getSkyeyeWebFlowLogObjectMethod;
 
     public IpEnrichmentBolt(String topicNameInput) {
         topicMethod = TopicMethodUtil.getTopicMethod(topicNameInput);
@@ -53,6 +53,13 @@ public class IpEnrichmentBolt extends BaseRichBolt {
     @SuppressWarnings("rawtypes")
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.outputCollector = collector;
+
+        try {
+            Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
+            getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
+        } catch (Exception e) {
+            logger.error("getSkyeyeWebFlowLogObjectMethod [{}] error", topicMethod, e);
+        }
     }
 
     public void execute(Tuple tuple) {
@@ -62,10 +69,9 @@ public class IpEnrichmentBolt extends BaseRichBolt {
         try {
             // logger.error("====" + new String(skyeyeWebFlowLogByteArray, "utf-8"));
             SENSOR_LOG log = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArray);
-            Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
-            Method getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
+            // Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
+            // Method getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
             Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
-
             String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
 
             // 查找ip相关的信息
