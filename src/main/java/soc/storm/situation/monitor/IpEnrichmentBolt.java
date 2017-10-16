@@ -16,10 +16,10 @@ import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
 import soc.storm.situation.utils.JsonUtils;
 import soc.storm.situation.utils.TopicMethodUtil;
-import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
@@ -28,12 +28,10 @@ import com.google.protobuf.Message;
 import com.googlecode.protobuf.format.JsonFormat;
 
 /**
- * 富化ip信息
- * 
- * @author peter
+ * @author zhongsanmu
  *
  */
-public class IpEnrichmentBolt extends BaseRichBolt {
+public class IpEnrichmentBolt extends BaseBasicBolt {
 
     /**
      * 
@@ -42,7 +40,6 @@ public class IpEnrichmentBolt extends BaseRichBolt {
 
     private static final Logger logger = LoggerFactory.getLogger(IpEnrichmentBolt.class);
 
-    private OutputCollector outputCollector;
     private String topicMethod;// = "getSkyeyeTcpflow";
     private Method getSkyeyeWebFlowLogObjectMethod;
 
@@ -51,9 +48,8 @@ public class IpEnrichmentBolt extends BaseRichBolt {
     }
 
     @SuppressWarnings("rawtypes")
-    public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-        this.outputCollector = collector;
-
+    @Override
+    public void prepare(Map stormConf, TopologyContext context) {
         try {
             Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
             getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
@@ -62,7 +58,8 @@ public class IpEnrichmentBolt extends BaseRichBolt {
         }
     }
 
-    public void execute(Tuple tuple) {
+    @Override
+    public void execute(Tuple tuple, BasicOutputCollector outputCollector) {
         // String skyeyeWebFlowLogStr = (String) tuple.getValue(0);
         byte[] skyeyeWebFlowLogByteArray = (byte[]) tuple.getValue(0);
 
@@ -100,8 +97,8 @@ public class IpEnrichmentBolt extends BaseRichBolt {
                     Result sipResult = Geoip.getInstance().query(sipStr);
                     Result dipResult = Geoip.getInstance().query(dipStr);
 
-                    Map<String, String> sipMap = ConvertResultToMap(sipResult);
-                    Map<String, String> dipMap = ConvertResultToMap(dipResult);
+                    Map<String, String> sipMap = Geoip.convertResultToMap(sipResult);
+                    Map<String, String> dipMap = Geoip.convertResultToMap(dipResult);
 
                     // 转换为json格式
                     if (sipMap != null) {
@@ -117,8 +114,7 @@ public class IpEnrichmentBolt extends BaseRichBolt {
                     }
 
                     // System.out.println("skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
-
-                    this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLog));
+                    outputCollector.emit(new Values(skyeyeWebFlowLog));
                 }
             } else {
                 throw new RuntimeException("skyeyeWebFlowLog is not json style");
@@ -129,51 +125,9 @@ public class IpEnrichmentBolt extends BaseRichBolt {
             // logger.error("skyeyeWebFlowLog:{}", skyeyeWebFlowLogStr, e);
             // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLogStr));
         }
-
-        // 更新kafka中partitionManager对应的offset
-        outputCollector.ack(tuple);
     }
 
-    private Map<String, String> ConvertResultToMap(Result result) {
-        Map<String, String> ipMap = new HashMap<String, String>();
-        if (null == result) {
-            return null;
-        }
-
-        if (null != result.block) {
-            if (result.block.latitude != null) {
-                ipMap.put("latitude", result.block.latitude);
-            }
-
-            if (result.block.longitude != null) {
-                ipMap.put("longitude", result.block.longitude);
-            }
-        }
-
-        if (result.location != null) {
-            if (result.location.continent_code != null) {
-                ipMap.put("continent_code", result.location.continent_code);
-            }
-            if (result.location.country_code2 != null) {
-                ipMap.put("country_code2", result.location.country_code2);
-            }
-            if (result.location.country_name != null) {
-                ipMap.put("country_name", result.location.country_name);
-            }
-            if (result.location.subdivision != null) {
-                ipMap.put("subdivision", result.location.subdivision);
-            }
-            if (result.location.city_name != null) {
-                ipMap.put("city_name", result.location.city_name);
-            }
-            if (result.location.timezone != null) {
-                ipMap.put("timezone", result.location.timezone);
-            }
-        }
-
-        return ipMap;
-    }
-
+    @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(new Fields("message"));
     }

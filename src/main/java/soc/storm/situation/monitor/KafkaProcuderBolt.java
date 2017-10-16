@@ -19,11 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import soc.storm.situation.contants.SystemConstants;
-import soc.storm.situation.utils.JsonUtils;
-import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Tuple;
 
 /**
@@ -32,7 +31,7 @@ import backtype.storm.tuple.Tuple;
  * @author zhongsanmu
  *
  */
-public class KafkaProcuderBolt extends BaseRichBolt {
+public class KafkaProcuderBolt extends BaseBasicBolt {
 
     /**
      * 
@@ -45,7 +44,6 @@ public class KafkaProcuderBolt extends BaseRichBolt {
     private String topic;// = "ty_tcpflow_output";
 
     private String topicProperties;// = producer.getTopicProperties(topic);
-    private OutputCollector outputCollector;
     private static KafkaProducer<String, byte[]> producer = null;
 
     static {
@@ -77,13 +75,17 @@ public class KafkaProcuderBolt extends BaseRichBolt {
         // "{\"name\":\"ty_dns\",\"namespace\":\"enrichment_ip\",\"type\":\"record\",\"fields\":[{\"name\":\"serial_num\",\"type\":[\"string\",\"null\"]},{\"name\":\"access_time\",\"type\":[\"string\",\"null\"]},{\"name\":\"sip\",\"type\":[\"string\",\"null\"]},{\"name\":\"sport\",\"type\":[\"int\",\"null\"]},{\"name\":\"dip\",\"type\":[\"string\",\"null\"]},{\"name\":\"dport\",\"type\":[\"int\",\"null\"]},{\"name\":\"dns_type\",\"type\":[\"int\",\"null\"]},{\"name\":\"host\",\"type\":[\"string\",\"null\"]},{\"name\":\"host_md5\",\"type\":[\"string\",\"null\"]},{\"name\":\"addr\",\"type\":[\"string\",\"null\"]},{\"name\":\"mx\",\"type\":[\"string\",\"null\"]},{\"name\":\"cname\",\"type\":[\"string\",\"null\"]},{\"name\":\"reply_code\",\"type\":[\"int\",\"null\"]},{\"name\":\"count\",\"type\":[\"string\",\"null\"]},{\"name\":\"geo_sip\",\"type\":[{\"type\":\"map\",\"values\":\"string\"},\"null\"]},{\"name\":\"geo_dip\",\"type\":[{\"type\":\"map\",\"values\":\"string\"},\"null\"]}]}";
     }
 
-    public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-        this.outputCollector = collector;
+    @SuppressWarnings("rawtypes")
+    @Override
+    public void prepare(Map stormConf, TopologyContext context) {
     }
 
-    public void execute(Tuple tuple) {
+    @SuppressWarnings("unchecked")
+    @Override
+    public void execute(Tuple tuple, BasicOutputCollector outputCollector) {
         Map<String, Object> skyeyeWebFlowLogMap = (Map<String, Object>) tuple.getValue(0);
-        System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " + JsonUtils.mapToJson(skyeyeWebFlowLogMap));
+        // System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " +
+        // JsonUtils.mapToJson(skyeyeWebFlowLogMap));
         try {
             // String topicProperties = producer.getTopicProperties(topic);
 
@@ -112,10 +114,9 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             e.printStackTrace();
         }
 
-        // 更新kafka中partitionManager对应的offset
-        outputCollector.ack(tuple);
     }
 
+    @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
     }
 

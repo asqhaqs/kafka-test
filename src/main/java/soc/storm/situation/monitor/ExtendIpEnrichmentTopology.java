@@ -88,10 +88,10 @@ public class ExtendIpEnrichmentTopology {
             // 是否输出调试信息
             conf.setDebug(Boolean.parseBoolean(SystemConstants.TOPOLOGY_DEBUG));
 
-            Map<String, String> map2 = new HashMap<String, String>();
-            map2.put("metadata.broker.list", SystemConstants.BROKER_URL);
-            map2.put("serializer.class", "kafka.serializer.StringEncoder");
-            conf.put("kafka.broker.properties", map2);
+            Map<String, String> propertymap = new HashMap<String, String>();
+            propertymap.put("metadata.broker.list", SystemConstants.BROKER_URL);
+            propertymap.put("serializer.class", "kafka.serializer.StringEncoder");
+            conf.put("kafka.broker.properties", propertymap);
 
             //
             if (args != null && args.length > 0) {

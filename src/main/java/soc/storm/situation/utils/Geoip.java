@@ -1,11 +1,6 @@
 
 package soc.storm.situation.utils;
 
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import soc.storm.situation.contants.SystemConstants;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -13,6 +8,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import soc.storm.situation.contants.SystemConstants;
 
 /**
  * 
@@ -428,6 +430,52 @@ public class Geoip implements Serializable {
         }
 
         return match(getBinary(word));
+    }
+
+    /**
+     * 将Result转换为Map
+     * 
+     * @param result
+     * @return
+     */
+    public static Map<String, String> convertResultToMap(Result result) {
+        Map<String, String> ipMap = new HashMap<String, String>();
+        if (null == result) {
+            return null;
+        }
+
+        if (null != result.block) {
+            if (result.block.latitude != null) {
+                ipMap.put("latitude", result.block.latitude);
+            }
+
+            if (result.block.longitude != null) {
+                ipMap.put("longitude", result.block.longitude);
+            }
+        }
+
+        if (result.location != null) {
+            if (result.location.continent_code != null) {
+                ipMap.put("continent_code", result.location.continent_code);
+            }
+            if (result.location.country_code2 != null) {
+                ipMap.put("country_code2", result.location.country_code2);
+            }
+            if (result.location.country_name != null) {
+                ipMap.put("country_name", result.location.country_name);
+            }
+            if (result.location.subdivision != null) {
+                ipMap.put("subdivision", result.location.subdivision);
+            }
+            if (result.location.city_name != null) {
+                ipMap.put("city_name", result.location.city_name);
+            }
+            if (result.location.timezone != null) {
+                ipMap.put("timezone", result.location.timezone);
+            }
+        }
+
+        return ipMap;
     }
 
     /**
