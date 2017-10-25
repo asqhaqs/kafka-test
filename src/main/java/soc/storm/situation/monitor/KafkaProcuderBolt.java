@@ -1,11 +1,11 @@
 
 package soc.storm.situation.monitor;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
-
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Tuple;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -17,24 +17,23 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import soc.storm.situation.contants.SystemConstants;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.BasicOutputCollector;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseBasicBolt;
-import backtype.storm.tuple.Tuple;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * KafkaProcuderBolt
- * 
+ *
  * @author zhongsanmu
  *
  */
-public class KafkaProcuderBolt extends BaseBasicBolt {
+public class KafkaProcuderBolt extends BaseRichBolt {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -2639126860311224615L;
 
@@ -44,6 +43,7 @@ public class KafkaProcuderBolt extends BaseBasicBolt {
     private String topic;// = "ty_tcpflow_output";
 
     private String topicProperties;// = producer.getTopicProperties(topic);
+    private OutputCollector outputCollector;
     private static KafkaProducer<String, byte[]> producer = null;
 
     static {
@@ -77,12 +77,13 @@ public class KafkaProcuderBolt extends BaseBasicBolt {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void prepare(Map stormConf, TopologyContext context) {
+    public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+        this.outputCollector = collector;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void execute(Tuple tuple, BasicOutputCollector outputCollector) {
+    public void execute(Tuple tuple) {
         Map<String, Object> skyeyeWebFlowLogMap = (Map<String, Object>) tuple.getValue(0);
         // System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " +
         // JsonUtils.mapToJson(skyeyeWebFlowLogMap));
@@ -114,6 +115,8 @@ public class KafkaProcuderBolt extends BaseBasicBolt {
             e.printStackTrace();
         }
 
+        // 更新kafka中partitionManager对应的offset
+        this.outputCollector.ack(tuple);
     }
 
     @Override

@@ -1,45 +1,45 @@
 
 package soc.storm.situation.monitor;
 
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
+import com.google.protobuf.Message;
+import com.googlecode.protobuf.format.JsonFormat;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.utils.Geoip;
+import soc.storm.situation.utils.Geoip.Result;
+import soc.storm.situation.utils.JsonUtils;
+import soc.storm.situation.utils.TopicMethodUtil;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 // import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-import soc.storm.situation.utils.Geoip;
-import soc.storm.situation.utils.Geoip.Result;
-import soc.storm.situation.utils.JsonUtils;
-import soc.storm.situation.utils.TopicMethodUtil;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.BasicOutputCollector;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseBasicBolt;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
-
-import com.google.protobuf.Message;
-import com.googlecode.protobuf.format.JsonFormat;
 
 /**
  * @author zhongsanmu
  *
  */
-public class IpEnrichmentBolt extends BaseBasicBolt {
+public class IpEnrichmentBolt extends BaseRichBolt {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -2639126860311224615L;
 
     private static final Logger logger = LoggerFactory.getLogger(IpEnrichmentBolt.class);
 
+    private OutputCollector outputCollector;
     private String topicMethod;// = "getSkyeyeTcpflow";
     private Method getSkyeyeWebFlowLogObjectMethod;
 
@@ -49,7 +49,9 @@ public class IpEnrichmentBolt extends BaseBasicBolt {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public void prepare(Map stormConf, TopologyContext context) {
+    public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+        this.outputCollector = collector;
+
         try {
             Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
             getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
@@ -59,7 +61,7 @@ public class IpEnrichmentBolt extends BaseBasicBolt {
     }
 
     @Override
-    public void execute(Tuple tuple, BasicOutputCollector outputCollector) {
+    public void execute(Tuple tuple) {
         // String skyeyeWebFlowLogStr = (String) tuple.getValue(0);
         byte[] skyeyeWebFlowLogByteArray = (byte[]) tuple.getValue(0);
 
@@ -114,7 +116,7 @@ public class IpEnrichmentBolt extends BaseBasicBolt {
                     }
 
                     // System.out.println("skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
-                    outputCollector.emit(new Values(skyeyeWebFlowLog));
+                    this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLog));
                 }
             } else {
                 throw new RuntimeException("skyeyeWebFlowLog is not json style");
@@ -125,6 +127,9 @@ public class IpEnrichmentBolt extends BaseBasicBolt {
             // logger.error("skyeyeWebFlowLog:{}", skyeyeWebFlowLogStr, e);
             // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLogStr));
         }
+
+        // 更新kafka中partitionManager对应的offset
+        this.outputCollector.ack(tuple);
     }
 
     @Override
