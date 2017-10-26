@@ -7,6 +7,7 @@ import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
 import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,6 +23,7 @@ public class KafkaProducerTask extends Thread {
     private final long perSecondCount;
     private static AtomicLong atomicLong = new AtomicLong(0);
     private static byte[] pbBytes = getPBBytes();
+    private CountDownLatch allDone;
 
     private static Properties createConsumerConfig() {
         Properties properties = new Properties();
@@ -37,15 +39,16 @@ public class KafkaProducerTask extends Thread {
         return properties;
     }
 
-    public KafkaProducerTask(String topic, long perSecondCount) {
+    public KafkaProducerTask(String topic, long perSecondCount, CountDownLatch allDone) {
         this.topic = topic;
         this.producer = new KafkaProducer<String, byte[]>(createConsumerConfig());
         this.perSecondCount = perSecondCount;
+        this.allDone = allDone;
     }
 
     @Override
     public void run() {
-        long begin = System.currentTimeMillis();
+
         while (atomicLong.incrementAndGet() < perSecondCount) {
             // Future<RecordMetadata> future = producer.send(new ProducerRecord<String, byte[]>(topic, null,
             // getPBBytes()));
@@ -65,8 +68,9 @@ public class KafkaProducerTask extends Thread {
             // e.printStackTrace();
             // }
         }
-        long end = System.currentTimeMillis();
-        System.out.println("load done, use time: " + (end - begin) + "ms");
+
+        allDone.countDown();
+
     }
 
     /**
@@ -87,7 +91,7 @@ public class KafkaProducerTask extends Thread {
         DNS dns = builder.build();
 
         sensorLogBuilder.setSkyeyeDns(dns);
-        sensorLogBuilder.setMessageType(2);// TODO:???
+        sensorLogBuilder.setMessageType(2);// start with TCPFLOW:1;DNS:2;.....
         SENSOR_LOG sensorLog = sensorLogBuilder.build();
 
         // try {
@@ -102,14 +106,21 @@ public class KafkaProducerTask extends Thread {
         return sensorLog.toByteArray();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         int threadCount = 10;
         long perSecondCount = 1000000;
+        CountDownLatch allDone = new CountDownLatch(threadCount);
+        long begin = System.currentTimeMillis();
 
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(threadCount);
         for (int i = 0; i < threadCount; i++) {
-            fixedThreadPool.execute(new KafkaProducerTask("ty_dns", perSecondCount));
+            fixedThreadPool.execute(new KafkaProducerTask("ty_dns", perSecondCount, allDone));
         }
+
+        allDone.await();
+
+        long end = System.currentTimeMillis();
+        System.out.println("load done, use time: " + (end - begin) + "ms");
 
         fixedThreadPool.shutdown();
     }
