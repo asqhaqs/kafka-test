@@ -1,16 +1,17 @@
 
 package soc.storm.situation.test;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 
 /**
  * 
@@ -30,7 +31,7 @@ public class KafkaProducerTask extends Thread {
         properties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
-        properties.put("batch.size", 1);
+        properties.put("batch.size", 16384);// default: 16384
         properties.put("linger.ms", 1);
         properties.put("buffer.memory", 33554432);// 32M
         properties.put("acks", "0");
@@ -48,7 +49,6 @@ public class KafkaProducerTask extends Thread {
 
     @Override
     public void run() {
-
         while (atomicLong.incrementAndGet() < perSecondCount) {
             // Future<RecordMetadata> future = producer.send(new ProducerRecord<String, byte[]>(topic, null,
             // getPBBytes()));
@@ -69,6 +69,7 @@ public class KafkaProducerTask extends Thread {
             // }
         }
 
+        producer.close();
         allDone.countDown();
 
     }
@@ -108,7 +109,7 @@ public class KafkaProducerTask extends Thread {
 
     public static void main(String[] args) throws InterruptedException {
         int threadCount = 10;
-        long perSecondCount = 1000000;
+        long perSecondCount = 10000000;
         CountDownLatch allDone = new CountDownLatch(threadCount);
         long begin = System.currentTimeMillis();
 
