@@ -30,7 +30,7 @@ public class SystemConstants extends ConfigurableContants {
     public static final String FILE_PATH = getProperty("file_path", "/home/storm/geoipdata");
 
     public static final String KAFKA_SPOUT_THREADS = getProperty("kafka_spout_threads", "5");
-    public static final String IP_ENRICHMENT_BOLT_THREADS = getProperty("ip_enrichment_bolt_threads", "2");
+    public static final String ENRICHMENT_BOLT_THREADS = getProperty("enrichment_bolt_threads", "2");
     public static final String KAFKA_BOLT_THREADS = getProperty("kafka_bolt_threads", "5");
 
     public static final String TOPOLOGY_DEBUG = getProperty("debug", "true");

@@ -1,6 +1,16 @@
 
 package soc.storm.situation.monitor;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import soc.storm.situation.contants.SystemConstants;
+import storm.kafka.BrokerHosts;
+import storm.kafka.SpoutConfig;
+import storm.kafka.ZkHosts;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
@@ -9,15 +19,6 @@ import backtype.storm.generated.AuthorizationException;
 import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import soc.storm.situation.contants.SystemConstants;
-import storm.kafka.BrokerHosts;
-import storm.kafka.SpoutConfig;
-import storm.kafka.ZkHosts;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ExtendIpEnrichmentTopology {
 
@@ -25,7 +26,7 @@ public class ExtendIpEnrichmentTopology {
 
     // 各个组件名字的唯一标识
     private final static String KAFKA_CONSUMER_SPOUT_ID = "kafka_consumer_spout01";
-    private final static String IP_ENRICHMENT_BOLT_ID = "ip_enrichment_bolt";
+    private final static String ENRICHMENT_BOLT_ID = "enrichment_bolt";
     private final static String KAFKA_PRODUCER_BOLT_ID = "kafka_producer_bolt";
 
     // tolopy_name
@@ -38,7 +39,7 @@ public class ExtendIpEnrichmentTopology {
 
             // 线程数
             int KAFKA_SPOUT_THREADS = Integer.parseInt(SystemConstants.KAFKA_SPOUT_THREADS);
-            int IP_ENRICHMENT_BOLT_THREADS = Integer.parseInt(SystemConstants.IP_ENRICHMENT_BOLT_THREADS);
+            int ENRICHMENT_BOLT_THREADS = Integer.parseInt(SystemConstants.ENRICHMENT_BOLT_THREADS);
             int KAFKA_BOLT_THREADS = Integer.parseInt(SystemConstants.KAFKA_BOLT_THREADS);
 
             //
@@ -72,9 +73,9 @@ public class ExtendIpEnrichmentTopology {
                 topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, kafkaConsumerSpout,
                     KAFKA_SPOUT_THREADS);
 
-                // （2）IpEnrichmentBolt
-                IpEnrichmentBolt ipEnrichmentBolt = new IpEnrichmentBolt(topicNameInput);
-                topologyBuilder.setBolt(IP_ENRICHMENT_BOLT_ID + topicNameInput, ipEnrichmentBolt, IP_ENRICHMENT_BOLT_THREADS)
+                // （2）EnrichmentBolt ip&md5
+                EnrichmentBolt enrichmentBolt = new EnrichmentBolt(topicNameInput);
+                topologyBuilder.setBolt(ENRICHMENT_BOLT_ID + topicNameInput, enrichmentBolt, ENRICHMENT_BOLT_THREADS)
                         .shuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
                 // topologyBuilder.setBolt(IP_ENRICHMENT_BOLT_ID + topicNameInput, ipEnrichmentBolt,
                 // IP_ENRICHMENT_BOLT_THREADS)
@@ -83,7 +84,7 @@ public class ExtendIpEnrichmentTopology {
                 // （3）KafkaProcuderBolt
                 KafkaProcuderBolt kafkaProducerBolt = new KafkaProcuderBolt(topicNameOutput);
                 topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + topicNameInput, kafkaProducerBolt, KAFKA_BOLT_THREADS)
-                        .shuffleGrouping(IP_ENRICHMENT_BOLT_ID + topicNameInput);
+                        .shuffleGrouping(ENRICHMENT_BOLT_ID + topicNameInput);
                 // topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + topicNameInput, kafkaProducerBolt,
                 // KAFKA_BOLT_THREADS)
                 // .localOrShuffleGrouping(IP_ENRICHMENT_BOLT_ID + topicNameInput);
