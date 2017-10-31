@@ -3,8 +3,6 @@ package soc.storm.situation.monitor;
 
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -13,27 +11,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import soc.storm.situation.contants.SystemConstants;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.tuple.Values;
 
-public class KafkaConsumerTask extends Thread {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerTask.class);
+/**
+ * 
+ * @author wangbin03
+ *
+ */
+public class KafkaConsumerManager {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerManager.class);
 
-    private final KafkaConsumer<String, byte[]> consumer;
+    private final KafkaConsumer<String, Object> consumer;
+
     private final String topic;
-    private Queue<byte[]> queue = new ConcurrentLinkedQueue<byte[]>();
 
-    private volatile boolean running = true;
-    private Thread runThread;
-
-    public KafkaConsumerTask(String topic) {
-        this.consumer = new KafkaConsumer<String, byte[]>(createConsumerConfig());
+    public KafkaConsumerManager(String topic) {
+        logger.info("init KafkaConsumerManager [{}]", topic);
         this.topic = topic;
+        this.consumer = new KafkaConsumer<String, Object>(createConsumerConfig());
     }
 
     private static Properties createConsumerConfig() {
         logger.info("init createConsumerConfig");
         Properties properties = new Properties();
         properties.put("bootstrap.servers", SystemConstants.BROKER_URL);
-        properties.put("group.id", SystemConstants.TOPOLOGY_NAME + "1122");
+        properties.put("group.id", SystemConstants.TOPOLOGY_NAME + "1010ad");
         // properties.put("enable.auto.commit", "false");
         properties.put("enable.auto.commit", "true");
         properties.put("auto.commit.interval.ms", "1000");
@@ -50,32 +53,33 @@ public class KafkaConsumerTask extends Thread {
     }
 
     // push消费方式，服务端推送过来。主动方式是pull
-    public void run() {
-        runThread = Thread.currentThread();
-        consumer.subscribe(Arrays.asList(topic));
+    public void run(SpoutOutputCollector collector) {
+        long sumCount = 0;
+
         try {
-            while (running && !runThread.isInterrupted()) {
-                ConsumerRecords<String, byte[]> records = consumer.poll(100);
-                consumer.commitSync();
-                for (ConsumerRecord<String, byte[]> consumerRecord : records) {
-                    // System.out.println(String.format("--------------------offset=%d,key=%s,value=%s",
-                    // consumerRecord.offset(),
-                    // consumerRecord.key(),
-                    // consumerRecord.value()));
+            this.consumer.subscribe(Arrays.asList(topic));
+            ConsumerRecords<String, Object> records = consumer.poll(100);
+            sumCount += records.count();
+            consumer.commitSync();
+            for (ConsumerRecord<String, Object> consumerRecord : records) {
+                // System.out.println(String.format("--------------------offset=%d,key=%s,value=%s",
+                // consumerRecord.offset(),
+                // consumerRecord.key(),
+                // consumerRecord.value()));
 
-                    queue.add(consumerRecord.value());
-                }
-
-                // Utils.sleep(500);
+                // String messageId = UUID.randomUUID().toString().replaceAll("-", "");
+                // collector.emit(new Values(consumerRecord.value()), messageId);
+                collector.emit(new Values(consumerRecord.value()));
             }
+
+            // Utils.sleep(500);
+
         } catch (Exception e) {
             logger.warn("KafkaConsumerTask error", e);
+        } finally {
+            // consumer.close();
         }
-
-    }
-
-    public Queue<byte[]> getQueue() {
-        return queue;
+        System.out.println("-------------------------------------------------------------sumCount:" + sumCount);
     }
 
     /**
@@ -83,14 +87,7 @@ public class KafkaConsumerTask extends Thread {
      */
     public void closeKafkaConsumerTask() {
         logger.warn("closeKafkaConsumerTask");
-        running = false;
-        runThread.interrupt();
+        consumer.wakeup();
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        KafkaConsumerTask consumerThread = new KafkaConsumerTask("ty_tcpflow");
-        consumerThread.start();
-        // Thread.sleep(10000);
-        // consumerThread.interrupt();
-    }
 }

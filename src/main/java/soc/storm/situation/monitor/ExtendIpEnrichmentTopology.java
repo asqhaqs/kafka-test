@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soc.storm.situation.contants.SystemConstants;
 import storm.kafka.BrokerHosts;
-import storm.kafka.KafkaSpout;
 import storm.kafka.SpoutConfig;
 import storm.kafka.ZkHosts;
 
@@ -25,7 +24,7 @@ public class ExtendIpEnrichmentTopology {
     private static final Logger logger = LoggerFactory.getLogger(ExtendIpEnrichmentTopology.class);
 
     // 各个组件名字的唯一标识
-    private final static String KAFKA_CONSUMER_SPOUT_ID = "kafka_consumer_spout";
+    private final static String KAFKA_CONSUMER_SPOUT_ID = "kafka_consumer_spout01";
     private final static String IP_ENRICHMENT_BOLT_ID = "ip_enrichment_bolt";
     private final static String KAFKA_PRODUCER_BOLT_ID = "kafka_producer_bolt";
 
@@ -64,21 +63,30 @@ public class ExtendIpEnrichmentTopology {
                 // spoutConfig.startOffsetTime = OffsetRequest.LatestTime(); // -1
 
                 // （1）KafkaConsumerSpout
-                topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, new KafkaSpout(spoutConfig),
-                    KAFKA_SPOUT_THREADS);
-                // KafkaConsumerSpout kafkaConsumerSpout = new KafkaConsumerSpout(topicNameInput);
+                // topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, new KafkaSpout(spoutConfig),
+                // KAFKA_SPOUT_THREADS);
+                // KafkaConsumerSpoutOLD kafkaConsumerSpout = new KafkaConsumerSpoutOLD(topicNameInput);
                 // topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, kafkaConsumerSpout,
                 // KAFKA_SPOUT_THREADS);
+                KafkaConsumerSpout kafkaConsumerSpout = new KafkaConsumerSpout(topicNameInput);
+                topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, kafkaConsumerSpout,
+                    KAFKA_SPOUT_THREADS);
 
                 // （2）IpEnrichmentBolt
                 IpEnrichmentBolt ipEnrichmentBolt = new IpEnrichmentBolt(topicNameInput);
                 topologyBuilder.setBolt(IP_ENRICHMENT_BOLT_ID + topicNameInput, ipEnrichmentBolt, IP_ENRICHMENT_BOLT_THREADS)
                         .shuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
+                // topologyBuilder.setBolt(IP_ENRICHMENT_BOLT_ID + topicNameInput, ipEnrichmentBolt,
+                // IP_ENRICHMENT_BOLT_THREADS)
+                // .localOrShuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
 
                 // （3）KafkaProcuderBolt
                 KafkaProcuderBolt kafkaProducerBolt = new KafkaProcuderBolt(topicNameOutput);
                 topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + topicNameInput, kafkaProducerBolt, KAFKA_BOLT_THREADS)
                         .shuffleGrouping(IP_ENRICHMENT_BOLT_ID + topicNameInput);
+                // topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + topicNameInput, kafkaProducerBolt,
+                // KAFKA_BOLT_THREADS)
+                // .localOrShuffleGrouping(IP_ENRICHMENT_BOLT_ID + topicNameInput);
             }
 
             Config conf = new Config();
@@ -95,6 +103,7 @@ public class ExtendIpEnrichmentTopology {
                 // 远程集群
                 conf.setNumWorkers(Integer.parseInt(SystemConstants.TOPOLOGY_WORKER_NUM));
                 conf.setMaxSpoutPending(Integer.parseInt(SystemConstants.MAX_SPOUT_PENDING));
+                conf.setMessageTimeoutSecs(60);// acker failed 超时时间
                 StormSubmitter.submitTopologyWithProgressBar(TOPOLOGY_NAME, conf, topologyBuilder.createTopology());
             } else {
                 // 建立本地集群,利用LocalCluster,storm在程序启动时会在本地自动建立一个集群,不需要用户自己再搭建,方便本地开发和debug

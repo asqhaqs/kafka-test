@@ -1,11 +1,11 @@
 
 package soc.storm.situation.monitor;
 
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Tuple;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -17,12 +17,13 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import soc.storm.situation.contants.SystemConstants;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
+import soc.storm.situation.contants.SystemConstants;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Tuple;
 
 /**
  * KafkaProcuderBolt
@@ -53,7 +54,8 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             kafkaProducerProperties.put("bootstrap.servers", SystemConstants.BROKER_URL);
             kafkaProducerProperties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
             kafkaProducerProperties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
-            kafkaProducerProperties.put("batch.size", 1);// 16384
+            // kafkaProducerProperties.put("batch.size", 1);// 16384
+            kafkaProducerProperties.put("batch.size", 16384);// 16384
             kafkaProducerProperties.put("linger.ms", 1);
             kafkaProducerProperties.put("buffer.memory", 33554432);
             kafkaProducerProperties.put("acks", "0");
@@ -109,14 +111,16 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             encoder.flush();
             byte[] sendData = out.toByteArray();
             producer.send(new ProducerRecord<String, byte[]>(topic, null, sendData));
+            // System.out.println("----------------------------KafkaProcuderBolt");
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        // delete zhongsanmu 20171031
         // 更新kafka中partitionManager对应的offset
-        this.outputCollector.ack(tuple);
+        // this.outputCollector.ack(tuple);
     }
 
     @Override

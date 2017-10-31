@@ -19,9 +19,9 @@ import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
  *
  */
 public class KafkaProducerTask extends Thread {
-    private String topic;
-    private KafkaProducer<String, byte[]> producer;
-    private final long perSecondCount;
+    private final String topic;
+    private final KafkaProducer<String, byte[]> producer;
+    private final long totalCount;
     private static AtomicLong atomicLong = new AtomicLong(0);
     private static byte[] pbBytes = getPBBytes();
     private CountDownLatch allDone;
@@ -40,27 +40,21 @@ public class KafkaProducerTask extends Thread {
         return properties;
     }
 
-    public KafkaProducerTask(String topic, long perSecondCount, CountDownLatch allDone) {
+    public KafkaProducerTask(String topic, long totalCount, CountDownLatch allDone) {
         this.topic = topic;
         this.producer = new KafkaProducer<String, byte[]>(createConsumerConfig());
-        this.perSecondCount = perSecondCount;
+        this.totalCount = totalCount;
         this.allDone = allDone;
+
+        System.out.println("---------------pbBytes.length: " + pbBytes.length);
     }
 
     @Override
     public void run() {
-        while (atomicLong.incrementAndGet() < perSecondCount) {
+        while (atomicLong.incrementAndGet() < totalCount) {
             // Future<RecordMetadata> future = producer.send(new ProducerRecord<String, byte[]>(topic, null,
             // getPBBytes()));
             producer.send(new ProducerRecord<String, byte[]>(topic, null, pbBytes));
-
-            // if (0 == atomicLong.incrementAndGet() % perSecondCount) {
-            // try {
-            // Thread.sleep(1000);
-            // } catch (InterruptedException e) {
-            // e.printStackTrace();
-            // }
-            // }
 
             // try {
             // Thread.sleep(1000);
@@ -71,7 +65,6 @@ public class KafkaProducerTask extends Thread {
 
         producer.close();
         allDone.countDown();
-
     }
 
     /**
@@ -83,12 +76,16 @@ public class KafkaProducerTask extends Thread {
 
         DNS.Builder builder = DNS.newBuilder();
         builder.setDip("114.114.114.114");
-        builder.setDport(1);
-        builder.setSerialNum("serial_num");
-        builder.setSport(1);
-        builder.setAccessTime("aaa");
+        builder.setDport(43423);
+        builder.setSerialNum("214246597");
+        builder.setSport(53);
+        builder.setAccessTime("2017-09-05 16:37:57.334");
         builder.setDnsType(1);
-        builder.setHost("host");
+        builder.setHost("www.google-analytics.com");
+        builder.setCount("1;3;0;0");
+        builder.setReplyCode(0);
+        builder.addAddr("119.37.197.93");
+        builder.addAddr("183.131.1.125");
         DNS dns = builder.build();
 
         sensorLogBuilder.setSkyeyeDns(dns);
@@ -107,22 +104,40 @@ public class KafkaProducerTask extends Thread {
         return sensorLog.toByteArray();
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        int threadCount = 10;
-        long perSecondCount = 10000000;
-        CountDownLatch allDone = new CountDownLatch(threadCount);
-        long begin = System.currentTimeMillis();
+    public static class KafkaProducerExecutorServiceTask extends Thread {
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(threadCount);
-        for (int i = 0; i < threadCount; i++) {
-            fixedThreadPool.execute(new KafkaProducerTask("ty_dns", perSecondCount, allDone));
+        @Override
+        public void run() {
+            try {
+                int threadCount = 10;
+                long totalCount = 100000000;// 1000 0000
+                CountDownLatch allDone = new CountDownLatch(threadCount);
+                long begin = System.currentTimeMillis();
+
+                ExecutorService fixedThreadPool = Executors.newFixedThreadPool(threadCount);
+                for (int i = 0; i < threadCount; i++) {
+                    // ty_dns ty_dns_inputtest
+                    fixedThreadPool.execute(new KafkaProducerTask("ty_dns_inputtest", totalCount, allDone));
+                }
+
+                allDone.await();
+
+                long end = System.currentTimeMillis();
+                System.out.println("load done, use time: " + (end - begin) + "ms");
+
+                //
+                KafkaProducerTask.atomicLong = new AtomicLong(0);
+                fixedThreadPool.shutdown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
-        allDone.await();
-
-        long end = System.currentTimeMillis();
-        System.out.println("load done, use time: " + (end - begin) + "ms");
-
-        fixedThreadPool.shutdown();
     }
+
+    public static void main(String[] args) throws InterruptedException {
+        KafkaProducerExecutorServiceTask kafkaProducerExecutorService = new KafkaProducerExecutorServiceTask();
+        kafkaProducerExecutorService.start();
+    }
+
 }

@@ -2,6 +2,8 @@
 package soc.storm.situation.monitor;
 
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,43 +13,49 @@ import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Values;
 
 /**
  * 
  * @author wangbin03
  *
  */
-public class KafkaConsumerSpout extends BaseRichSpout {
+public class KafkaConsumerSpoutOLD extends BaseRichSpout {
     /**
      * 
      */
     private static final long serialVersionUID = -6932165001380993216L;
-    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerSpout.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerSpoutOLD.class);
 
     private SpoutOutputCollector collector;
     private final String topic;
+    private Queue<byte[]> queue = new ConcurrentLinkedQueue<byte[]>();
 
     private transient KafkaConsumerTask consumer;
-    // private HashMap<String, byte[]> waitAck = new HashMap<String, byte[]>();
 
-    private KafkaConsumerManager kafkaConsumerManager;
-
-    public KafkaConsumerSpout(String topic) {
+    public KafkaConsumerSpoutOLD(String topic) {
         logger.info("KafkaConsumerSpout init [{}]", topic);
         this.topic = topic;
-
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
-        this.kafkaConsumerManager = new KafkaConsumerManager(topic);
+
+        consumer = new KafkaConsumerTask(topic);
+        consumer.start();
+        queue = consumer.getQueue();
     }
 
     @Override
     public void nextTuple() {
-        kafkaConsumerManager.run(collector);
+        if (queue.size() > 0) {
+            byte[] str = queue.poll();
+            // collector.emit(new Values(str), UUID.randomUUID().toString());
+            collector.emit(new Values(str));
+            // Utils.sleep(500);
+        }
     }
 
     @Override
@@ -58,15 +66,10 @@ public class KafkaConsumerSpout extends BaseRichSpout {
 
     @Override
     public void ack(Object msgId) {
-        System.out.println("消息处理成功:" + msgId);
-        // waitAck.remove(msgId);
     }
 
     @Override
-    public void fail(Object msgId) {
-        System.out.println("消息处理失败:" + msgId);
-        // 重发如果不开启ackfail机制，那么spout的map对象中的该数据不会被删除的。
-        // collector.emit(new Values(waitAck.get(msgId)), msgId);
+    public void fail(Object id) {
     }
 
     @Override

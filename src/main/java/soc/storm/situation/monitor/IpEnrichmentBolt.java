@@ -128,8 +128,9 @@ public class IpEnrichmentBolt extends BaseRichBolt {
             // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLogStr));
         }
 
+        // delete zhongsanmu 20171031
         // 更新kafka中partitionManager对应的offset
-        this.outputCollector.ack(tuple);
+        // this.outputCollector.ack(tuple);
     }
 
     @Override
