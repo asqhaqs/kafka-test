@@ -1,21 +1,6 @@
 
 package soc.storm.situation.monitor;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-import soc.storm.situation.utils.Geoip;
-import soc.storm.situation.utils.Geoip.Result;
-import soc.storm.situation.utils.JsonUtils;
-import soc.storm.situation.utils.TopicMethodUtil;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -23,9 +8,22 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-
 import com.google.protobuf.Message;
 import com.googlecode.protobuf.format.JsonFormat;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.utils.Geoip;
+import soc.storm.situation.utils.Geoip.Result;
+import soc.storm.situation.utils.JsonUtils;
+import soc.storm.situation.utils.TopicMethodUtil;
+
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * @author zhongsanmu
@@ -43,6 +41,7 @@ public class EnrichmentBolt extends BaseRichBolt {
     private OutputCollector outputCollector;
     private String topicMethod;// = "getSkyeyeTcpflow";
     private Method getSkyeyeWebFlowLogObjectMethod;
+    private final static Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
 
     public EnrichmentBolt(String topicNameInput) {
         topicMethod = TopicMethodUtil.getTopicMethod(topicNameInput);
@@ -54,7 +53,6 @@ public class EnrichmentBolt extends BaseRichBolt {
         this.outputCollector = collector;
 
         try {
-            Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
             getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
         } catch (Exception e) {
             logger.error("getSkyeyeWebFlowLogObjectMethod [{}] error", topicMethod, e);
@@ -63,7 +61,7 @@ public class EnrichmentBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple tuple) {
-        // String skyeyeWebFlowLogStr = (String) tuple.getValue(0);
+        // String skyeyeWebFlowLogStr002 = (String) tuple.getValue(0);
         byte[] skyeyeWebFlowLogByteArray = (byte[]) tuple.getValue(0);
 
         try {
@@ -90,7 +88,7 @@ public class EnrichmentBolt extends BaseRichBolt {
                     // （2）富化md5--薛杰：md5应该只涉及dns和weblog add zhongsanmu 20171031
                     enrichmentMd5(this.topicMethod, skyeyeWebFlowLog);
 
-                    System.out.println("skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
+                    // System.out.println("skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
                     this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLog));
                 }
             } else {
@@ -113,7 +111,7 @@ public class EnrichmentBolt extends BaseRichBolt {
      * 
      * @param skyeyeWebFlowLog
      */
-    public void convertSkyeyeWebFlowLogToStr(Map<String, Object> skyeyeWebFlowLog) {
+    private void convertSkyeyeWebFlowLogToStr(Map<String, Object> skyeyeWebFlowLog) {
         for (Entry<String, Object> entry : skyeyeWebFlowLog.entrySet()) {
             if (entry.getValue() != null) {
                 try {
@@ -133,7 +131,7 @@ public class EnrichmentBolt extends BaseRichBolt {
      * @param skyeyeWebFlowLog
      * @throws Exception
      */
-    public void enrichmentIp(Map<String, Object> skyeyeWebFlowLog) throws Exception {
+    private void enrichmentIp(Map<String, Object> skyeyeWebFlowLog) throws Exception {
         String sipStr = (null == skyeyeWebFlowLog.get("sip")) ? null : skyeyeWebFlowLog.get("sip").toString();
         String dipStr = (null == skyeyeWebFlowLog.get("dip")) ? null : skyeyeWebFlowLog.get("dip").toString();
 
@@ -163,7 +161,7 @@ public class EnrichmentBolt extends BaseRichBolt {
      * @param topicMethod
      * @param skyeyeWebFlowLog
      */
-    public void enrichmentMd5(String topicMethod, Map<String, Object> skyeyeWebFlowLog) {
+    private void enrichmentMd5(String topicMethod, Map<String, Object> skyeyeWebFlowLog) {
         switch (topicMethod) {
         case "getSkyeyeDns":// dns
             // host_md5

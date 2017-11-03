@@ -1,17 +1,17 @@
 
 package soc.storm.situation.test;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
+
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-
-import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 
 /**
  * 
@@ -23,7 +23,8 @@ public class KafkaProducerTask extends Thread {
     private final KafkaProducer<String, byte[]> producer;
     private final long totalCount;
     private static AtomicLong atomicLong = new AtomicLong(0);
-    private static byte[] pbBytes = getPBBytes();
+    // private static byte[] pbBytes = getPBBytesDNS();
+    private static byte[] pbBytes = getPBBytesTcpFlow();
     private CountDownLatch allDone;
 
     private static Properties createConsumerConfig() {
@@ -68,10 +69,11 @@ public class KafkaProducerTask extends Thread {
     }
 
     /**
+     * 生成DNS类型的PB测试数据
      * 
      * @return
      */
-    public static byte[] getPBBytes() {
+    public static byte[] getPBBytesDNS() {
         SENSOR_LOG.Builder sensorLogBuilder = SENSOR_LOG.newBuilder();
 
         DNS.Builder builder = DNS.newBuilder();
@@ -104,6 +106,58 @@ public class KafkaProducerTask extends Thread {
         return sensorLog.toByteArray();
     }
 
+    /**
+     * 生成TcpFlow类型的PB测试数据
+     * 
+     * @return
+     */
+    public static byte[] getPBBytesTcpFlow() {
+        SENSOR_LOG.Builder sensorLogBuilder = SENSOR_LOG.newBuilder();
+
+        TCPFLOW.Builder builder = TCPFLOW.newBuilder();
+        builder.setDip("114.114.114.114");
+        builder.setDport(1);
+        builder.setSip("11.8.45.37");
+        builder.setSport(11737);
+        // serial_num, status, stime, dtime, sport, proto, uplink_length, downlink_length, client_os, server_os,
+        // src_mac, dst_mac, up_payload, down_payload, summary
+        builder.setSerialNum("215332105");
+        builder.setStatus("fin");
+        builder.setStime("2016-04-06 11:36:57.099");
+        builder.setDtime("2016-04-06 11:36:57.114");
+
+        builder.setProto("http");
+        builder.setUplinkLength(424L);
+        builder.setDownlinkLength(154L);
+        builder.setClientOs("Linux2.2.x-3.x (no timestamps)");
+        builder.setServerOs("Linux3.x");
+
+        builder.setSrcMac("fa:16:3e:21:59:41");
+        builder.setDstMac("5c:dd:70:94:bd:00");
+        // builder.setUpPayload("474554202f73686f756a692f6d6f766965737461743f616374696f6e3d656e746572266d5f763d312e312e30266d69643d3836353732383032303938303131362666726f6d3d2f2e2e2f2e2e2f2e2e2f2e2e2f2e2e2f2e2e2f2e2e2f2e2e2f77696e6e74");
+        builder.setUpPayload("474554202f73686f756a692f6d6f766965737461743f616374696f6e3d656e746572266d5f763");
+        builder.setDownPayload("485454502f312e3120323030204f4b0d0a53657276657200206e67696e782f312e322e390d0a4461746500205765642c2030362041707220323031362030333a32303a313720474d540d0a436f6e74656e742d547970650020746578742f68746d6c0d0a");
+        builder.setSummary("53;0;1460;1452");
+
+        TCPFLOW tcpflow = builder.build();
+
+        sensorLogBuilder.setSkyeyeTcpflow(tcpflow);
+        sensorLogBuilder.setMessageType(1);// start with TCPFLOW:1;DNS:2;.....
+        SENSOR_LOG sensorLog = sensorLogBuilder.build();
+
+        // try {
+        // SENSOR_LOG log = SENSOR_LOG.parseFrom(sensorLog.toByteArray());
+        // Object skyeyeWebFlowLogPB = log.getSkyeyeTcpflow();
+        // String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
+        // System.out.println("-------------------sensorLog.toByteArray().length:" + sensorLog.toByteArray().length);
+        // System.out.println("-------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
+        // } catch (InvalidProtocolBufferException e) {
+        // e.printStackTrace();
+        // }
+
+        return sensorLog.toByteArray();
+    }
+
     public static class KafkaProducerExecutorServiceTask extends Thread {
 
         @Override
@@ -117,7 +171,8 @@ public class KafkaProducerTask extends Thread {
                 ExecutorService fixedThreadPool = Executors.newFixedThreadPool(threadCount);
                 for (int i = 0; i < threadCount; i++) {
                     // ty_dns ty_dns_inputtest
-                    fixedThreadPool.execute(new KafkaProducerTask("ty_dns_inputtest", totalCount, allDone));
+                    // fixedThreadPool.execute(new KafkaProducerTask("ty_dns_inputtest", totalCount, allDone));
+                    fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest", totalCount, allDone));
                 }
 
                 allDone.await();
@@ -136,8 +191,13 @@ public class KafkaProducerTask extends Thread {
     }
 
     public static void main(String[] args) throws InterruptedException {
+        // getPBBytesTcpFlow();
         KafkaProducerExecutorServiceTask kafkaProducerExecutorService = new KafkaProducerExecutorServiceTask();
         kafkaProducerExecutorService.start();
     }
 
 }
+
+// load done, use time: 261105ms ty_tcpflow_inputtest 500B 1亿 batch.size 16384
+// load done, use time: 258126ms ty_tcpflow_inputtest 500B 1亿 batch.size 16384
+// load done, use time: 117980ms ty_tcpflow_inputtest 500B 1千万 batch.size 1
