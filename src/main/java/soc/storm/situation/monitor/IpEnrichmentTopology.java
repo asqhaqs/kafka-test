@@ -21,9 +21,9 @@ import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
 
-public class IpEnrichmentTopologyBAK {
+public class IpEnrichmentTopology {
 
-    private static final Logger log = Logger.getLogger(IpEnrichmentTopologyBAK.class);
+    private static final Logger log = Logger.getLogger(IpEnrichmentTopology.class);
 
     // 各个组件名字的唯一标识
     private final static String GEO_IP_SPOUT_ID = "geo_ip-spout";
@@ -53,10 +53,10 @@ public class IpEnrichmentTopologyBAK {
                 GEO_IP_SPOUT_ID);
 
         // 设置如何处理kafka消息队列输入流
-        spoutConfig.scheme = new SchemeAsMultiScheme(new MessageSchemeBAK());
+        spoutConfig.scheme = new SchemeAsMultiScheme(new MessageScheme());
 
         // 建立拓扑DAG
-        IpEnrichmentBoltBAK ipEnrichmentSolt = new IpEnrichmentBoltBAK();
+        IpEnrichmentBolt ipEnrichmentSolt = new IpEnrichmentBolt();
         // 构建一个拓扑Builder
         TopologyBuilder topologyBuilder = new TopologyBuilder();
 
@@ -91,7 +91,7 @@ public class IpEnrichmentTopologyBAK {
      */
     private static void initData() {
         try {
-            InputStream input = IpEnrichmentTopologyBAK.class.getResourceAsStream("/app.properties");
+            InputStream input = IpEnrichmentTopology.class.getResourceAsStream("/app.properties");
             pro.load(input);
         } catch (Exception e) {
             e.printStackTrace();

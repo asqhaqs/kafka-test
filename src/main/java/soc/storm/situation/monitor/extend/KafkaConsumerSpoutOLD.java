@@ -1,5 +1,5 @@
 
-package soc.storm.situation.monitor;
+package soc.storm.situation.monitor.extend;
 
 import java.util.Map;
 import java.util.Queue;

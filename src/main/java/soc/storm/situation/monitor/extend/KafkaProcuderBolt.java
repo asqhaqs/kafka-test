@@ -1,5 +1,5 @@
 
-package soc.storm.situation.monitor;
+package soc.storm.situation.monitor.extend;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class KafkaProcuderBolt extends BaseRichBolt {
     private String topic;// = "ty_tcpflow_output";
 
     private String topicProperties;// = producer.getTopicProperties(topic);
-    private OutputCollector outputCollector;
+    // private OutputCollector outputCollector;
     private static KafkaProducer<String, byte[]> producer = null;
 
     static {
@@ -80,7 +80,7 @@ public class KafkaProcuderBolt extends BaseRichBolt {
     @SuppressWarnings("rawtypes")
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-        this.outputCollector = collector;
+        // this.outputCollector = collector;
     }
 
     @SuppressWarnings("unchecked")
@@ -110,7 +110,9 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             }
             encoder.flush();
             byte[] sendData = out.toByteArray();
+            // TODO: test
             producer.send(new ProducerRecord<String, byte[]>(topic, null, sendData));
+
             // System.out.println("----------------------------KafkaProcuderBolt");
         } catch (IOException e) {
             e.printStackTrace();

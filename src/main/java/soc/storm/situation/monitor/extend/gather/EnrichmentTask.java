@@ -1,81 +1,84 @@
 
-package soc.storm.situation.monitor;
-
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
-import com.google.protobuf.Message;
-import com.googlecode.protobuf.format.JsonFormat;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-import soc.storm.situation.utils.Geoip;
-import soc.storm.situation.utils.Geoip.Result;
-import soc.storm.situation.utils.JsonUtils;
-import soc.storm.situation.utils.TopicMethodUtil;
+package soc.storm.situation.monitor.extend.gather;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+// import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import soc.storm.situation.contants.SystemConstants;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.utils.Geoip;
+import soc.storm.situation.utils.Geoip.Result;
+import soc.storm.situation.utils.JsonUtils;
+import soc.storm.situation.utils.TopicMethodUtil;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
+
+import com.google.protobuf.Message;
+import com.googlecode.protobuf.format.JsonFormat;
 
 /**
  * @author zhongsanmu
  *
  */
-public class EnrichmentBolt extends BaseRichBolt {
+public class EnrichmentTask implements Runnable {// extends BaseRichBolt
+    private static final Logger logger = LoggerFactory.getLogger(EnrichmentTask.class);
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -2639126860311224615L;
-
-    private static final Logger logger = LoggerFactory.getLogger(EnrichmentBolt.class);
-
-    private OutputCollector outputCollector;
     private String topicMethod;// = "getSkyeyeTcpflow";
     private Method getSkyeyeWebFlowLogObjectMethod;
     private final static Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
 
-    public EnrichmentBolt(String topicNameInput) {
-        topicMethod = TopicMethodUtil.getTopicMethod(topicNameInput);
+    // add zhongsanmu 20171107
+    private MessageCacheProcess<byte[]> messageCacheProcess = new MessageCacheProcess<byte[]>();
+
+    // add zhongsanmu 20171107
+    private KafkaProducerTask kafkaProducerTask;
+    private ExecutorService kafkaProducerTaskThreadPool;
+    private static int KAFKAP_RODUCER_TASK_THREAD_TIMES = Integer.parseInt(SystemConstants.KAFKAP_RODUCER_TASK_THREAD_TIMES);
+
+    public MessageCacheProcess<byte[]> getMessageCacheProcess() {
+        return messageCacheProcess;
     }
 
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-        this.outputCollector = collector;
+    public EnrichmentTask(String topicNameInput, String topicNameOutput) {
+        topicMethod = TopicMethodUtil.getTopicMethod(topicNameInput);
 
         try {
             getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
         } catch (Exception e) {
             logger.error("getSkyeyeWebFlowLogObjectMethod [{}] error", topicMethod, e);
         }
+
+        //
+        this.kafkaProducerTask = new KafkaProducerTask(topicNameOutput);
+        this.kafkaProducerTaskThreadPool = Executors.newFixedThreadPool(KAFKAP_RODUCER_TASK_THREAD_TIMES);
+        for (int i = 0; i < KAFKAP_RODUCER_TASK_THREAD_TIMES; i++) {
+            this.kafkaProducerTaskThreadPool.execute(kafkaProducerTask);
+        }
     }
 
-    @Override
-    public void execute(Tuple tuple) {
-        // String skyeyeWebFlowLogStr002 = (String) tuple.getValue(0);
-        byte[] skyeyeWebFlowLogByteArray = (byte[]) tuple.getValue(0);
-
+    /**
+     * 
+     * @param skyeyeWebFlowLogByteArray
+     * @return
+     */
+    public Map<String, Object> enrichment(byte[] skyeyeWebFlowLogByteArray) {
         try {
-            // logger.error("====" + new String(skyeyeWebFlowLogByteArray, "utf-8"));
             SENSOR_LOG log = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArray);
-            // Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
-            // Method getSkyeyeWebFlowLogObjectMethod = skyeyeWebFlowLogClass.getMethod(topicMethod);
             Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
             String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
 
             // 查找ip相关的信息
             if (StringUtils.isNotBlank(skyeyeWebFlowLogStr)) {
-                // System.out.println("------------ipEnrichmentBolt:" + skyeyeWebFlowLogStr);
-                // logger.error("------------ipEnrichmentBolt:" + skyeyeWebFlowLogStr);
                 Map<String, Object> skyeyeWebFlowLog = JsonUtils.jsonToMap(skyeyeWebFlowLogStr);
 
                 if (null != skyeyeWebFlowLog) {
@@ -88,8 +91,7 @@ public class EnrichmentBolt extends BaseRichBolt {
                     // （2）富化md5--薛杰：md5应该只涉及dns和weblog add zhongsanmu 20171031
                     enrichmentMd5(this.topicMethod, skyeyeWebFlowLog);
 
-                    // System.out.println("skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
-                    this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLog));
+                    return skyeyeWebFlowLog;
                 }
             } else {
                 throw new RuntimeException("skyeyeWebFlowLog is not json style");
@@ -97,13 +99,9 @@ public class EnrichmentBolt extends BaseRichBolt {
 
         } catch (Exception e) {
             logger.error("skyeyeWebFlowLog", e);
-            // logger.error("skyeyeWebFlowLog:{}", skyeyeWebFlowLogStr, e);
-            // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLogStr));
         }
 
-        // delete zhongsanmu 20171031
-        // 更新kafka中partitionManager对应的offset
-        // this.outputCollector.ack(tuple);
+        return null;
     }
 
     /**
@@ -185,9 +183,25 @@ public class EnrichmentBolt extends BaseRichBolt {
         }
     }
 
-    @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(new Fields("message"));
+    }
+
+    @Override
+    public void run() {
+        try {
+            // while (running && !runThread.isInterrupted()) {
+            while (true) {
+                //
+                byte[] skyeyeWebFlowLogBytes = messageCacheProcess.getMessage();
+
+                //
+                Map<String, Object> skyeyeWebFlowLog = enrichment(skyeyeWebFlowLogBytes);
+                kafkaProducerTask.getMessageCacheProcess().addMessage(skyeyeWebFlowLog);
+            }
+        } catch (Exception e) {
+        } finally {
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 
-package soc.storm.situation.monitor;
+package soc.storm.situation.monitor.extend;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,16 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import soc.storm.situation.contants.SystemConstants;
-import storm.kafka.BrokerHosts;
-import storm.kafka.SpoutConfig;
-import storm.kafka.ZkHosts;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
 import backtype.storm.generated.AuthorizationException;
 import backtype.storm.generated.InvalidTopologyException;
-import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.topology.TopologyBuilder;
 
 public class ExtendIpEnrichmentTopology {
@@ -50,18 +46,18 @@ public class ExtendIpEnrichmentTopology {
                 String topicNameInput = topicNameInputArray[i].trim();
                 String topicNameOutput = topicNameOutputArray[i].trim();
 
-                String zkRoot = "";
-                // 配置zookeeper 主机:端口号
-                BrokerHosts brokerHosts = new ZkHosts(SystemConstants.ZOOKEEPER_HOSTS);
-                SpoutConfig spoutConfig = new SpoutConfig(brokerHosts, topicNameInput, zkRoot,
-                        KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
-                // 设置如何处理kafka消息队列输入流
-                spoutConfig.scheme = new SchemeAsMultiScheme(new MessageScheme());
-                // spoutConfig.ignoreZkOffsets = true;// 从头开始消费
-                // spoutConfig.forceFromStart = false; // 从头开始消费
-                spoutConfig.socketTimeoutMs = 60 * 1000;
-                // TODO:online delete
-                // spoutConfig.startOffsetTime = OffsetRequest.LatestTime(); // -1
+                // String zkRoot = "";
+                // // 配置zookeeper 主机:端口号
+                // BrokerHosts brokerHosts = new ZkHosts(SystemConstants.ZOOKEEPER_HOSTS);
+                // SpoutConfig spoutConfig = new SpoutConfig(brokerHosts, topicNameInput, zkRoot,
+                // KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
+                // // 设置如何处理kafka消息队列输入流
+                // spoutConfig.scheme = new SchemeAsMultiScheme(new MessageScheme());
+                // // spoutConfig.ignoreZkOffsets = true;// 从头开始消费
+                // // spoutConfig.forceFromStart = false; // 从头开始消费
+                // spoutConfig.socketTimeoutMs = 60 * 1000;
+                // // TODO:online delete
+                // // spoutConfig.startOffsetTime = OffsetRequest.LatestTime(); // -1
 
                 // （1）KafkaConsumerSpout
                 // topologyBuilder.setSpout(KAFKA_CONSUMER_SPOUT_ID + topicNameInput, new KafkaSpout(spoutConfig),
@@ -75,19 +71,18 @@ public class ExtendIpEnrichmentTopology {
 
                 // （2）EnrichmentBolt ip&md5
                 EnrichmentBolt enrichmentBolt = new EnrichmentBolt(topicNameInput);
+                // topologyBuilder.setBolt(ENRICHMENT_BOLT_ID + topicNameInput, enrichmentBolt, ENRICHMENT_BOLT_THREADS)
+                // .shuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
                 topologyBuilder.setBolt(ENRICHMENT_BOLT_ID + topicNameInput, enrichmentBolt, ENRICHMENT_BOLT_THREADS)
-                        .shuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
-                // topologyBuilder.setBolt(IP_ENRICHMENT_BOLT_ID + topicNameInput, ipEnrichmentBolt,
-                // IP_ENRICHMENT_BOLT_THREADS)
-                // .localOrShuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
+                        .localOrShuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicNameInput);
 
                 // （3）KafkaProcuderBolt
                 KafkaProcuderBolt kafkaProducerBolt = new KafkaProcuderBolt(topicNameOutput);
-                topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + topicNameInput, kafkaProducerBolt, KAFKA_BOLT_THREADS)
-                        .shuffleGrouping(ENRICHMENT_BOLT_ID + topicNameInput);
                 // topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + topicNameInput, kafkaProducerBolt,
                 // KAFKA_BOLT_THREADS)
-                // .localOrShuffleGrouping(IP_ENRICHMENT_BOLT_ID + topicNameInput);
+                // .shuffleGrouping(ENRICHMENT_BOLT_ID + topicNameInput);
+                topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + topicNameInput, kafkaProducerBolt, KAFKA_BOLT_THREADS)
+                        .localOrShuffleGrouping(ENRICHMENT_BOLT_ID + topicNameInput);
             }
 
             Config conf = new Config();

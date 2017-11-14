@@ -1,5 +1,5 @@
 
-package soc.storm.situation.monitor;
+package soc.storm.situation.monitor.extend;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import soc.storm.situation.contants.SystemConstants;
 
+@Deprecated
 public class KafkaConsumerTask extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerTask.class);
 

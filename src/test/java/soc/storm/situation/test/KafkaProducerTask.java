@@ -1,17 +1,20 @@
 
 package soc.storm.situation.test;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
-
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+import soc.storm.situation.compress.SnappyCompress;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
+import soc.storm.situation.test.compress.KafkaConsumerThenCompressTest;
 
 /**
  * 
@@ -24,7 +27,17 @@ public class KafkaProducerTask extends Thread {
     private final long totalCount;
     private static AtomicLong atomicLong = new AtomicLong(0);
     // private static byte[] pbBytes = getPBBytesDNS();
-    private static byte[] pbBytes = getPBBytesTcpFlow();
+    // private static byte[] pbBytes = getPBBytesTcpFlow();
+
+    // private static byte[] sourceData = PBContentTcpFlow.pbBytesTcpFlowByteArray;
+    // private static KafkaConsumerThenCompressTest consumerTest = new KafkaConsumerThenCompressTest("ty_tcpflow");
+    // private static byte[] sourceData = consumerTest.getByteArray(1000);
+    // private static byte[] pbBytes = SnappyCompress.compress(sourceData);
+    // // private static byte[] pbBytes = sourceData;
+
+    private static byte[] pbBytes = null;
+
+    //
     private CountDownLatch allDone;
 
     private static Properties createConsumerConfig() {
@@ -32,7 +45,8 @@ public class KafkaProducerTask extends Thread {
         properties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
-        properties.put("batch.size", 16384);// default: 16384
+        // properties.put("batch.size", 16384);// default: 16384
+        properties.put("batch.size", 1);// default: 16384
         properties.put("linger.ms", 1);
         properties.put("buffer.memory", 33554432);// 32M
         properties.put("acks", "0");
@@ -47,11 +61,13 @@ public class KafkaProducerTask extends Thread {
         this.totalCount = totalCount;
         this.allDone = allDone;
 
-        System.out.println("---------------pbBytes.length: " + pbBytes.length);
+        // System.out.println("---------------sourceData.length:" + sourceData.length
+        // + ", pbBytes.length: " + pbBytes.length);
     }
 
     @Override
     public void run() {
+        //
         while (atomicLong.incrementAndGet() < totalCount) {
             // Future<RecordMetadata> future = producer.send(new ProducerRecord<String, byte[]>(topic, null,
             // getPBBytes()));
@@ -98,7 +114,11 @@ public class KafkaProducerTask extends Thread {
         // SENSOR_LOG log = SENSOR_LOG.parseFrom(sensorLog.toByteArray());
         // Object skyeyeWebFlowLogPB = log.getSkyeyeDns();
         // String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
+        // System.out.println("-------------------sensorLog.toByteArray().length:" + sensorLog.toByteArray().length);//
+        // 133
         // System.out.println("-------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
+        // System.out.println("-------------------skyeyeWebFlowLogStr.getBytes().length:" +
+        // skyeyeWebFlowLogStr.getBytes().length);// 246
         // } catch (InvalidProtocolBufferException e) {
         // e.printStackTrace();
         // }
@@ -149,8 +169,11 @@ public class KafkaProducerTask extends Thread {
         // SENSOR_LOG log = SENSOR_LOG.parseFrom(sensorLog.toByteArray());
         // Object skyeyeWebFlowLogPB = log.getSkyeyeTcpflow();
         // String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
-        // System.out.println("-------------------sensorLog.toByteArray().length:" + sensorLog.toByteArray().length);
+        // System.out.println("-------------------sensorLog.toByteArray().length:" + sensorLog.toByteArray().length);//
+        // 500
         // System.out.println("-------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
+        // System.out.println("-------------------skyeyeWebFlowLogStr.getBytes().length:" +
+        // skyeyeWebFlowLogStr.getBytes().length);// 717
         // } catch (InvalidProtocolBufferException e) {
         // e.printStackTrace();
         // }
@@ -162,9 +185,18 @@ public class KafkaProducerTask extends Thread {
 
         @Override
         public void run() {
+            KafkaConsumerThenCompressTest consumerTest = new KafkaConsumerThenCompressTest("ty_tcpflow");
+            byte[] sourceData = consumerTest.getByteArray(1000);
+            KafkaProducerTask.pbBytes = SnappyCompress.compress(sourceData);
+            // private static byte[] pbBytes = sourceData;
+            System.out.println("---------------sourceData.length:" + sourceData.length
+                    + ", pbBytes.length: " + pbBytes.length);
+
             try {
                 int threadCount = 10;
-                long totalCount = 100000000;// 1000 0000
+                // long totalCount = 100000000;// 1000 0000
+                // long totalCount = 5000000;// 10000 0000 / 2000 = 500000
+                long totalCount = 100000;// 10000 0000 / 1000 = 100000
                 CountDownLatch allDone = new CountDownLatch(threadCount);
                 long begin = System.currentTimeMillis();
 
@@ -172,7 +204,14 @@ public class KafkaProducerTask extends Thread {
                 for (int i = 0; i < threadCount; i++) {
                     // ty_dns ty_dns_inputtest
                     // fixedThreadPool.execute(new KafkaProducerTask("ty_dns_inputtest", totalCount, allDone));
-                    fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest", totalCount, allDone));
+                    // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest100", totalCount, allDone));
+                    // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy",
+                    // totalCount,allDone));
+                    fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy_random1000",
+                            totalCount, allDone));
+
+                    // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy_config_random1000",
+                    // totalCount, allDone));
                 }
 
                 allDone.await();
@@ -187,7 +226,6 @@ public class KafkaProducerTask extends Thread {
                 e.printStackTrace();
             }
         }
-
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -201,3 +239,4 @@ public class KafkaProducerTask extends Thread {
 // load done, use time: 261105ms ty_tcpflow_inputtest 500B 1亿 batch.size 16384
 // load done, use time: 258126ms ty_tcpflow_inputtest 500B 1亿 batch.size 16384
 // load done, use time: 117980ms ty_tcpflow_inputtest 500B 1千万 batch.size 1
+

@@ -1,5 +1,5 @@
 
-package soc.storm.situation.monitor;
+package soc.storm.situation.monitor.extend;
 
 import java.util.Map;
 
@@ -27,7 +27,7 @@ public class KafkaConsumerSpout extends BaseRichSpout {
     private SpoutOutputCollector collector;
     private final String topic;
 
-    private transient KafkaConsumerTask consumer;
+    // private transient KafkaConsumerTask consumer;
     // private HashMap<String, byte[]> waitAck = new HashMap<String, byte[]>();
 
     private KafkaConsumerManager kafkaConsumerManager;
@@ -53,7 +53,7 @@ public class KafkaConsumerSpout extends BaseRichSpout {
     @Override
     public void close() {
         //
-        consumer.closeKafkaConsumerTask();
+        // consumer.closeKafkaConsumerTask();
     }
 
     @Override

@@ -1,7 +1,9 @@
 
 package soc.storm.situation.test;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
+
+// import org.apache.commons.codec.digest.DigestUtils;
 
 public class CommonTest {
 

@@ -32,6 +32,14 @@ public class SystemConstants extends ConfigurableContants {
     public static final String KAFKA_SPOUT_THREADS = getProperty("kafka_spout_threads", "5");
     public static final String ENRICHMENT_BOLT_THREADS = getProperty("enrichment_bolt_threads", "2");
     public static final String KAFKA_BOLT_THREADS = getProperty("kafka_bolt_threads", "5");
+    // TODO:
+    public static final String ENRICHMENT_TASK_THREAD_TIMES = getProperty("enrichment_task_thread_times", "10");
+    public static final String KAFKAP_RODUCER_TASK_THREAD_TIMES = getProperty("kafka_producer_task_thread_times", "10");
+
+    //
+    public static final String TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE = getProperty("topology_executor_receive_buffer_size", "1024");
+    public static final String TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE = getProperty("topology_executor_send_buffer_size", "1024");
+    public static final String TOPOLOGY_TRANSFER_BUFFER_SIZE = getProperty("kafka_producer_task_thread_times", "1024");
 
     public static final String TOPOLOGY_DEBUG = getProperty("debug", "true");
 
