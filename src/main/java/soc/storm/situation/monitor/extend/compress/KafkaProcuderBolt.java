@@ -19,7 +19,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import soc.storm.situation.compress.SnappyCompress;
 import soc.storm.situation.contants.SystemConstants;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -137,9 +136,9 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             // skyeyeWebFlowLogMapList.size());
 
             long compressBegin = System.currentTimeMillis();
-            // byte[] sendData = out.toByteArray();
+            byte[] sendData = out.toByteArray();
             // TODO:
-            byte[] sendData = SnappyCompress.compress(out.toByteArray());
+            // byte[] sendData = SnappyCompress.compress(out.toByteArray());
 
             // System.out.println("----------------------------out.toByteArray().length:" + out.toByteArray().length);
             // byte[] sendData = SnappyCompress.compress001(out.toByteArray());

@@ -1,20 +1,18 @@
 
 package soc.storm.situation.test;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
+import soc.storm.situation.test.compress.KafkaConsumerThenCompressTest;
+
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-
-import soc.storm.situation.compress.SnappyCompress;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
-import soc.storm.situation.test.compress.KafkaConsumerThenCompressTest;
 
 /**
  * 
@@ -187,8 +185,8 @@ public class KafkaProducerTask extends Thread {
         public void run() {
             KafkaConsumerThenCompressTest consumerTest = new KafkaConsumerThenCompressTest("ty_tcpflow");
             byte[] sourceData = consumerTest.getByteArray(1000);
-            KafkaProducerTask.pbBytes = SnappyCompress.compress(sourceData);
-            // private static byte[] pbBytes = sourceData;
+            // KafkaProducerTask.pbBytes = SnappyCompress.compress(sourceData);
+            KafkaProducerTask.pbBytes = sourceData;
             System.out.println("---------------sourceData.length:" + sourceData.length
                     + ", pbBytes.length: " + pbBytes.length);
 

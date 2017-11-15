@@ -100,9 +100,10 @@ public class ExtendIpEnrichmentTopology {
                 conf.setNumWorkers(Integer.parseInt(SystemConstants.TOPOLOGY_WORKER_NUM));
                 conf.setMaxSpoutPending(Integer.parseInt(SystemConstants.MAX_SPOUT_PENDING));
                 conf.setMessageTimeoutSecs(60);// acker failed 超时时间
-                conf.put(Config.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE, SystemConstants.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE);
-                conf.put(Config.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE, SystemConstants.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE);
-                conf.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, SystemConstants.TOPOLOGY_TRANSFER_BUFFER_SIZE);
+                conf.put(Config.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE,
+                    Integer.parseInt(SystemConstants.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE));
+                conf.put(Config.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE, Integer.parseInt(SystemConstants.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE));
+                conf.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, Integer.parseInt(SystemConstants.TOPOLOGY_TRANSFER_BUFFER_SIZE));
                 StormSubmitter.submitTopologyWithProgressBar(TOPOLOGY_NAME, conf, topologyBuilder.createTopology());
             } else {
                 // 建立本地集群,利用LocalCluster,storm在程序启动时会在本地自动建立一个集群,不需要用户自己再搭建,方便本地开发和debug

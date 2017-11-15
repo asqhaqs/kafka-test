@@ -16,7 +16,6 @@ import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import soc.storm.situation.compress.SnappyCompress;
 import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
@@ -84,7 +83,7 @@ public class EnrichmentBolt extends BaseRichBolt {
             long deCompressBegin = System.currentTimeMillis();
 
             // TODO:
-            skyeyeWebFlowLogByteArray = SnappyCompress.deCommpress(skyeyeWebFlowLogByteArray);
+            // skyeyeWebFlowLogByteArray = SnappyCompress.deCommpress(skyeyeWebFlowLogByteArray);
 
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(skyeyeWebFlowLogByteArray);
             ObjectInputStream in = new ObjectInputStream(byteArrayInputStream);
