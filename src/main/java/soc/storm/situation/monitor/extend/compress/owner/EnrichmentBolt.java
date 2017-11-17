@@ -85,7 +85,7 @@ public class EnrichmentBolt extends BaseRichBolt {
             skyeyeWebFlowLogByteArray = SnappyCompress.deCommpress(skyeyeWebFlowLogByteArray);
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(skyeyeWebFlowLogByteArray);
             ObjectInputStream in = new ObjectInputStream(byteArrayInputStream);
-            ArrayList<Object> pbBytesTcpFlowList = (ArrayList<Object>) in.readObject();
+            ArrayList<Object> pbBytesWebFlowLogList = (ArrayList<Object>) in.readObject();
             byteArrayInputStream.close();
             in.close();
             long deCompressEnd = System.currentTimeMillis();
@@ -94,7 +94,7 @@ public class EnrichmentBolt extends BaseRichBolt {
 
             long enrichmentBegin = System.currentTimeMillis();
             List<Map<String, Object>> skyeyeWebFlowLogList = new ArrayList<Map<String, Object>>(100);
-            for (Object skyeyeWebFlowLogByteArrayElement : pbBytesTcpFlowList) {
+            for (Object skyeyeWebFlowLogByteArrayElement : pbBytesWebFlowLogList) {
                 SENSOR_LOG log = SENSOR_LOG.parseFrom((byte[]) skyeyeWebFlowLogByteArrayElement);
                 Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
                 String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);

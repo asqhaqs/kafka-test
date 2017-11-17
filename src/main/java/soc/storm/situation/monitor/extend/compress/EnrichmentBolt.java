@@ -1,8 +1,6 @@
 
 package soc.storm.situation.monitor.extend.compress;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +14,8 @@ import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import soc.storm.situation.coder.WebFlowLogGatherMsgBinCoder;
+import soc.storm.situation.coder.WebFlowLogGatherMsgCoder;
 import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
@@ -84,19 +84,25 @@ public class EnrichmentBolt extends BaseRichBolt {
 
             // TODO:
             // skyeyeWebFlowLogByteArray = SnappyCompress.deCommpress(skyeyeWebFlowLogByteArray);
+            // ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(skyeyeWebFlowLogByteArray);
+            // ObjectInputStream in = new ObjectInputStream(byteArrayInputStream);
+            // ArrayList<Object> pbBytesWebFlowLogList = (ArrayList<Object>) in.readObject();
+            // byteArrayInputStream.close();
+            // in.close();
 
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(skyeyeWebFlowLogByteArray);
-            ObjectInputStream in = new ObjectInputStream(byteArrayInputStream);
-            ArrayList<Object> pbBytesTcpFlowList = (ArrayList<Object>) in.readObject();
-            byteArrayInputStream.close();
-            in.close();
+            // （1） java Serializable
+            // WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgSerializableCoder();
+            // （2）sensor protocol
+            WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgBinCoder();
+            List<Object> pbBytesWebFlowLogList = webFlowLogGatherMsgCoder.fromWire(skyeyeWebFlowLogByteArray);
+
             long deCompressEnd = System.currentTimeMillis();
             // System.out.println("---------------------------EnrichmentBolt, deCompress use time: "
             // + (deCompressEnd - deCompressBegin) + "ms");
 
             long enrichmentBegin = System.currentTimeMillis();
             List<Map<String, Object>> skyeyeWebFlowLogList = new ArrayList<Map<String, Object>>(100);
-            for (Object skyeyeWebFlowLogByteArrayElement : pbBytesTcpFlowList) {
+            for (Object skyeyeWebFlowLogByteArrayElement : pbBytesWebFlowLogList) {
                 SENSOR_LOG log = SENSOR_LOG.parseFrom((byte[]) skyeyeWebFlowLogByteArrayElement);
                 Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
                 String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
