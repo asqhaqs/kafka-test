@@ -72,7 +72,7 @@ public class KafkaProducerTest {
 
         // org.apache.kafka.common.serialization.StringSerializer
 
-        KafkaProducer<String, byte[]> producer = new KafkaProducer<String, byte[]>(kafkaProducerProperties);
+        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(kafkaProducerProperties);
         // String topicProperties = producer.getTopicProperties(topic);
 //        String topicProperties = null;// producer.getTopicProperties(topic);
 //
@@ -128,7 +128,7 @@ public class KafkaProducerTest {
 //            encoder.flush();
             //byte[] sendData = out.toByteArray();
             String sendData= "{\"serial_num\":\"000005\", \"access_time\":\"2017-11-21 14:08:00\", \"sip\":\"192.168.1.1\", \"sport\":\"5502\", \"dip\":\"192.168.10.1\", \"dport\":\"\", \"dns_type\": \"type1\", \"host\": \"www.lenzhao.com\", \"host_md5\": \"fdsfrvgffffddd\", \"addr\": \"beijing\", \"mx\": \"100\", \"cname\": \"lenzhao\", \"reply_code\": \"400\", \"count\": \"10\", \"geo_sip\": {\"gip\": \"192.168.8.8\"}, \"geo_dip\": {\"gip\": \"192.168.8.8\"}}";
-            Future<RecordMetadata> future = producer.send(new ProducerRecord(topic, null, sendData));
+            Future<RecordMetadata> future = producer.send(new ProducerRecord<String, String>(topic, null, sendData));
             try {
                 future.get(4, TimeUnit.SECONDS);
             } catch (TimeoutException e) {
