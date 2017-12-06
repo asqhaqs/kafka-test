@@ -41,6 +41,12 @@ public class SystemConstants extends ConfigurableContants {
     public static final String TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE = getProperty("topology_executor_send_buffer_size", "1024");
     public static final String TOPOLOGY_TRANSFER_BUFFER_SIZE = getProperty("kafka_producer_task_thread_times", "1024");
 
+    // ElasticSearch
+    public static final String ES_IP_ADDRESS = getProperty("es_ip_address", "10.187.101.154");
+    public static final String ES_TCP_PORT = getProperty("es_tcp_port", "9300");
+    public static final String ES_HTTP_PORT = getProperty("es_http_port", "9200");
+    public static final String ES_CLUSTER_NAME = getProperty("es_cluster_name", "es");
+
     public static final String TOPOLOGY_DEBUG = getProperty("debug", "true");
 
     // zookeeper_hosts=172.24.2.155:2181,172.24.2.156:2181,172.24.2.157:2181

@@ -1,26 +1,6 @@
 
 package soc.storm.situation.monitor.extend.compress;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.commons.lang.StringUtils;
-// import org.apache.commons.codec.digest.DigestUtils;import org.apache.commons.lang.StringUtils;
-import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import soc.storm.situation.coder.WebFlowLogGatherMsgBinCoder;
-import soc.storm.situation.coder.WebFlowLogGatherMsgCoder;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-import soc.storm.situation.utils.Geoip;
-import soc.storm.situation.utils.Geoip.Result;
-import soc.storm.situation.utils.JsonUtils;
-import soc.storm.situation.utils.TopicMethodUtil;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -28,9 +8,29 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
-
 import com.google.protobuf.Message;
 import com.googlecode.protobuf.format.JsonFormat;
+import org.apache.commons.lang.StringUtils;
+import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import soc.storm.situation.coder.WebFlowLogGatherMsgBinCoder;
+import soc.storm.situation.coder.WebFlowLogGatherMsgCoder;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.utils.DateTimeUtils;
+import soc.storm.situation.utils.Geoip;
+import soc.storm.situation.utils.Geoip.Result;
+import soc.storm.situation.utils.JsonUtils;
+import soc.storm.situation.utils.TopicMethodUtil;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+// import org.apache.commons.codec.digest.DigestUtils;import org.apache.commons.lang.StringUtils;
 
 /**
  * @author zhongsanmu
@@ -49,6 +49,13 @@ public class EnrichmentBolt extends BaseRichBolt {
     private String topicMethod;// = "getSkyeyeTcpflow";
     private Method getSkyeyeWebFlowLogObjectMethod;
     private final static Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
+    //
+    // （1） java Serializable
+    // private final static WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new
+    // WebFlowLogGatherMsgSerializableCoder();
+
+    // （2）sensor protocol
+    private final static WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgBinCoder();
 
     public EnrichmentBolt(String topicNameInput) {
         topicMethod = TopicMethodUtil.getTopicMethod(topicNameInput);
@@ -90,10 +97,6 @@ public class EnrichmentBolt extends BaseRichBolt {
             // byteArrayInputStream.close();
             // in.close();
 
-            // （1） java Serializable
-            // WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgSerializableCoder();
-            // （2）sensor protocol
-            WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgBinCoder();
             List<Object> pbBytesWebFlowLogList = webFlowLogGatherMsgCoder.fromWire(skyeyeWebFlowLogByteArray);
 
             long deCompressEnd = System.currentTimeMillis();
@@ -122,6 +125,16 @@ public class EnrichmentBolt extends BaseRichBolt {
 
                         // （2）富化md5--薛杰：md5应该只涉及dns和weblog add zhongsanmu 20171031
                         enrichmentMd5(this.topicMethod, skyeyeWebFlowLog);
+
+                        // （3）添加found_time字段--格式：yyyy-MM-dd HH:mm:ss.SSS add zhongsanmu 20171127
+                        // skyeyeWebFlowLog.put("found_time", DateTimeUtils.formatNowTime());
+                        skyeyeWebFlowLog.put("found_time", Long.valueOf(System.currentTimeMillis()));
+
+                        // （4）分区字段 partition_time，小时 add zhongsanmu 20171127
+                        skyeyeWebFlowLog.put("partition_time", DateTimeUtils.formatNowHourTime());
+
+                        // （5）数据类型转换，eg:int conver to long add zhongsanmu 20171127
+                        enrichmentConvertDataType(this.topicMethod, skyeyeWebFlowLog);
 
                         // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLog));
                         // System.out.println("skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
@@ -230,6 +243,29 @@ public class EnrichmentBolt extends BaseRichBolt {
             Object hostWebLog = skyeyeWebFlowLog.get("host");
             String hostWebLogStr = (null != hostWebLog) ? hostWebLog.toString() : "";
             skyeyeWebFlowLog.put("host_md5", DigestUtils.md5Hex(hostWebLogStr).toLowerCase());
+            break;
+        default:
+            break;
+        }
+    }
+
+    /**
+     * 转化数据类型
+     * 
+     * @param topicMethod
+     * @param skyeyeWebFlowLog
+     */
+    private void enrichmentConvertDataType(String topicMethod, Map<String, Object> skyeyeWebFlowLog) {
+        switch (topicMethod) {
+        case "getSkyeyeTcpflow":
+        case "getSkyeyeUdpflow":
+            // uplink_length
+            Object uplinkLengthWebLog = skyeyeWebFlowLog.get("uplink_length");
+            skyeyeWebFlowLog.put("uplink_length", Long.parseLong(uplinkLengthWebLog.toString()));
+
+            // downlink_length
+            Object downlinkLengthWebLog = skyeyeWebFlowLog.get("downlink_length");
+            skyeyeWebFlowLog.put("downlink_length", Long.parseLong(downlinkLengthWebLog.toString()));
             break;
         default:
             break;

@@ -1,12 +1,11 @@
 
 package soc.storm.situation.monitor.extend.compress;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Tuple;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -18,13 +17,14 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import soc.storm.situation.contants.SystemConstants;
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Tuple;
+import soc.storm.situation.utils.JsonUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * KafkaProcuderBolt
@@ -60,7 +60,7 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             kafkaProducerProperties.put("linger.ms", 1);
             kafkaProducerProperties.put("buffer.memory", 33554432);
             kafkaProducerProperties.put("acks", "0");
-            kafkaProducerProperties.put("compression.type", "snappy");// #消息压缩模式，默认是none，可选gzip、snappy。
+            kafkaProducerProperties.put("compression.type", "snappy");// #消息压缩模式，默认是none，可选gzip、snappy、lz4。
             kafkaProducerProperties.put("topic.properties.fetch.enable", "true");
 
             producer = new KafkaProducer<String, byte[]>(kafkaProducerProperties);
@@ -103,8 +103,8 @@ public class KafkaProcuderBolt extends BaseRichBolt {
                 // Schema topicSchema =
                 // parser.parse(KafkaProcuderBolt.class.getResourceAsStream("/avro/tcp_flowaa.avsc"));
 
-                // System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " +
-                // JsonUtils.mapToJson(skyeyeWebFlowLogMap));
+                System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " +
+                        JsonUtils.mapToJson(skyeyeWebFlowLogMap));
 
                 Schema topicSchema = new Schema.Parser().parse(topicProperties);
                 DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(topicSchema);

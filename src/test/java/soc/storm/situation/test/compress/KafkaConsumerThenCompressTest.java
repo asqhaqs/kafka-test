@@ -13,6 +13,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
+import soc.storm.situation.coder.WebFlowLogGatherMsgBinCoder;
+import soc.storm.situation.coder.WebFlowLogGatherMsgCoder;
 import soc.storm.situation.compress.Bzip2Compress;
 import soc.storm.situation.compress.GzipCompress;
 import soc.storm.situation.compress.Lz4Compress;
@@ -33,7 +35,8 @@ public class KafkaConsumerThenCompressTest extends Thread {
         Properties properties = new Properties();
         properties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
         // properties.put("group.id", SystemConstants.TOPOLOGY_NAME);
-        properties.put("group.id", "zhongsanmu1119009");
+        // properties.put("group.id", "zhongsanmu1119009");
+        properties.put("group.id", "zhongsanmu1119009001");
         properties.put("enable.auto.commit", "false");
         properties.put("auto.commit.interval.ms", "1000");
         // properties.put("auto.offset.reset", "earliest");// String must be one of: latest, earliest, none
@@ -71,18 +74,35 @@ public class KafkaConsumerThenCompressTest extends Thread {
                 // consumerRecord.key(),
                 // consumerRecord.value()));
 
-                sumCount++;
-                //
+                // //
                 // byte[] consumerRecordValue = getByteArray(consumerRecord.value());
-                // System.out.println("--------------consumerRecordValue.length:" + consumerRecord.value().length);
+                // System.out.println("--------------consumerRecordValue:" + consumerRecordValue.length);
                 //
 
-                pbBytesTcpFlowList.add(consumerRecord.value());
+                // （2）sensor protocol--add zhongsanmu 20171130
+                byte[] skyeyeWebFlowLogByteArray = (byte[]) consumerRecord.value();
+                WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgBinCoder();
+                List<Object> pbBytesWebFlowLogList = webFlowLogGatherMsgCoder.fromWire(skyeyeWebFlowLogByteArray);
+                for (Object object : pbBytesWebFlowLogList) {
+                    sumCount++;
+                    pbBytesTcpFlowList.add(consumerRecord.value());
 
-                if (tupleTotalCount < sumCount) {
-                    isFinish = true;
+                    if (tupleTotalCount < sumCount) {
+                        isFinish = true;
+                        break;
+                    }
+                }
+                if (true == isFinish) {
                     break;
                 }
+
+                // sumCount++;
+                // pbBytesTcpFlowList.add(consumerRecord.value());
+                //
+                // if (tupleTotalCount < sumCount) {
+                // isFinish = true;
+                // break;
+                // }
             }
 
             if (true == isFinish) {

@@ -195,6 +195,9 @@ public class KafkaProducerTask extends Thread {
                 // long totalCount = 100000000;// 1000 0000
                 // long totalCount = 5000000;// 10000 0000 / 2000 = 500000
                 long totalCount = 100000;// 10000 0000 / 1000 = 100000
+                // long totalCount = 90000;// 45W/S
+                // long totalCount = 96000;// 48W/S
+                // long totalCount = 98000;// 49W/S
                 CountDownLatch allDone = new CountDownLatch(threadCount);
                 long begin = System.currentTimeMillis();
 
@@ -205,7 +208,7 @@ public class KafkaProducerTask extends Thread {
                     // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest100", totalCount, allDone));
                     // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy",
                     // totalCount,allDone));
-                    fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy_random1000",
+                    fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy_config_random1000_all",
                             totalCount, allDone));
 
                     // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy_config_random1000",
