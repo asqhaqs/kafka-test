@@ -11,7 +11,8 @@ public class CommonTest {
 
     public static void main(String[] args) {
         // md5Test();
-        dateTimeFormat();
+        // dateTimeFormat();
+        strToByteArray();
     }
 
     public static void md5Test() {
@@ -21,6 +22,15 @@ public class CommonTest {
 
     public static void dateTimeFormat() {
         System.out.println("dateString:" + DateTimeUtils.formatNowTime());
+    }
+
+    public static void strToByteArray() {
+        String dataSourceStr = "aabbcc";
+        byte[] dataSourceStrByteArray = dataSourceStr.getBytes();
+        for (byte b : dataSourceStrByteArray) {
+            System.out.print((char) b);
+        }
+        System.out.println();
     }
 
 }

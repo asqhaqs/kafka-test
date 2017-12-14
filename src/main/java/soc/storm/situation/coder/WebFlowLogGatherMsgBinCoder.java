@@ -68,6 +68,7 @@ public class WebFlowLogGatherMsgBinCoder implements WebFlowLogGatherMsgCoder {
                 return null;
             }
             int count = byte2Int(countBytes);
+            // System.out.println("------------------------------count:" + count);
 
             //
             skyeyeWebFlowLogList = new ArrayList<Object>(count);
@@ -81,6 +82,7 @@ public class WebFlowLogGatherMsgBinCoder implements WebFlowLogGatherMsgCoder {
                     return null;
                 }
                 int len = byte2Int(lenBytes);
+                // System.out.println("------------------------------i:" + i + ",len:" + len);
 
                 // （2-1）获取data，日志数据，长度与由len0指定。
                 byte[] dataBytes = new byte[len];

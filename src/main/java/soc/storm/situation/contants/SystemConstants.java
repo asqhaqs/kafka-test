@@ -49,6 +49,9 @@ public class SystemConstants extends ConfigurableContants {
 
     public static final String TOPOLOGY_DEBUG = getProperty("debug", "true");
 
+    // encrypt
+    public static final String WEBFLOW_LOG_ENCRYPT = getProperty("encrypt", "false");
+
     // zookeeper_hosts=172.24.2.155:2181,172.24.2.156:2181,172.24.2.157:2181
     //
     // broker_url=172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092

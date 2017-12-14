@@ -55,7 +55,7 @@ public class KafkaConsumerManager {
         logger.info("init createConsumerConfig");
         Properties properties = new Properties();
         properties.put("bootstrap.servers", SystemConstants.BROKER_URL);
-        properties.put("group.id", SystemConstants.TOPOLOGY_NAME + "1164");
+        properties.put("group.id", SystemConstants.TOPOLOGY_NAME + "1167");
         properties.put("enable.auto.commit", "false");
         // properties.put("enable.auto.commit", "true");
         properties.put("auto.commit.interval.ms", "1000");

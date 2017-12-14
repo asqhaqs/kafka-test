@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import soc.storm.situation.coder.WebFlowLogGatherMsgBinCoder;
 import soc.storm.situation.coder.WebFlowLogGatherMsgCoder;
+import soc.storm.situation.contants.SystemConstants;
+import soc.storm.situation.encrypt.AESUtil;
 import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 import soc.storm.situation.utils.DateTimeUtils;
 import soc.storm.situation.utils.Geoip;
@@ -49,6 +51,15 @@ public class EnrichmentBolt extends BaseRichBolt {
     private String topicMethod;// = "getSkyeyeTcpflow";
     private Method getSkyeyeWebFlowLogObjectMethod;
     private final static Class<?> skyeyeWebFlowLogClass = SENSOR_LOG.class;
+
+    // 加密解密
+    private final static boolean isWebflowLogEncrypt = (SystemConstants.WEBFLOW_LOG_ENCRYPT.equals("true")) ? true : false;
+    private final static AESUtil aESUtil = new AESUtil();
+    static {
+        aESUtil.init_aes(SystemConstants.FILE_PATH + "/decrypt.conf");
+    }
+    byte[] skyeyeWebFlowLogByteArrayElementBytesDest = new byte[10000];
+
     //
     // （1） java Serializable
     // private final static WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new
@@ -71,6 +82,12 @@ public class EnrichmentBolt extends BaseRichBolt {
         } catch (Exception e) {
             logger.error("getSkyeyeWebFlowLogObjectMethod [{}] error", topicMethod, e);
         }
+    }
+
+    public static byte[] subBytes(byte[] src, int begin, int count) {
+        byte[] bs = new byte[count];
+        System.arraycopy(src, begin, bs, 0, count);
+        return bs;
     }
 
     @Override
@@ -106,11 +123,26 @@ public class EnrichmentBolt extends BaseRichBolt {
             long enrichmentBegin = System.currentTimeMillis();
             List<Map<String, Object>> skyeyeWebFlowLogList = new ArrayList<Map<String, Object>>(100);
             for (Object skyeyeWebFlowLogByteArrayElement : pbBytesWebFlowLogList) {
-                SENSOR_LOG log = SENSOR_LOG.parseFrom((byte[]) skyeyeWebFlowLogByteArrayElement);
+                byte[] skyeyeWebFlowLogByteArrayElementBytes = (byte[]) skyeyeWebFlowLogByteArrayElement;
+
+                // 加密解密 add zhongsanmu 20171213
+                if (isWebflowLogEncrypt) {
+                    int decryptBytesLength = aESUtil.decrypt(skyeyeWebFlowLogByteArrayElementBytes,
+                        skyeyeWebFlowLogByteArrayElementBytes.length,
+                        skyeyeWebFlowLogByteArrayElementBytesDest);
+
+                    if (decryptBytesLength < 0) {
+                        throw new RuntimeException("AES decrpty error");
+                    }
+
+                    skyeyeWebFlowLogByteArrayElementBytes = subBytes(skyeyeWebFlowLogByteArrayElementBytesDest, 0, decryptBytesLength);
+                }
+
+                SENSOR_LOG log = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArrayElementBytes);
                 Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
                 String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
 
-                // System.out.println("-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
+                System.out.println("-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
 
                 // 查找ip相关的信息
                 if (StringUtils.isNotBlank(skyeyeWebFlowLogStr)) {
