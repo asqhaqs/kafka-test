@@ -1,19 +1,18 @@
 
 package soc.storm.situation.monitor.extend.compress;
 
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Fields;
-import backtype.storm.tuple.Tuple;
-import backtype.storm.tuple.Values;
-import com.google.protobuf.Message;
-import com.googlecode.protobuf.format.JsonFormat;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import soc.storm.situation.coder.WebFlowLogGatherMsgBinCoder;
 import soc.storm.situation.coder.WebFlowLogGatherMsgCoder;
 import soc.storm.situation.contants.SystemConstants;
@@ -24,13 +23,16 @@ import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
 import soc.storm.situation.utils.JsonUtils;
 import soc.storm.situation.utils.TopicMethodUtil;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+import com.google.protobuf.Message;
+import com.googlecode.protobuf.format.JsonFormat;
 
 // import org.apache.commons.codec.digest.DigestUtils;import org.apache.commons.lang.StringUtils;
 
@@ -54,9 +56,12 @@ public class EnrichmentBolt extends BaseRichBolt {
 
     // 加密解密
     private final static boolean isWebflowLogEncrypt = (SystemConstants.WEBFLOW_LOG_ENCRYPT.equals("true")) ? true : false;
-    private final static AESUtil aESUtil = new AESUtil();
+    private static AESUtil aESUtil = null;
     static {
-        aESUtil.init_aes(SystemConstants.FILE_PATH + "/decrypt.conf");
+        if (isWebflowLogEncrypt) {
+            aESUtil = new AESUtil();
+            aESUtil.init_aes(SystemConstants.FILE_PATH + "/decrypt.conf");
+        }
     }
     byte[] skyeyeWebFlowLogByteArrayElementBytesDest = new byte[10000];
 
@@ -142,7 +147,7 @@ public class EnrichmentBolt extends BaseRichBolt {
                 Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
                 String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
 
-                System.out.println("-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
+                // System.out.println("-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
 
                 // 查找ip相关的信息
                 if (StringUtils.isNotBlank(skyeyeWebFlowLogStr)) {

@@ -47,10 +47,14 @@ public class SystemConstants extends ConfigurableContants {
     public static final String ES_HTTP_PORT = getProperty("es_http_port", "9200");
     public static final String ES_CLUSTER_NAME = getProperty("es_cluster_name", "es");
 
+    // debug
     public static final String TOPOLOGY_DEBUG = getProperty("debug", "true");
 
     // encrypt
     public static final String WEBFLOW_LOG_ENCRYPT = getProperty("encrypt", "false");
+
+    // nest record: Record--Array--Record
+    public static final String RECORD_ARRAY_RECORD = getProperty("record_array_record", "skyeye_ssl:cert,skyeye_mail:attachment");
 
     // zookeeper_hosts=172.24.2.155:2181,172.24.2.156:2181,172.24.2.157:2181
     //

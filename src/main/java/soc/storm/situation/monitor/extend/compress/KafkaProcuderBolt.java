@@ -1,12 +1,16 @@
 
 package soc.storm.situation.monitor.extend.compress;
 
-import backtype.storm.task.OutputCollector;
-import backtype.storm.task.TopologyContext;
-import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Tuple;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
@@ -17,13 +21,13 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import soc.storm.situation.contants.SystemConstants;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import soc.storm.situation.contants.SystemConstants;
+import backtype.storm.task.OutputCollector;
+import backtype.storm.task.TopologyContext;
+import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.topology.base.BaseRichBolt;
+import backtype.storm.tuple.Tuple;
 
 /**
  * KafkaProcuderBolt
@@ -44,10 +48,25 @@ public class KafkaProcuderBolt extends BaseRichBolt {
     private String topic;// = "ty_tcpflow_output";
 
     private String topicProperties;// = producer.getTopicProperties(topic);
+
+    // avro schema: record 嵌套 record
+    private static Map<String, String> recordArrayRecordTopicMap = new HashMap<String, String>();
+    private static Map<String, String> recordArrayRecordMap = new HashMap<String, String>();
+    private boolean isRecordArrayRecordTopic;
+
     // private OutputCollector outputCollector;
     private static KafkaProducer<String, byte[]> producer = null;
 
     static {
+        // （1）初始化 recordArrayRecordMap
+        String[] recordArrayRecordArray = SystemConstants.RECORD_ARRAY_RECORD.split(",");
+        for (String recordArrayRecordStr : recordArrayRecordArray) {
+            String[] recordArrayRecordSubArray = recordArrayRecordStr.split(":");
+            recordArrayRecordTopicMap.put(recordArrayRecordSubArray[0], null);
+            recordArrayRecordMap.put(recordArrayRecordStr, null);
+        }
+
+        // （2）初始化 KafkaProducer
         try {
             logger.info("init kafkaProducerProperties");
 
@@ -66,10 +85,13 @@ public class KafkaProcuderBolt extends BaseRichBolt {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     public KafkaProcuderBolt(String topicNameOutput) {
         topic = topicNameOutput;
+        //
+        isRecordArrayRecordTopic = recordArrayRecordTopicMap.containsKey(topic);
         topicProperties = producer.getTopicProperties(topic);
         // topicProperties =
         // "{\"name\":\"ty_dns\",\"namespace\":\"enrichment_ip\",\"type\":\"record\",\"fields\":[{\"name\":\"serial_num\",\"type\":[\"string\",\"null\"]},{\"name\":\"access_time\",\"type\":[\"string\",\"null\"]},{\"name\":\"sip\",\"type\":[\"string\",\"null\"]},{\"name\":\"sport\",\"type\":[\"string\",\"null\"]},{\"name\":\"dip\",\"type\":[\"string\",\"null\"]},{\"name\":\"dport\",\"type\":[\"string\",\"null\"]},{\"name\":\"dns_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"host\",\"type\":[\"string\",\"null\"]},{\"name\":\"host_md5\",\"type\":[\"string\",\"null\"]},{\"name\":\"addr\",\"type\":[\"string\",\"null\"]},{\"name\":\"mx\",\"type\":[\"string\",\"null\"]},{\"name\":\"cname\",\"type\":[\"string\",\"null\"]},{\"name\":\"reply_code\",\"type\":[\"string\",\"null\"]},{\"name\":\"count\",\"type\":[\"string\",\"null\"]},{\"name\":\"geo_sip\",\"type\":[{\"type\":\"map\",\"values\":\"string\"},\"null\"]},{\"name\":\"geo_dip\",\"type\":[{\"type\":\"map\",\"values\":\"string\"},\"null\"]}]}";
@@ -111,7 +133,29 @@ public class KafkaProcuderBolt extends BaseRichBolt {
                 if (null != skyeyeWebFlowLogMap && 0 != skyeyeWebFlowLogMap.size()) {
                     GenericRecord record = new GenericData.Record(topicSchema);
                     for (Map.Entry<String, Object> entry : skyeyeWebFlowLogMap.entrySet()) {
-                        record.put(entry.getKey(), entry.getValue());
+                        // record.put(entry.getKey(), entry.getValue());
+
+                        if (isRecordArrayRecordTopic && recordArrayRecordMap.containsKey(topic + ":" + entry.getKey())) {
+                            Schema subSchemaElementType = null;
+                            List<GenericRecord> subRecordArray = new ArrayList<GenericRecord>();
+
+                            List<Map<String, Object>> subRecordMapList = (List<Map<String, Object>>) entry.getValue();
+                            if (subRecordMapList != null && subRecordMapList.size() > 0) {
+                                subSchemaElementType = KafkaProcuderBolt.getSubSchemaElementType(topicSchema, entry.getKey());
+                            }
+                            for (Map<String, Object> subRecordMap : subRecordMapList) {
+                                GenericRecord subRecord = new GenericData.Record(subSchemaElementType);
+                                for (Map.Entry<String, Object> subRecordEntry : subRecordMap.entrySet()) {
+                                    subRecord.put(subRecordEntry.getKey(), subRecordEntry.getValue());
+                                }
+
+                                subRecordArray.add(subRecord);
+                            }
+
+                            record.put("cert", subRecordArray);
+                        } else {
+                            record.put(entry.getKey(), entry.getValue());
+                        }
                     }
                     datumWriter.write(record, encoder);
                 }
@@ -179,4 +223,20 @@ public class KafkaProcuderBolt extends BaseRichBolt {
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
     }
 
+    /**
+     * 
+     * @param topicSchema
+     * @return
+     */
+    public static Schema getSubSchemaElementType(Schema topicSchema, String subName) {
+        Schema subSchema = null;
+        Schema.Field subField = topicSchema.getField("cert");
+        List<Schema> schemaList = subField.schema().getTypes();
+        for (Schema schema : schemaList) {
+            if (schema.getType().equals(Type.ARRAY)) {
+                subSchema = schema;
+            }
+        }
+        return subSchema.getElementType();
+    }
 }
