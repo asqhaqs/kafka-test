@@ -11,8 +11,8 @@ public class CommonTest {
 
     public static void main(String[] args) {
         // md5Test();
-        // dateTimeFormat();
-        strToByteArray();
+        dateTimeFormat();
+        // strToByteArray();
     }
 
     public static void md5Test() {
@@ -21,7 +21,10 @@ public class CommonTest {
     }
 
     public static void dateTimeFormat() {
-        System.out.println("dateString:" + DateTimeUtils.formatNowTime());
+        System.out.println("DateTimeUtils.formatNowTime():" + DateTimeUtils.formatNowTime());
+        System.out.println("DateTimeUtils.formatNowMonthTime():" + DateTimeUtils.formatNowMonthTime());
+        System.out.println("DateTimeUtils.formatNowDayTime():" + DateTimeUtils.formatNowDayTime());
+        System.out.println("DateTimeUtils.formatNowHourTime():" + DateTimeUtils.formatNowHourTime());
     }
 
     public static void strToByteArray() {

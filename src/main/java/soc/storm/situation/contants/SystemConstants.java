@@ -56,6 +56,9 @@ public class SystemConstants extends ConfigurableContants {
     // nest record: Record--Array--Record
     public static final String RECORD_ARRAY_RECORD = getProperty("record_array_record", "skyeye_ssl:cert,skyeye_mail:attachment");
 
+    // Hive partition_time_type: 0:month 1:day 2:hour
+    public static final String HIVE_PARTITION_TIME_TYPE = getProperty("hive_partition_time_type", "1");
+
     // zookeeper_hosts=172.24.2.155:2181,172.24.2.156:2181,172.24.2.157:2181
     //
     // broker_url=172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092

@@ -2,7 +2,6 @@
 package soc.storm.situation.monitor.extend.compress;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import soc.storm.situation.contants.SystemConstants;
+import soc.storm.situation.utils.JsonUtils;
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -118,46 +118,55 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
 
             for (Map<String, Object> skyeyeWebFlowLogMap : skyeyeWebFlowLogMapList) {
-                // String topicProperties = producer.getTopicProperties(topic);
-
-                // Schema.Parser parser = new Schema.Parser();
-                // Schema topicSchema =
-                // parser.parse(KafkaProcuderBolt.class.getResourceAsStream("/avro/tcp_flowaa.avsc"));
-
-                // System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " +
-                // JsonUtils.mapToJson(skyeyeWebFlowLogMap));
-
-                Schema topicSchema = new Schema.Parser().parse(topicProperties);
-                DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(topicSchema);
-
+                //
                 if (null != skyeyeWebFlowLogMap && 0 != skyeyeWebFlowLogMap.size()) {
+                    // String topicProperties = producer.getTopicProperties(topic);
+
+                    // Schema.Parser parser = new Schema.Parser();
+                    // Schema topicSchema =
+                    // parser.parse(KafkaProcuderBolt.class.getResourceAsStream("/avro/tcp_flowaa.avsc"));
+
+                    // System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " +
+                    // JsonUtils.mapToJson(skyeyeWebFlowLogMap));
+
+                    Schema topicSchema = new Schema.Parser().parse(topicProperties);
+                    DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(topicSchema);
+
                     GenericRecord record = new GenericData.Record(topicSchema);
-                    for (Map.Entry<String, Object> entry : skyeyeWebFlowLogMap.entrySet()) {
-                        // record.put(entry.getKey(), entry.getValue());
 
-                        if (isRecordArrayRecordTopic && recordArrayRecordMap.containsKey(topic + ":" + entry.getKey())) {
-                            Schema subSchemaElementType = null;
-                            List<GenericRecord> subRecordArray = new ArrayList<GenericRecord>();
+                    try {
+                        for (Map.Entry<String, Object> entry : skyeyeWebFlowLogMap.entrySet()) {
+                            // record.put(entry.getKey(), entry.getValue());
 
-                            List<Map<String, Object>> subRecordMapList = (List<Map<String, Object>>) entry.getValue();
-                            if (subRecordMapList != null && subRecordMapList.size() > 0) {
-                                subSchemaElementType = KafkaProcuderBolt.getSubSchemaElementType(topicSchema, entry.getKey());
-                            }
-                            for (Map<String, Object> subRecordMap : subRecordMapList) {
-                                GenericRecord subRecord = new GenericData.Record(subSchemaElementType);
-                                for (Map.Entry<String, Object> subRecordEntry : subRecordMap.entrySet()) {
-                                    subRecord.put(subRecordEntry.getKey(), subRecordEntry.getValue());
+                            if (isRecordArrayRecordTopic && recordArrayRecordMap.containsKey(topic + ":" + entry.getKey())) {
+                                Schema subSchemaElementType = null;
+                                List<GenericRecord> subRecordArray = new ArrayList<GenericRecord>();
+
+                                List<Map<String, Object>> subRecordMapList = (List<Map<String, Object>>) entry.getValue();
+                                if (subRecordMapList != null && subRecordMapList.size() > 0) {
+                                    subSchemaElementType = KafkaProcuderBolt.getSubSchemaElementType(topicSchema, entry.getKey());
+                                }
+                                for (Map<String, Object> subRecordMap : subRecordMapList) {
+                                    GenericRecord subRecord = new GenericData.Record(subSchemaElementType);
+                                    for (Map.Entry<String, Object> subRecordEntry : subRecordMap.entrySet()) {
+                                        subRecord.put(subRecordEntry.getKey(), subRecordEntry.getValue());
+                                    }
+
+                                    subRecordArray.add(subRecord);
                                 }
 
-                                subRecordArray.add(subRecord);
+                                record.put(entry.getKey(), subRecordArray);
+                            } else {
+                                record.put(entry.getKey(), entry.getValue());
                             }
-
-                            record.put("cert", subRecordArray);
-                        } else {
-                            record.put(entry.getKey(), entry.getValue());
                         }
+
+                        datumWriter.write(record, encoder);
+                    } catch (Exception e) {
+                        // e.printStackTrace();
+                        System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " + JsonUtils
+                                .mapToJson(skyeyeWebFlowLogMap) + ",  " + e.getMessage());
                     }
-                    datumWriter.write(record, encoder);
                 }
             }
 
@@ -205,13 +214,12 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             // ------------KafkaProcuderBolt---topic:ty_tcpflow_outputtest1--------sendData.length:94412
 
             long end = System.currentTimeMillis();
-            System.out
-                    .println("#################################################################################KafkaProcuderBolt, use time: "
-                            + (end - begin) + "ms");
-        } catch (IOException e) {
-            e.printStackTrace();
+            // System.out
+            // .println("#################################################################################KafkaProcuderBolt, use time: "
+            // + (end - begin) + "ms");
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.print("topic:" + topic + "," + e.getMessage());
         }
 
         // delete zhongsanmu 20171031
@@ -230,7 +238,7 @@ public class KafkaProcuderBolt extends BaseRichBolt {
      */
     public static Schema getSubSchemaElementType(Schema topicSchema, String subName) {
         Schema subSchema = null;
-        Schema.Field subField = topicSchema.getField("cert");
+        Schema.Field subField = topicSchema.getField(subName);
         List<Schema> schemaList = subField.schema().getTypes();
         for (Schema schema : schemaList) {
             if (schema.getType().equals(Type.ARRAY)) {

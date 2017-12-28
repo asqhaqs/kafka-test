@@ -1,9 +1,13 @@
 
 package soc.storm.situation.utils;
 
-import com.alibaba.fastjson.JSON;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.util.*;
+import com.alibaba.fastjson.JSON;
 
 /**
  * 描述：json工具类
@@ -49,7 +53,14 @@ public class JsonUtils {
         try {
             return JSON.parseObject(json, Map.class);
         } catch (Exception e) {
+            // System.out.println("------------------------skyeyeWebFlowLogStr:" + json);
             e.printStackTrace();
+            // //
+            // // Gson gson = new Gson();
+            // JsonParser parser = new JsonParser();
+            // JsonElement jsonElement = parser.parse(json);
+            // // System.out.println("------------------------skyeyeWebFlowLogStr:" + json + ", jsonElement:" +
+            // // jsonElement);
         }
         return null;
     }

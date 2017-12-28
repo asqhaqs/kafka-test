@@ -3,6 +3,8 @@ package soc.storm.situation.monitor.extend.compress;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+// import org.apache.commons.codec.digest.DigestUtils;import org.apache.commons.lang.StringUtils;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,7 @@ import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
 import soc.storm.situation.utils.DateTimeUtils;
 import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
+import soc.storm.situation.utils.JsonFormatProtocolBuffer;
 import soc.storm.situation.utils.JsonUtils;
 import soc.storm.situation.utils.TopicMethodUtil;
 import backtype.storm.task.OutputCollector;
@@ -32,9 +35,6 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
 import com.google.protobuf.Message;
-import com.googlecode.protobuf.format.JsonFormat;
-
-// import org.apache.commons.codec.digest.DigestUtils;import org.apache.commons.lang.StringUtils;
 
 /**
  * @author zhongsanmu
@@ -64,6 +64,9 @@ public class EnrichmentBolt extends BaseRichBolt {
         }
     }
     byte[] skyeyeWebFlowLogByteArrayElementBytesDest = new byte[10000];
+
+    //
+    private static final Base64.Encoder base64Encoder = Base64.getEncoder();
 
     //
     // （1） java Serializable
@@ -127,6 +130,8 @@ public class EnrichmentBolt extends BaseRichBolt {
 
             long enrichmentBegin = System.currentTimeMillis();
             List<Map<String, Object>> skyeyeWebFlowLogList = new ArrayList<Map<String, Object>>(100);
+            int listSize = pbBytesWebFlowLogList.size();
+            int i = 0;
             for (Object skyeyeWebFlowLogByteArrayElement : pbBytesWebFlowLogList) {
                 byte[] skyeyeWebFlowLogByteArrayElementBytes = (byte[]) skyeyeWebFlowLogByteArrayElement;
 
@@ -143,15 +148,45 @@ public class EnrichmentBolt extends BaseRichBolt {
                     skyeyeWebFlowLogByteArrayElementBytes = subBytes(skyeyeWebFlowLogByteArrayElementBytesDest, 0, decryptBytesLength);
                 }
 
+                try {
+                    i++;
+                    SENSOR_LOG log2 = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArrayElementBytes);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 SENSOR_LOG log = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArrayElementBytes);
                 Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
-                String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
+                // String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
+                String skyeyeWebFlowLogStr = JsonFormatProtocolBuffer.printToString((Message) skyeyeWebFlowLogPB);
+
+                // Message skyeyeWebFlowLogPBMessage = (Message) skyeyeWebFlowLogPB;
+                // Map<String, Object> skyeyeWebFlowLogMap = new HashMap<String, Object>();
+                // for (Iterator<Map.Entry<FieldDescriptor, Object>> iter =
+                // skyeyeWebFlowLogPBMessage.getAllFields().entrySet().iterator(); iter
+                // .hasNext();) {
+                // Map.Entry<FieldDescriptor, Object> field = iter.next();
+                // if (field.getKey().getType().equals(FieldDescriptor.Type.BYTES)) {
+                // // String valueString = ((com.google.protobuf.ByteString) field.getValue()).toStringUtf8();
+                // String valueString = base64Encoder
+                // .encodeToString(((com.google.protobuf.ByteString) field.getValue()).toByteArray());
+                // skyeyeWebFlowLogMap.put(field.getKey().getName(), valueString);
+                // } else {
+                // skyeyeWebFlowLogMap.put(field.getKey().getName(), field.getValue());
+                // }
+                // }
+
+                // skyeyeWebFlowLogStr = JsonUtils.mapToJson(skyeyeWebFlowLogMap);
+                // if (skyeyeWebFlowLogPBMessage.getUnknownFields().asMap().size() > 0)
+                // generator.print(", ");
+                // printUnknownFields(skyeyeWebFlowLogPBMessage.getUnknownFields(), generator);
 
                 // System.out.println("-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
 
                 // 查找ip相关的信息
                 if (StringUtils.isNotBlank(skyeyeWebFlowLogStr)) {
                     Map<String, Object> skyeyeWebFlowLog = JsonUtils.jsonToMap(skyeyeWebFlowLogStr);
+                    // Map<String, Object> skyeyeWebFlowLog = skyeyeWebFlowLogMap;
 
                     if (null != skyeyeWebFlowLog) {
                         // TODO:数字转换为字符串？？？？
@@ -168,7 +203,7 @@ public class EnrichmentBolt extends BaseRichBolt {
                         skyeyeWebFlowLog.put("found_time", Long.valueOf(System.currentTimeMillis()));
 
                         // （4）分区字段 partition_time，小时 add zhongsanmu 20171127
-                        skyeyeWebFlowLog.put("partition_time", DateTimeUtils.formatNowHourTime());
+                        skyeyeWebFlowLog.put("partition_time", getPartitionTime());
 
                         // （5）数据类型转换，eg:int conver to long add zhongsanmu 20171127
                         enrichmentConvertDataType(this.topicMethod, skyeyeWebFlowLog);
@@ -193,11 +228,11 @@ public class EnrichmentBolt extends BaseRichBolt {
             // + (emitEnd - emitBegin) + "ms");
 
             long end = System.currentTimeMillis();
-            System.out
-                    .println("---------------------------------------------------------------------------------EnrichmentBolt, use time: "
-                            + (end - begin) + "ms");
+            // System.out
+            // .println("---------------------------------------------------------------------------------EnrichmentBolt, use time: "
+            // + (end - begin) + "ms");
         } catch (Exception e) {
-            logger.error("skyeyeWebFlowLog", e);
+            logger.error("skyeyeWebFlowLog-" + topicMethod, e);
             // logger.error("skyeyeWebFlowLog:{}", skyeyeWebFlowLogStr, e);
             // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLogStr));
         }
@@ -212,6 +247,7 @@ public class EnrichmentBolt extends BaseRichBolt {
      * 
      * @param skyeyeWebFlowLog
      */
+    @Deprecated
     private void convertSkyeyeWebFlowLogToStr(Map<String, Object> skyeyeWebFlowLog) {
         for (Entry<String, Object> entry : skyeyeWebFlowLog.entrySet()) {
             if (entry.getValue() != null) {
@@ -306,6 +342,23 @@ public class EnrichmentBolt extends BaseRichBolt {
             break;
         default:
             break;
+        }
+    }
+
+    /**
+     * 获取Hive分区时间
+     * 
+     */
+    private String getPartitionTime() {
+        switch (SystemConstants.HIVE_PARTITION_TIME_TYPE) {
+        case "0":// 月
+            return DateTimeUtils.formatNowMonthTime();
+        case "1":// 天
+            return DateTimeUtils.formatNowDayTime();
+        case "2":// 时
+            return DateTimeUtils.formatNowHourTime();
+        default:// 默认：天
+            return DateTimeUtils.formatNowDayTime();
         }
     }
 

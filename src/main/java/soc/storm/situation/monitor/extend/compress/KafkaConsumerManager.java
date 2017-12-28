@@ -1,17 +1,18 @@
 
 package soc.storm.situation.monitor.extend.compress;
 
-import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.tuple.Values;
+import java.util.Arrays;
+import java.util.Properties;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import soc.storm.situation.contants.SystemConstants;
 
-import java.util.Arrays;
-import java.util.Properties;
+import soc.storm.situation.contants.SystemConstants;
+import backtype.storm.spout.SpoutOutputCollector;
+import backtype.storm.tuple.Values;
 
 /**
  * 
@@ -55,7 +56,7 @@ public class KafkaConsumerManager {
         logger.info("init createConsumerConfig");
         Properties properties = new Properties();
         properties.put("bootstrap.servers", SystemConstants.BROKER_URL);
-        properties.put("group.id", SystemConstants.TOPOLOGY_NAME + "1167");
+        properties.put("group.id", SystemConstants.TOPOLOGY_NAME + "1207");
         properties.put("enable.auto.commit", "false");
         // properties.put("enable.auto.commit", "true");
         properties.put("auto.commit.interval.ms", "1000");

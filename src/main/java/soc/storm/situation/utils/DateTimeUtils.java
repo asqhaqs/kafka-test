@@ -24,6 +24,30 @@ public class DateTimeUtils {
     }
 
     /**
+     * 当前时间格式化“yyyy-MM”字符串--月
+     * 
+     * @return
+     */
+    public static String formatNowMonthTime() {
+        Date currentTime = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM");
+        String dateString = formatter.format(currentTime);
+        return dateString;
+    }
+
+    /**
+     * 当前时间格式化“yyyy-MM-dd”字符串--天
+     * 
+     * @return
+     */
+    public static String formatNowDayTime() {
+        Date currentTime = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        String dateString = formatter.format(currentTime);
+        return dateString;
+    }
+
+    /**
      * 当前时间格式化“yyyy-MM-dd HH”字符串--小时
      * 
      * @return
