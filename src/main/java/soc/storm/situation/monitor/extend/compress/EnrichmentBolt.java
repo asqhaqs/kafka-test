@@ -4,7 +4,6 @@ package soc.storm.situation.monitor.extend.compress;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 // import org.apache.commons.codec.digest.DigestUtils;import org.apache.commons.lang.StringUtils;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,9 +63,6 @@ public class EnrichmentBolt extends BaseRichBolt {
         }
     }
     byte[] skyeyeWebFlowLogByteArrayElementBytesDest = new byte[10000];
-
-    //
-    private static final Base64.Encoder base64Encoder = Base64.getEncoder();
 
     //
     // （1） java Serializable
@@ -159,27 +155,6 @@ public class EnrichmentBolt extends BaseRichBolt {
                 Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
                 // String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
                 String skyeyeWebFlowLogStr = JsonFormatProtocolBuffer.printToString((Message) skyeyeWebFlowLogPB);
-
-                // Message skyeyeWebFlowLogPBMessage = (Message) skyeyeWebFlowLogPB;
-                // Map<String, Object> skyeyeWebFlowLogMap = new HashMap<String, Object>();
-                // for (Iterator<Map.Entry<FieldDescriptor, Object>> iter =
-                // skyeyeWebFlowLogPBMessage.getAllFields().entrySet().iterator(); iter
-                // .hasNext();) {
-                // Map.Entry<FieldDescriptor, Object> field = iter.next();
-                // if (field.getKey().getType().equals(FieldDescriptor.Type.BYTES)) {
-                // // String valueString = ((com.google.protobuf.ByteString) field.getValue()).toStringUtf8();
-                // String valueString = base64Encoder
-                // .encodeToString(((com.google.protobuf.ByteString) field.getValue()).toByteArray());
-                // skyeyeWebFlowLogMap.put(field.getKey().getName(), valueString);
-                // } else {
-                // skyeyeWebFlowLogMap.put(field.getKey().getName(), field.getValue());
-                // }
-                // }
-
-                // skyeyeWebFlowLogStr = JsonUtils.mapToJson(skyeyeWebFlowLogMap);
-                // if (skyeyeWebFlowLogPBMessage.getUnknownFields().asMap().size() > 0)
-                // generator.print(", ");
-                // printUnknownFields(skyeyeWebFlowLogPBMessage.getUnknownFields(), generator);
 
                 // System.out.println("-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
 
