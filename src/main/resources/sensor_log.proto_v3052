@@ -46,7 +46,7 @@ message DNS{
   repeated string addr=13;
   repeated string cname=14;
   repeated string mx=15;
-  optional string txt=16;    // 增加txt字段 
+  repeated string txt=16;    // 增加txt字段 
 }
 
 message WEBLOG{
@@ -332,7 +332,7 @@ message WEBSHELL_DOLOG
   optional string attacker=15;
   optional string victim=16;
   optional int32 write_date=17;
-  required string severity=18;
+  required int32 severity=18;// zhongsanmu 20180409 update string-->int32
 }
 
 message WEBATTACK_DOLOG
@@ -341,7 +341,7 @@ message WEBATTACK_DOLOG
   required int32 rule_id=2;
   required string rule_name=3;
   required int32 dolog_count=4;
-  required string severity=5;
+  required int32 severity=5;// zhongsanmu 20180409 update string-->int32
   required int32 rule_version=6;
   optional string sip=7;
   optional string dip=8;
@@ -403,28 +403,46 @@ message IDS_DOLOG
 message ABNORMAL_PKT {
   required string serial_num=1;
   required string access_time=2;
-  required string type=3;
+  required string abnormal_type=3;// zhongsanmu 20180408 update type-->abnormal_type
   optional string sip=4;
   optional string sipv6=5;
   optional int32  sport=6;
   optional string dip=7;
   optional string dipv6=8;
   optional int32  dport=9;
-  optional string data=10;
-  optional int32 datalen=11;
-  optional string info=12;
+  optional string payload=10;// zhongsanmu 20180408 update data-->payload
+  optional int32 payloadlen=11;// zhongsanmu 20180408 update datalen-->payloadlen
+  optional string abnormal_info=12;// zhongsanmu 20180408 update info-->abnormal_info
 }
 
 message REDIRECT {
   required string serial_num=1;
-  required string proto=2;
+  required string access_time = 2;
   optional string sip=3;
   optional string sipv6=4;
   required int32  sport=5;
   optional string dip=6;
   optional string dipv6=7;
   required int32  dport=8;
-  optional string info=9;
+  required string block_object = 9;
+  required string block_type = 10;
+  required string block_method = 11;
+  optional string block_name = 12;
+}
+
+message TELNET_CMD{
+  required string serial_num=1;
+  required string proto=2;
+  required string access_time=3;
+  optional string sip=4;
+  optional string sipv6=5;
+  required int32  sport=6;
+  optional string dip=7;
+  optional string dipv6=8;
+  required int32  dport=9;
+  required string user=10;
+  required string cmd=11;
+  required string ret=12;
 }
 
 message SENSOR_LOG {
@@ -449,6 +467,7 @@ message SENSOR_LOG {
   optional IDS_DOLOG       skyeye_ids=19;
   optional ABNORMAL_PKT skyeye_abnormal=20;
   optional REDIRECT skyeye_redirect=21;
+  optional TELNET_CMD   skyeye_telnetcmd=22;
 }
 
 

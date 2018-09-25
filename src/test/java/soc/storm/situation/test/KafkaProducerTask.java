@@ -1,18 +1,19 @@
 
 package soc.storm.situation.test;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
-import soc.storm.situation.test.compress.KafkaConsumerThenCompressTest;
-
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
+import soc.storm.situation.test.compress.KafkaConsumerThenCompressTest;
 
 /**
  * 
@@ -40,7 +41,8 @@ public class KafkaProducerTask extends Thread {
 
     private static Properties createConsumerConfig() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
+        // properties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
+        properties.put("bootstrap.servers", "bg02.situation.360es.net:9092,bg04.situation.360es.net:9092,bg05.situation.360es.net:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
         // properties.put("batch.size", 16384);// default: 16384
@@ -179,12 +181,18 @@ public class KafkaProducerTask extends Thread {
         return sensorLog.toByteArray();
     }
 
+    /**
+     * 
+     * @author wangbin03
+     *
+     */
     public static class KafkaProducerExecutorServiceTask extends Thread {
 
         @Override
         public void run() {
-            KafkaConsumerThenCompressTest consumerTest = new KafkaConsumerThenCompressTest("ty_tcpflow");
-            byte[] sourceData = consumerTest.getByteArray(1000);
+            KafkaConsumerThenCompressTest consumerTest = new KafkaConsumerThenCompressTest("ty_tcp");
+            // byte[] sourceData = consumerTest.getByteArray(1000);
+            byte[] sourceData = consumerTest.getByteArrayInit(1);
             // KafkaProducerTask.pbBytes = SnappyCompress.compress(sourceData);
             KafkaProducerTask.pbBytes = sourceData;
             System.out.println("---------------sourceData.length:" + sourceData.length
@@ -194,7 +202,7 @@ public class KafkaProducerTask extends Thread {
                 int threadCount = 10;
                 // long totalCount = 100000000;// 1000 0000
                 // long totalCount = 5000000;// 10000 0000 / 2000 = 500000
-                long totalCount = 100000;// 10000 0000 / 1000 = 100000
+                long totalCount = 10;// 10000 0000 / 1000 = 100000
                 // long totalCount = 90000;// 45W/S
                 // long totalCount = 96000;// 48W/S
                 // long totalCount = 98000;// 49W/S
@@ -208,8 +216,7 @@ public class KafkaProducerTask extends Thread {
                     // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest100", totalCount, allDone));
                     // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy",
                     // totalCount,allDone));
-                    fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy_config_random1000_all",
-                            totalCount, allDone));
+                    fixedThreadPool.execute(new KafkaProducerTask("skyeye_tcpflowtest", totalCount, allDone));
 
                     // fixedThreadPool.execute(new KafkaProducerTask("ty_tcpflow_inputtest_snappy_config_random1000",
                     // totalCount, allDone));

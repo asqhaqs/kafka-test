@@ -81,7 +81,6 @@ public class AESUtil {
         //
         byte[] destBytes = subBytes(decrypt_buff, 0, len2);
         System.out.println("destBytes : " + byteArrayToString(destBytes).toString() + "\n");
-
     }
 
     public static String byteArrayToString(byte[] byteArray) {

@@ -1,5 +1,5 @@
 
-package soc.storm.situation.monitor.extend.compress;
+package soc.storm.situation.monitor.extend.compress3061;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +16,11 @@ import backtype.storm.generated.AuthorizationException;
 import backtype.storm.generated.InvalidTopologyException;
 import backtype.storm.topology.TopologyBuilder;
 
+/**
+ * 
+ * @author wangbin03
+ *
+ */
 public class ExtendIpEnrichmentTopology {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtendIpEnrichmentTopology.class);
@@ -26,7 +31,7 @@ public class ExtendIpEnrichmentTopology {
     private final static String KAFKA_PRODUCER_BOLT_ID = "kafka_producer_bolt";
 
     // tolopy_name
-    private final static String TOPOLOGY_NAME = SystemConstants.TOPOLOGY_NAME;// "extend_ip_enrichment_topology";
+    private final static String TOPOLOGY_NAME = SystemConstants.TOPOLOGY_NAME;
 
     public static void main(String[] args) {
         try {
@@ -41,6 +46,11 @@ public class ExtendIpEnrichmentTopology {
             //
             String[] topicNameInputArray = SystemConstants.TOPIC_NAME_INPUT.split(",");
             String[] topicNameOutputArray = SystemConstants.TOPIC_NAME_OUTPUT.split(",");
+
+            System.out.println("--------------------SystemConstants.TOPIC_NAME_INPUT:" + SystemConstants.TOPIC_NAME_INPUT);
+            System.out.println("--------------------SystemConstants.TOPIC_NAME_OUTPUT:" + SystemConstants.TOPIC_NAME_OUTPUT);
+            System.out.println("--------------------topicNameInputArray.length:" + topicNameInputArray.length);
+            System.out.println("--------------------topicNameOutputArray.length:" + topicNameOutputArray.length);
 
             for (int i = 0; i < topicNameInputArray.length; i++) {
                 String topicNameInput = topicNameInputArray[i].trim();
@@ -106,6 +116,8 @@ public class ExtendIpEnrichmentTopology {
                 conf.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, Integer.parseInt(SystemConstants.TOPOLOGY_TRANSFER_BUFFER_SIZE));
                 StormSubmitter.submitTopologyWithProgressBar(TOPOLOGY_NAME, conf, topologyBuilder.createTopology());
             } else {
+                // FileUtil.testConfigFile("ExtendIpEnrichmentTopology");// --add zhongsanmu 20180104
+
                 // 建立本地集群,利用LocalCluster,storm在程序启动时会在本地自动建立一个集群,不需要用户自己再搭建,方便本地开发和debug
                 LocalCluster cluster = new LocalCluster();
                 // 创建拓扑实例,并提交到本地集群进行运行

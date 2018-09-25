@@ -68,6 +68,7 @@ public class WebFlowLogGatherMsgBinCoder implements WebFlowLogGatherMsgCoder {
                 return null;
             }
             int count = byte2Int(countBytes);
+            // System.out.println("------------------------------Arrays.asList(input):" + Arrays.asList(input));
             // System.out.println("------------------------------count:" + count);
 
             //

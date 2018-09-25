@@ -1,7 +1,8 @@
 
-package soc.storm.situation.monitor.extend.compress;
+package soc.storm.situation.monitor.extend.compresstdgywa3061;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +42,16 @@ public class KafkaProcuderBolt extends BaseRichBolt {
      *
      */
     private static final long serialVersionUID = -2639126860311224615L;
-
     private static final Logger logger = LoggerFactory.getLogger(KafkaProcuderBolt.class);
+
+    static {
+        System.out.println("--------------------KafkaProcuderBolt-------------SystemConstants.BROKER_URL:" + SystemConstants.BROKER_URL);
+        if (SystemConstants.IS_KERBEROS.equals("true")) {
+            System.setProperty("java.security.auth.login.config",
+                SystemConstants.KAFKA_KERBEROS_PATH + File.separator + "kafka_server_jaas.conf");
+            System.setProperty("java.security.krb5.conf", SystemConstants.KAFKA_KERBEROS_PATH + File.separator + "krb5.conf");
+        }
+    }
 
     private static Properties kafkaProducerProperties = new Properties();
     private String topic;// = "ty_tcpflow_output";
@@ -69,7 +78,6 @@ public class KafkaProcuderBolt extends BaseRichBolt {
         // （2）初始化 KafkaProducer
         try {
             logger.info("init kafkaProducerProperties");
-
             kafkaProducerProperties.put("bootstrap.servers", SystemConstants.BROKER_URL);
             kafkaProducerProperties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
             kafkaProducerProperties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
@@ -80,8 +88,19 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             kafkaProducerProperties.put("acks", "0");
             kafkaProducerProperties.put("compression.type", "snappy");// #消息压缩模式，默认是none，可选gzip、snappy、lz4。
             kafkaProducerProperties.put("topic.properties.fetch.enable", "true");
+            // kerberos 授权&认证
+            if (SystemConstants.IS_KERBEROS.equals("true")) {
+                kafkaProducerProperties.put("security.protocol", "SASL_PLAINTEXT");
+                kafkaProducerProperties.put("sasl.kerberos.service.name", "kafka");
+            }
 
             producer = new KafkaProducer<String, byte[]>(kafkaProducerProperties);
+
+            try {
+                // FileUtil.testConfigFile("KafkaProcuderBolt");
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }// --add zhongsanmu 20180104
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,6 +112,7 @@ public class KafkaProcuderBolt extends BaseRichBolt {
         //
         isRecordArrayRecordTopic = recordArrayRecordTopicMap.containsKey(topic);
         topicProperties = producer.getTopicProperties(topic);
+        System.out.println("--------------------topic:" + topic + "topicProperties:" + topicProperties);
         // topicProperties =
         // "{\"name\":\"ty_dns\",\"namespace\":\"enrichment_ip\",\"type\":\"record\",\"fields\":[{\"name\":\"serial_num\",\"type\":[\"string\",\"null\"]},{\"name\":\"access_time\",\"type\":[\"string\",\"null\"]},{\"name\":\"sip\",\"type\":[\"string\",\"null\"]},{\"name\":\"sport\",\"type\":[\"string\",\"null\"]},{\"name\":\"dip\",\"type\":[\"string\",\"null\"]},{\"name\":\"dport\",\"type\":[\"string\",\"null\"]},{\"name\":\"dns_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"host\",\"type\":[\"string\",\"null\"]},{\"name\":\"host_md5\",\"type\":[\"string\",\"null\"]},{\"name\":\"addr\",\"type\":[\"string\",\"null\"]},{\"name\":\"mx\",\"type\":[\"string\",\"null\"]},{\"name\":\"cname\",\"type\":[\"string\",\"null\"]},{\"name\":\"reply_code\",\"type\":[\"string\",\"null\"]},{\"name\":\"count\",\"type\":[\"string\",\"null\"]},{\"name\":\"geo_sip\",\"type\":[{\"type\":\"map\",\"values\":\"string\"},\"null\"]},{\"name\":\"geo_dip\",\"type\":[{\"type\":\"map\",\"values\":\"string\"},\"null\"]}]}";
         // topicProperties =
@@ -126,8 +146,8 @@ public class KafkaProcuderBolt extends BaseRichBolt {
                     // Schema topicSchema =
                     // parser.parse(KafkaProcuderBolt.class.getResourceAsStream("/avro/tcp_flowaa.avsc"));
 
-                    // System.out.println("--------------------[" + topic + "] skyeyeWebFlowLogMap: " +
-                    // JsonUtils.mapToJson(skyeyeWebFlowLogMap));
+                    System.out.println("--------------------[" + topic + "] KafkaProcuderBolt skyeyeWebFlowLogMap: "
+                            + JsonUtils.mapToJson(skyeyeWebFlowLogMap));
 
                     Schema topicSchema = new Schema.Parser().parse(topicProperties);
                     DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(topicSchema);
@@ -182,6 +202,7 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             // }
 
             encoder.flush();
+            out.flush();
             long avroCompressEnd = System.currentTimeMillis();
             // System.out.println("###########################KafkaProcuderBolt, avroCompress use time: "
             // + (avroCompressEnd - avroCompressBegin) + "ms, skyeyeWebFlowLogMapList.size():" +
@@ -214,9 +235,9 @@ public class KafkaProcuderBolt extends BaseRichBolt {
             // ------------KafkaProcuderBolt---topic:ty_tcpflow_outputtest1--------sendData.length:94412
 
             long end = System.currentTimeMillis();
-            // System.out
-            // .println("#################################################################################KafkaProcuderBolt, use time: "
-            // + (end - begin) + "ms");
+            System.out
+                    .println("#################################################################################KafkaProcuderBolt, use time: "
+                            + (end - begin) + "ms");
         } catch (Exception e) {
             e.printStackTrace();
             System.out.print("topic:" + topic + "," + e.getMessage());

@@ -24,7 +24,7 @@ import com.google.gson.JsonObject;
  * @author wangbin03
  *
  */
-public class HttpClientTest {
+public class HttpTest {
 
     private Log logger = LogFactory.getLog(this.getClass());
 
@@ -43,9 +43,9 @@ public class HttpClientTest {
      * 
      * @param url
      */
-    public HttpClientTest(String url) {
+    public HttpTest(String url) {
         if (url != null) {
-            HttpClientTest.apiURL = url;
+            HttpTest.apiURL = url;
         }
 
         if (apiURL != null) {
@@ -190,7 +190,7 @@ public class HttpClientTest {
 
     public static void loginMethodTest() {
         String loginURL = "http://bd04.guiyang.lgy:50061/v1/user/login";
-        HttpClientTest httpClientTest = new HttpClientTest(loginURL);
+        HttpTest httpClientTest = new HttpTest(loginURL);
         // JsonArray arry = new JsonArray();
         JsonObject j = new JsonObject();
         j.addProperty("userName", "kafka_test");
@@ -203,7 +203,7 @@ public class HttpClientTest {
         String insertURL = "http://bd04.guiyang.lgy:50061/v1/topic/create";
         // apiURL = "http://bd04.guiyang.lgy:50061/v1/api/topic/create";
         // apiURL = "http://bd04.guiyang.lgy:50061/v1/topic/create";
-        HttpClientTest httpClientTest = new HttpClientTest(insertURL);
+        HttpTest httpClientTest = new HttpTest(insertURL);
         // String jsonStr001 = "{                " +
         // "\"apiUserName\": \"360admin\", " +
         // "\"apiUserToken\": \"c6f1eea0ab386853415d4953bdd14783\",  " +

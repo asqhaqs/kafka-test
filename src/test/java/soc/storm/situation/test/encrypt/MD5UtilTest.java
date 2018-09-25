@@ -12,7 +12,7 @@ import org.apache.commons.lang3.RandomStringUtils;
  * @author zhongsanmu
  * @time 20170216
  */
-public class MD5Util {
+public class MD5UtilTest {
 
     /**
      * 获取十六进制字符串形式的MD5摘要
@@ -70,9 +70,9 @@ public class MD5Util {
     // 测试主函数
     public static void main(String args[]) {
         String plaintext = "123456";
-        String ciphertext = MD5Util.generate(plaintext);
+        String ciphertext = MD5UtilTest.generate(plaintext);
         System.out.println("加盐后MD5：" + ciphertext);
-        System.out.println("是否是同一字符串:" + MD5Util.verify(plaintext, ciphertext));
+        System.out.println("是否是同一字符串:" + MD5UtilTest.verify(plaintext, ciphertext));
     }
 
 }

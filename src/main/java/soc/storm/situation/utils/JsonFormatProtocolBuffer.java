@@ -31,6 +31,7 @@ package soc.storm.situation.utils;
  */
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.CharBuffer;
 import java.text.CharacterIterator;
@@ -123,17 +124,62 @@ public class JsonFormatProtocolBuffer {
     }
 
     protected static void print(Message message, JsonGenerator generator) throws IOException {
-
         for (Iterator<Map.Entry<FieldDescriptor, Object>> iter = message.getAllFields().entrySet().iterator(); iter.hasNext();) {
             Map.Entry<FieldDescriptor, Object> field = iter.next();
+
+            // FieldDescriptor fieldFieldDescriptor = field.getKey();
+            // String keyName = "";
+            // if (fieldFieldDescriptor.isExtension()) {
+            // // generator.print("\"");
+            // if (fieldFieldDescriptor.getContainingType().getOptions().getMessageSetWireFormat()
+            // && (fieldFieldDescriptor.getType() == FieldDescriptor.Type.MESSAGE) &&
+            // (fieldFieldDescriptor.isOptional())
+            // // object equality
+            // && (fieldFieldDescriptor.getExtensionScope() == fieldFieldDescriptor.getMessageType())) {
+            // keyName = fieldFieldDescriptor.getMessageType().getFullName();
+            // } else {
+            // keyName = fieldFieldDescriptor.getFullName();
+            // }
+            // // generator.print("\"");
+            // } else {
+            // // generator.print("\"");
+            // if (fieldFieldDescriptor.getType() == FieldDescriptor.Type.GROUP) {
+            // // Groups must be serialized with their original capitalization.
+            // keyName = fieldFieldDescriptor.getMessageType().getName();
+            // } else {
+            // keyName = fieldFieldDescriptor.getName();
+            // }
+            // // generator.print("\"");
+            // }
+            // System.out.println("----field.getKey():" + field.getKey() + "----keyName:" + keyName);
+            // if (isInteger(keyName)) {
+            // continue;
+            // }
+
             printField(field.getKey(), field.getValue(), generator);
             if (iter.hasNext()) {
                 generator.print(",");
             }
         }
-        if (message.getUnknownFields().asMap().size() > 0)
-            generator.print(", ");
-        printUnknownFields(message.getUnknownFields(), generator);
+
+        // if (message.getUnknownFields().asMap().size() > 0) {
+        // generator.print(", ");
+        // }
+        // printUnknownFields(message.getUnknownFields(), generator);
+    }
+
+    /*
+     * 推荐，速度最快
+     * 判断是否为整数
+     * 
+     * @param str 传入的字符串
+     * 
+     * @return 是整数返回true,否则返回false
+     */
+
+    public static boolean isInteger(String str) {
+        Pattern pattern = Pattern.compile("^[-\\+]?[\\d]*$");
+        return pattern.matcher(str).matches();
     }
 
     public static void printField(FieldDescriptor field, Object value, JsonGenerator generator) throws IOException {
@@ -1166,12 +1212,109 @@ public class JsonFormatProtocolBuffer {
     // them.
 
     /**
+     * 汪勇，bytes都用utf-8解码
+     * add zhongsanmu 20180418
+     */
+    static String escapeBytes(ByteString input) {
+        String valueString;
+        try {
+            valueString = new String(input.toByteArray(), "utf-8");
+            return escapeText(valueString);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        valueString = escapeBytes(input);
+        return valueString;
+    }
+
+    /**
+     * 刘创，数据直接拷贝出来就行。不用编码
+     * add zhongsanmu 20180123
+     */
+    @Deprecated
+    static String escapeBytesSame(ByteString input) {
+        // String valueString = new String(input.toByteArray());
+        String valueString = new String(input.toByteArray());
+        return valueString;
+    }
+
+    /**
+     * add zhongsanmu 20180208
+     */
+    @Deprecated
+    static String escapeBytesSameV2(ByteString input) {
+        StringBuilder builder = new StringBuilder(input.size());
+        for (int i = 0; i < input.size(); i++) {
+            builder.append((char) input.byteAt(i));
+        }
+
+        return builder.toString();
+    }
+
+    /**
      * Bytes to Base64
      * add zhongsanmu 20171228
      */
-    static String escapeBytes(ByteString input) {
+    @Deprecated
+    static String escapeBytesBase64(ByteString input) {
         String valueString = base64Encoder.encodeToString(input.toByteArray());
         return valueString;
+    }
+
+    /**
+     * escapeBytesBAK20180418
+     * 
+     * @param input
+     * @return
+     */
+    static String escapeBytesBAK20180418(ByteString input) {
+        StringBuilder builder = new StringBuilder(input.size());
+        for (int i = 0; i < input.size(); i++) {
+            byte b = input.byteAt(i);
+            switch (b) {
+            // Java does not recognize \a or \v, apparently.
+            // case 0x07:
+            // builder.append("\\a");
+            // break;
+            case '\b':
+                builder.append("\\b");
+                break;
+            case '\f':
+                builder.append("\\f");
+                break;
+            case '\n':
+                builder.append("\\n");
+                break;
+            case '\r':
+                builder.append("\\r");
+                break;
+            case '\t':
+                builder.append("\\t");
+                break;
+            // case 0x0b:
+            // builder.append("\\v");
+            // break;
+            case '\\':
+                builder.append("\\\\");
+                break;
+            case '\'':
+                builder.append("\\\'");
+                break;
+            case '"':
+                builder.append("\\\"");
+                break;
+            default:
+                if (b >= 0x20) {
+                    builder.append((char) b);
+                } else {
+                    final String unicodeString = unicodeEscaped((char) b);
+                    builder.append(unicodeString);
+                }
+                break;
+            }
+        }
+        return builder.toString();
     }
 
     /**

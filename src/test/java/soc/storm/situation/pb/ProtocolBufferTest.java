@@ -1,5 +1,5 @@
 
-package soc.storm.situation.test;
+package soc.storm.situation.pb;
 
 // import soc.storm.situation.protocolbuffer.AddressBookProtos.DNS;
 // import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
@@ -9,6 +9,11 @@ import soc.storm.situation.protocolbuffer.AddressBookProtos.TCPFLOW;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
+/**
+ * 
+ * @author wangbin03
+ *
+ */
 public class ProtocolBufferTest {
 
     public static void main(String[] args) throws InvalidProtocolBufferException {
@@ -89,5 +94,3 @@ public class ProtocolBufferTest {
         System.out.println("after:\n" + p2.toString());
     }
 }
-
-

@@ -33,10 +33,11 @@ public class KafkaConsumerThenCompressTest extends Thread {
 
     private static Properties createConsumerConfig() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
+        // properties.put("bootstrap.servers", "172.24.2.155:9092,172.24.2.156:9092,172.24.2.157:9092");
+        properties.put("bootstrap.servers", "bg02.situation.360es.net:9092,bg04.situation.360es.net:9092,bg05.situation.360es.net:9092");
         // properties.put("group.id", SystemConstants.TOPOLOGY_NAME);
         // properties.put("group.id", "zhongsanmu1119009");
-        properties.put("group.id", "zhongsanmu1119009001");
+        properties.put("group.id", "zhongsanmu20180315002");
         properties.put("enable.auto.commit", "false");
         properties.put("auto.commit.interval.ms", "1000");
         // properties.put("auto.offset.reset", "earliest");// String must be one of: latest, earliest, none
@@ -48,6 +49,30 @@ public class KafkaConsumerThenCompressTest extends Thread {
         properties.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RangeAssignor");
 
         return properties;
+    }
+
+    /**
+     * 
+     * getByteArray used by KafkaProducerTask 原始天眼流量日志数据
+     * 
+     * @param tupleCount
+     * @return
+     */
+    public byte[] getByteArrayInit(int tupleTotalCount) {
+        consumer.subscribe(Arrays.asList(topic));
+        while (true) {
+            //
+            ConsumerRecords<String, Object> records = consumer.poll(100);
+            consumer.commitSync();
+            // System.out.println("--------records.count():" + records.count());
+
+            for (ConsumerRecord<String, Object> consumerRecord : records) {
+                // （2）sensor protocol--add zhongsanmu 20171130
+                byte[] skyeyeWebFlowLogByteArray = (byte[]) consumerRecord.value();
+                return skyeyeWebFlowLogByteArray;
+            }
+
+        }
     }
 
     /**
@@ -81,6 +106,7 @@ public class KafkaConsumerThenCompressTest extends Thread {
 
                 // （2）sensor protocol--add zhongsanmu 20171130
                 byte[] skyeyeWebFlowLogByteArray = (byte[]) consumerRecord.value();
+
                 WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgBinCoder();
                 List<Object> pbBytesWebFlowLogList = webFlowLogGatherMsgCoder.fromWire(skyeyeWebFlowLogByteArray);
                 for (Object object : pbBytesWebFlowLogList) {

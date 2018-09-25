@@ -241,7 +241,7 @@ public class AvroGenericSerializerTest {
             // System.out.println(grback002);
             // String user = "{\"name\": \"Alyssa\", \"favorite_number\": {\"int\": 7}, \"favorite_color\": null}";
             String userArray = "{\"name\": \"Alyssa\", \"favorite_number\": {\"int\": 7}, \"favorite_color\": null, \"cert\": []}";
-            byte[] bytes002 = avroGenericSerializer.fromJsonToAvro(genericRecord.toString(), User_Schema);
+            byte[] bytes002 = AvroGenericSerializerTest.fromJsonToAvro(genericRecord.toString(), User_Schema);
             for (int i = 0; i < bytes002.length; i++) {
                 System.out.println(bytes002[i]);
             }

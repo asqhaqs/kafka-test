@@ -1,6 +1,8 @@
 
 package soc.storm.situation.contants;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -21,7 +23,11 @@ public class ConfigurableContants {
     protected static void init(String propertyFileName) {
         InputStream in = null;
         try {
-            in = ConfigurableContants.class.getResourceAsStream(propertyFileName);
+            // in = ConfigurableContants.class.getResourceAsStream(propertyFileName);
+
+            File file = new File(propertyFileName);
+            in = new FileInputStream(file);
+
             if (in != null) {
                 props.load(in);
             }

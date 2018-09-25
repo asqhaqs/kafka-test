@@ -16,7 +16,7 @@ import org.apache.commons.codec.binary.Base64;
  * @author wangbin03
  *
  */
-public class AESUtil {
+public class AESUtilTest {
     private static final String AES = "AES";
     private static final String CHARSET_NAME = "utf-8";
 
@@ -176,10 +176,10 @@ public class AESUtil {
         // System.out.println("解密：" + decode(hexStr, password));
 
         // String loginToken = AESUtil.encrypt("11ddd211ddd211ddd211ddd211ddd211ddd211ddd211ddd211ddd2");//
-        String loginToken = AESUtil
+        String loginToken = AESUtilTest
                 .encrypt("type:3accesstime:2014-11-27 09:35:59.045753sip:10.18.67.28sport:51001dip:192.168.0.223dport:53type:requesthost:quote");//
         System.out.println("loginToken:" + loginToken);// loginToken:SL4OO2Afi7s=
-        String loginTokenReal = AESUtil.decrypt(loginToken);//
+        String loginTokenReal = AESUtilTest.decrypt(loginToken);//
         System.out.println("loginTokenReal:" + loginTokenReal);// loginTokenReal:112
     }
 

@@ -1,13 +1,14 @@
 
-package soc.storm.situation.monitor.extend.compress;
+package soc.storm.situation.monitor.extend.compress3052;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-// import org.apache.commons.codec.digest.DigestUtils;import org.apache.commons.lang.StringUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.storm.shade.org.apache.commons.codec.digest.DigestUtils;
@@ -18,7 +19,9 @@ import soc.storm.situation.coder.WebFlowLogGatherMsgBinCoder;
 import soc.storm.situation.coder.WebFlowLogGatherMsgCoder;
 import soc.storm.situation.contants.SystemConstants;
 import soc.storm.situation.encrypt.AESUtil;
-import soc.storm.situation.protocolbuffer.AddressBookProtos.SENSOR_LOG;
+import soc.storm.situation.encrypt.Md5Util;
+import soc.storm.situation.protocolbuffer.AddressBookProtos3052.SENSOR_LOG;
+import soc.storm.situation.utils.BytesHexStrTranslate;
 import soc.storm.situation.utils.DateTimeUtils;
 import soc.storm.situation.utils.Geoip;
 import soc.storm.situation.utils.Geoip.Result;
@@ -46,6 +49,15 @@ public class EnrichmentBolt extends BaseRichBolt {
      */
     private static final long serialVersionUID = -2639126860311224615L;
 
+    static {
+        System.out.println("--------------------EnrichmentBolt-------------SystemConstants.BROKER_URL:" + SystemConstants.BROKER_URL);
+        if (SystemConstants.IS_KERBEROS.equals("true")) {
+            System.setProperty("java.security.auth.login.config",
+                SystemConstants.KAFKA_KERBEROS_PATH + File.separator + "kafka_server_jaas.conf");
+            System.setProperty("java.security.krb5.conf", SystemConstants.KAFKA_KERBEROS_PATH + File.separator + "krb5.conf");
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(EnrichmentBolt.class);
 
     private OutputCollector outputCollector;
@@ -57,12 +69,18 @@ public class EnrichmentBolt extends BaseRichBolt {
     private final static boolean isWebflowLogEncrypt = (SystemConstants.WEBFLOW_LOG_ENCRYPT.equals("true")) ? true : false;
     private static AESUtil aESUtil = null;
     static {
+        try {
+            // FileUtil.testConfigFile("EnrichmentBolt");
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }// --add zhongsanmu 20180104
+
         if (isWebflowLogEncrypt) {
             aESUtil = new AESUtil();
             aESUtil.init_aes(SystemConstants.FILE_PATH + "/decrypt.conf");
         }
     }
-    byte[] skyeyeWebFlowLogByteArrayElementBytesDest = new byte[10000];
+    private byte[] skyeyeWebFlowLogByteArrayElementBytesDest = new byte[Integer.parseInt(SystemConstants.WEBFLOW_LOG_ENCRYPT_BUFFER_SIZE)];// 61858764、10000
 
     //
     // （1） java Serializable
@@ -72,8 +90,28 @@ public class EnrichmentBolt extends BaseRichBolt {
     // （2）sensor protocol
     private final static WebFlowLogGatherMsgCoder webFlowLogGatherMsgCoder = new WebFlowLogGatherMsgBinCoder();
 
+    // // enrichment special property
+    // private String topic;// = "ty_tcpflow_output";
+    // private static Map<String, String> enrichmentSpecialPropertyTopicMap = new HashMap<String, String>();
+    // private static Map<String, String> enrichmentSpecialPropertyMap = new HashMap<String, String>();
+    // private boolean isEnrichmentSpecialPropertyTopic;
+    // static {
+    // // 初始化 enrichmentSpecialPropertyMap
+    // String[] enrichmentSpecialPropertyArray = SystemConstants.ENRICHMENT_SPECIAL_PROPERTY.split(",");
+    // for (String enrichmentSpecialPropertyStr : enrichmentSpecialPropertyArray) {
+    // String[] enrichmentSpecialPropertySubArray = enrichmentSpecialPropertyStr.split(":");
+    // enrichmentSpecialPropertyTopicMap.put(enrichmentSpecialPropertySubArray[0], null);
+    // enrichmentSpecialPropertyMap.put(enrichmentSpecialPropertyStr, null);
+    // }
+    // }
+
     public EnrichmentBolt(String topicNameInput) {
+        // topic = topicNameInput;
+        //
         topicMethod = TopicMethodUtil.getTopicMethod(topicNameInput);
+
+        //
+        // isEnrichmentSpecialPropertyTopic = enrichmentSpecialPropertyTopicMap.containsKey(topicNameInput);
     }
 
     @SuppressWarnings("rawtypes")
@@ -88,6 +126,13 @@ public class EnrichmentBolt extends BaseRichBolt {
         }
     }
 
+    /**
+     * 
+     * @param src
+     * @param begin
+     * @param count
+     * @return
+     */
     public static byte[] subBytes(byte[] src, int begin, int count) {
         byte[] bs = new byte[count];
         System.arraycopy(src, begin, bs, 0, count);
@@ -118,6 +163,7 @@ public class EnrichmentBolt extends BaseRichBolt {
             // byteArrayInputStream.close();
             // in.close();
 
+            System.out.println(topicMethod + "-----------------------skyeyeWebFlowLogByteArray.length:" + skyeyeWebFlowLogByteArray.length);
             List<Object> pbBytesWebFlowLogList = webFlowLogGatherMsgCoder.fromWire(skyeyeWebFlowLogByteArray);
 
             long deCompressEnd = System.currentTimeMillis();
@@ -126,13 +172,14 @@ public class EnrichmentBolt extends BaseRichBolt {
 
             long enrichmentBegin = System.currentTimeMillis();
             List<Map<String, Object>> skyeyeWebFlowLogList = new ArrayList<Map<String, Object>>(100);
-            int listSize = pbBytesWebFlowLogList.size();
-            int i = 0;
+            // int listSize = pbBytesWebFlowLogList.size();
+            // int i = 0;
             for (Object skyeyeWebFlowLogByteArrayElement : pbBytesWebFlowLogList) {
                 byte[] skyeyeWebFlowLogByteArrayElementBytes = (byte[]) skyeyeWebFlowLogByteArrayElement;
 
                 // 加密解密 add zhongsanmu 20171213
                 if (isWebflowLogEncrypt) {
+                    System.out.println(topicMethod + "-----------------------isWebflowLogEncrypt:" + isWebflowLogEncrypt);
                     int decryptBytesLength = aESUtil.decrypt(skyeyeWebFlowLogByteArrayElementBytes,
                         skyeyeWebFlowLogByteArrayElementBytes.length,
                         skyeyeWebFlowLogByteArrayElementBytesDest);
@@ -144,19 +191,24 @@ public class EnrichmentBolt extends BaseRichBolt {
                     skyeyeWebFlowLogByteArrayElementBytes = subBytes(skyeyeWebFlowLogByteArrayElementBytesDest, 0, decryptBytesLength);
                 }
 
-                try {
-                    i++;
-                    SENSOR_LOG log2 = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArrayElementBytes);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                System.out.println(topicMethod + "-----------------------skyeyeWebFlowLogByteArrayElementBytes.length:" +
+                        Integer.toHexString(skyeyeWebFlowLogByteArrayElementBytes.length)
+                        + ",  skyeyeWebFlowLogByteArrayElementBytes:" + BytesHexStrTranslate
+                                .bytesToHexFun3(skyeyeWebFlowLogByteArrayElementBytes));
+
+                // try {
+                // i++;
+                // SENSOR_LOG log2 = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArrayElementBytes);
+                // } catch (Exception e) {
+                // e.printStackTrace();
+                // }
 
                 SENSOR_LOG log = SENSOR_LOG.parseFrom(skyeyeWebFlowLogByteArrayElementBytes);
                 Object skyeyeWebFlowLogPB = getSkyeyeWebFlowLogObjectMethod.invoke(log);
                 // String skyeyeWebFlowLogStr = JsonFormat.printToString((Message) skyeyeWebFlowLogPB);
                 String skyeyeWebFlowLogStr = JsonFormatProtocolBuffer.printToString((Message) skyeyeWebFlowLogPB);
 
-                // System.out.println("-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
+                System.out.println(topicMethod + "enrichmentBolt-----------------------skyeyeWebFlowLogStr:" + skyeyeWebFlowLogStr);
 
                 // 查找ip相关的信息
                 if (StringUtils.isNotBlank(skyeyeWebFlowLogStr)) {
@@ -167,24 +219,30 @@ public class EnrichmentBolt extends BaseRichBolt {
                         // TODO:数字转换为字符串？？？？
                         // convertSkyeyeWebFlowLogToStr(skyeyeWebFlowLog);
 
-                        // （1）富化ip(sip、dip)
+                        // （1）富化ip(sip、dip; Webids：victim、attacker)
                         enrichmentIp(skyeyeWebFlowLog);
 
-                        // （2）富化md5--薛杰：md5应该只涉及dns和weblog add zhongsanmu 20171031
+                        // （2）富化md5--薛杰：md5应该只涉及dns和weblog（append file 20180716） add zhongsanmu 20171031
                         enrichmentMd5(this.topicMethod, skyeyeWebFlowLog);
 
                         // （3）添加found_time字段--格式：yyyy-MM-dd HH:mm:ss.SSS add zhongsanmu 20171127
-                        // skyeyeWebFlowLog.put("found_time", DateTimeUtils.formatNowTime());
-                        skyeyeWebFlowLog.put("found_time", Long.valueOf(System.currentTimeMillis()));
+                        skyeyeWebFlowLog.put("es_timestamp", Long.valueOf(System.currentTimeMillis()));
+                        // 添加es_version字段 “1” add zhongsanmu 20180123
+                        skyeyeWebFlowLog.put("es_version", "1");
+                        // 添加event_id字段 uuid add zhongsanmu 20180123
+                        skyeyeWebFlowLog.put("event_id", UUID.randomUUID().toString());
 
-                        // （4）分区字段 partition_time，小时 add zhongsanmu 20171127
-                        skyeyeWebFlowLog.put("partition_time", getPartitionTime());
+                        // （4）分区字段 hive_partition_time，小时 update zhongsanmu 20180123
+                        skyeyeWebFlowLog.put("hive_partition_time", getPartitionTime());
 
                         // （5）数据类型转换，eg:int conver to long add zhongsanmu 20171127
                         enrichmentConvertDataType(this.topicMethod, skyeyeWebFlowLog);
 
+                        // （6）字段名称修改：mail_from-->es_from add zhongsanmu 20180123
+                        enrichmentConvertDataName(this.topicMethod, skyeyeWebFlowLog);
+
                         // this.outputCollector.emit(tuple, new Values(skyeyeWebFlowLog));
-                        // System.out.println("skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
+                        System.out.println(topicMethod + "enrichmentBolt-------skyeyeWebFlowLog: " + JsonUtils.mapToJson(skyeyeWebFlowLog));
                         skyeyeWebFlowLogList.add(skyeyeWebFlowLog);
                     }
                 } else {
@@ -238,12 +296,13 @@ public class EnrichmentBolt extends BaseRichBolt {
     }
 
     /**
-     * 富化ip(sip、dip)
+     * 富化ip(sip、dip; Webids：victim、attacker)
      * 
      * @param skyeyeWebFlowLog
      * @throws Exception
      */
     private void enrichmentIp(Map<String, Object> skyeyeWebFlowLog) throws Exception {
+        // （1）sip、dip
         String sipStr = (null == skyeyeWebFlowLog.get("sip")) ? null : skyeyeWebFlowLog.get("sip").toString();
         String dipStr = (null == skyeyeWebFlowLog.get("dip")) ? null : skyeyeWebFlowLog.get("dip").toString();
 
@@ -265,6 +324,38 @@ public class EnrichmentBolt extends BaseRichBolt {
         } else {
             skyeyeWebFlowLog.put("geo_dip", new HashMap<String, String>());
         }
+
+        // （2）Webids：victim、attacker
+        switch (topicMethod) {
+        case "getSkyeyeWebshell":
+        case "getSkyeyeWebattack":
+        case "getSkyeyeIds":
+            String victimStr = (null == skyeyeWebFlowLog.get("victim")) ? null : skyeyeWebFlowLog.get("victim").toString();
+            String attackerStr = (null == skyeyeWebFlowLog.get("attacker")) ? null : skyeyeWebFlowLog.get("attacker").toString();
+
+            Result victimResult = Geoip.getInstance().query(victimStr);
+            Result attackerResult = Geoip.getInstance().query(attackerStr);
+
+            Map<String, String> victimMap = Geoip.convertResultToMap(victimResult);
+            Map<String, String> attackerMap = Geoip.convertResultToMap(attackerResult);
+
+            // 转换为json格式
+            if (victimMap != null) {
+                skyeyeWebFlowLog.put("geo_victim", victimMap);
+            } else {
+                skyeyeWebFlowLog.put("geo_victim", new HashMap<String, String>());
+            }
+
+            if (attackerMap != null) {
+                skyeyeWebFlowLog.put("geo_attacker", attackerMap);
+            } else {
+                skyeyeWebFlowLog.put("geo_attacker", new HashMap<String, String>());
+            }
+            break;
+        default:
+            break;
+        }
+
     }
 
     /**
@@ -279,9 +370,10 @@ public class EnrichmentBolt extends BaseRichBolt {
             // host_md5
             Object hostDns = skyeyeWebFlowLog.get("host");
             String hostDnsStr = (null != hostDns) ? hostDns.toString() : "";
-            skyeyeWebFlowLog.put("host_md5", DigestUtils.md5Hex(hostDnsStr).toLowerCase());
+            skyeyeWebFlowLog.put("host_md5", Md5Util.enrichmentHostMd5Hex(hostDnsStr));
             break;
         case "getSkyeyeWeblog":// weblog
+        case "getSkyeyeFile":// file
             // uri_md5
             Object uriWebLog = skyeyeWebFlowLog.get("uri");
             String uriWebLogStr = (null != uriWebLog) ? uriWebLog.toString() : "";
@@ -290,10 +382,27 @@ public class EnrichmentBolt extends BaseRichBolt {
             // host_md5
             Object hostWebLog = skyeyeWebFlowLog.get("host");
             String hostWebLogStr = (null != hostWebLog) ? hostWebLog.toString() : "";
-            skyeyeWebFlowLog.put("host_md5", DigestUtils.md5Hex(hostWebLogStr).toLowerCase());
+            skyeyeWebFlowLog.put("host_md5", Md5Util.enrichmentHostMd5Hex(hostWebLogStr));
             break;
         default:
             break;
+        }
+    }
+
+    /**
+     * 获取Hive分区时间
+     * 
+     */
+    private String getPartitionTime() {
+        switch (SystemConstants.HIVE_PARTITION_TIME_TYPE) {
+        case "0":// 月
+            return DateTimeUtils.formatNowMonthTime();
+        case "1":// 天
+            return DateTimeUtils.formatNowDayTime();
+        case "2":// 时
+            return DateTimeUtils.formatNowHourTime();
+        default:// 默认：天
+            return DateTimeUtils.formatNowDayTime();
         }
     }
 
@@ -321,19 +430,37 @@ public class EnrichmentBolt extends BaseRichBolt {
     }
 
     /**
-     * 获取Hive分区时间
+     * 字段名称修改
      * 
+     * @param topicMethod
+     * @param skyeyeWebFlowLog
      */
-    private String getPartitionTime() {
-        switch (SystemConstants.HIVE_PARTITION_TIME_TYPE) {
-        case "0":// 月
-            return DateTimeUtils.formatNowMonthTime();
-        case "1":// 天
-            return DateTimeUtils.formatNowDayTime();
-        case "2":// 时
-            return DateTimeUtils.formatNowHourTime();
-        default:// 默认：天
-            return DateTimeUtils.formatNowDayTime();
+    private void enrichmentConvertDataName(String topicMethod, Map<String, Object> skyeyeWebFlowLog) {
+        // （1）mail_from-->es_from --add zhongsanmu 20180123
+        switch (topicMethod) {
+        case "getSkyeyeMail":
+        case "getSkyeyeMailSandbox":
+            // mail_from --> es_from
+            Object esFrom = skyeyeWebFlowLog.get("mail_from");
+            skyeyeWebFlowLog.put("es_from", esFrom);
+            skyeyeWebFlowLog.remove("mail_from");
+            break;
+        default:
+            break;
+        }
+
+        // （2）to是hive关键字，重命名为es_to --add zhongsanmu 20180124
+        if (skyeyeWebFlowLog.containsKey("to")) {
+            Object esTo = skyeyeWebFlowLog.get("to");
+            skyeyeWebFlowLog.put("es_to", esTo);
+            skyeyeWebFlowLog.remove("to");
+        }
+
+        // （3）user是hive关键字，重命名为es_user --add zhongsanmu 20180124
+        if (skyeyeWebFlowLog.containsKey("user")) {
+            Object esUser = skyeyeWebFlowLog.get("user");
+            skyeyeWebFlowLog.put("es_user", esUser);
+            skyeyeWebFlowLog.remove("user");
         }
     }
 
