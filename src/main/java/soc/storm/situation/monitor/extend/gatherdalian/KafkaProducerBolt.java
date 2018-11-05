@@ -85,8 +85,12 @@ public class KafkaProducerBolt extends BaseRichBolt {
 		
 		topic = topicOutput;
 		topicProperties = producer.getTopicProperties(topic);
-		System.out.println("--------------------------topic: " + topic + "topicProperties: " + topicProperties);
+		logger.info("--------------------------topic: " + topic + "topicProperties: " + topicProperties);
 		
+	}
+	
+	public String getTopicProper() {
+		return this.topicProperties;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -109,16 +113,20 @@ public class KafkaProducerBolt extends BaseRichBolt {
 		long avroCompressBegin = System.currentTimeMillis();
 		
 		if(syslogMap != null && syslogMap.size() > 0) { 
-            System.out.println("--------------------[" + topic + "] KafkaProcuderBolt syslogMap: "
+            logger.info("--------------------[" + topic + "] KafkaProcuderBolt syslogMap: "
                     + JsonUtils.mapToJson(syslogMap));
             
+            logger.info("--------------------topicProperties is [" + topicProperties + "]");
+            logger.info("--------------------proucer's topicProperties is [" + producer.getTopicProperties(topic) + "]");
     		Schema toppicSchema = new Schema.Parser().parse(topicProperties);
     		DatumWriter<GenericRecord> writer = new GenericDatumWriter<GenericRecord>(toppicSchema);
     		
     		GenericRecord record = new GenericData.Record(toppicSchema);
     		
     		try {
+    			logger.info("--------------------syslogmap size is ******" + syslogMap.size());
     			for(Map.Entry<String, Object> entry : syslogMap.entrySet()) {
+    				logger.info("--------------------syslogmap key is [" + entry.getKey() + "]");
     				record.put(entry.getKey(), entry.getValue());
     			}
     			writer.write(record, encoder);
@@ -126,7 +134,7 @@ public class KafkaProducerBolt extends BaseRichBolt {
     	        out.flush();
     	        
                 long avroCompressEnd = System.currentTimeMillis();
-                System.out.println("###########################KafkaProcuderBolt, avroCompress use time: "
+                logger.info("###########################KafkaProcuderBolt, avroCompress use time: "
                  + (avroCompressEnd - avroCompressBegin) + "ms, syslogMap.size():" +
                  syslogMap.size() + "&&&&& topic name: " + topic);
 

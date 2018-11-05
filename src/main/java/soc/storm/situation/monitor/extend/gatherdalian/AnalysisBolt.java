@@ -99,10 +99,11 @@ public class AnalysisBolt extends BaseRichBolt {
 		String type = null;
 		if(StringUtils.isNotBlank(syslog)) {
 			//截断 syslog 并进行 判断
-			fieldList = Arrays.asList(syslog.split("\\^"));
+			fieldList = Arrays.asList(syslog.split("\\^", -1));
 			type = fieldList.get(3).trim();
 			long analysisend = System.currentTimeMillis();
 			logger.info("----------------------------- split time is: {} ms", (analysisend-analysisbegin));
+			logger.info("============================= split type is: " + type + "flowTypes.length  is" + flowTypes.length);
 		
 			//判断该type是否是我们需要的类型 && 对相应的输出topic bolt进行分发   
 			//这里使用了 下标映射 使其可配置 1.找到jj 流量类型在数组位置；2.找到其在对应关系中对应360类型的下标；3.转发至相应360类型的的 enrichment bolt处理 
@@ -110,7 +111,9 @@ public class AnalysisBolt extends BaseRichBolt {
 				if(type.equals(flowTypes[i].trim())) {
 					for(int j = 0; j < typeMappingRules.length; j++) {
 						if(Integer.parseInt(typeMappingRules[j].trim()) == i) {
+							
 							String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + topicOutputs[j].trim();
+							logger.info("----------------------------- streamID is: {}", streamID);
 							outputCollector.emit(streamID,tuple,new Values(type, fieldList));
 						}
 							

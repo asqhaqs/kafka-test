@@ -65,7 +65,9 @@ public class MappedFlowAndIpEnrichmentTopology {
 				MappingAndEnrichmentBolt mappingAndEnrichmentBolt = new MappingAndEnrichmentBolt(topicOutput);
 				mapEnrichBolts.put(topicOutput, mappingAndEnrichmentBolt);
 				
+				logger.info("********kafkaProducerBolt init -----------");
 				KafkaProducerBolt kafkaProducerBolt = new KafkaProducerBolt(topicOutput);
+				logger.info("********kafkaProducerBolt init -----------");
 				kafkaProducerBolts.put(topicOutput, kafkaProducerBolt);
 				
 			}
@@ -90,6 +92,7 @@ public class MappedFlowAndIpEnrichmentTopology {
 					
 					String out = entry.getKey();
 					// 定义 analysis bolt   以及  mapping_enrichment bolt 的  连接拓扑， 以及 流 id
+					logger.info("-----------------------the out topic name is-----{}---------------------", out);
 					String analysisId = ANALYSIS_BOLT_ID + topicInput;
 					String maprichId = MAPPING_ENRICHMENT_BOLT_ID + out;
 					String streamId =  analysisId + maprichId;
@@ -102,6 +105,7 @@ public class MappedFlowAndIpEnrichmentTopology {
 					
 					// 富化 和 输出端bolt 的拓扑连接，只连接一次
 					if(i < 1) {
+						logger.info("--------------contect the producer boltname is " + kafkaProducerBolts.get(out).getTopicProper());
 						topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + out, kafkaProducerBolts.get(out), 
 								KAFKA_BOLT_THREADS).localOrShuffleGrouping(MAPPING_ENRICHMENT_BOLT_ID + out);
 					}	
@@ -124,11 +128,14 @@ public class MappedFlowAndIpEnrichmentTopology {
 	            //设置超时时间
 	            config.setMessageTimeoutSecs(60);
 	            config.put(Config.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE, 
-	            		SystemMapEnrichConstants.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE);
+	            		Integer.parseInt(SystemMapEnrichConstants.TOPOLOGY_EXECUTOR_RECEIVE_BUFFER_SIZE));
 	            config.put(Config.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE, 
-	            		SystemMapEnrichConstants.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE);
-	            config.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, SystemMapEnrichConstants.TOPOLOGY_TRANSFER_BUFFER_SIZE);
+	            		Integer.parseInt(SystemMapEnrichConstants.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE));
+	            config.put(Config.TOPOLOGY_TRANSFER_BUFFER_SIZE, Integer.parseInt(SystemMapEnrichConstants.TOPOLOGY_TRANSFER_BUFFER_SIZE));
+	            // 打印配置
+	            logger.info("********************************TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE： " + config.get(Config.TOPOLOGY_EXECUTOR_SEND_BUFFER_SIZE));
 	            StormSubmitter.submitTopologyWithProgressBar(TOPOLOGY_NAME, config, topologyBuilder.createTopology());
+	            
 			}else {
 				// 本地测试
 				LocalCluster local = new LocalCluster();

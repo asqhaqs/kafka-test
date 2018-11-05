@@ -177,7 +177,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 			throws NullPointerException,ArrayIndexOutOfBoundsException{
 		//对syslog 内容数组而不是字段数组进行遍历，防止因为数据过长截断而导致的数组越界问题
 		for(int i = 0; i < logValues.size(); i++) {
-			map.put(fields[i].trim(), logValues.get(i));
+			map.put(fields[i].trim(), logValues.get(i).trim());
 		}
 	}
 	
@@ -186,7 +186,13 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 		if(skyeyeUnmappedFields != null && skyeyeUnmappedFields.length > 0) {
 			for(String unmappedField : skyeyeUnmappedFields) {
 				if(StringUtils.isNotBlank(unmappedField))
+				logger.info("+++++++++++++++++++++++unmapped fields " + unmappedField);
+//				if(unmappedField.equals("ret")) {
+//					String[] ss = new String[]();
+//					map.put(unmappedField, new String[]);
+//				}
 				map.put(unmappedField, null);
+				
 			}
 		}
 	}
@@ -206,11 +212,16 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
     private void convertDataName(Map<String, String> relationMap, Map<String, Object> syslogMap) {
     	if(relationMap != null && relationMap.size() > 0){
     		for(Map.Entry<String, String> entry : relationMap.entrySet()) {
-    			String jjField = entry.getKey();
-    			String skyeyeField = entry.getValue();
-    			Object object = syslogMap.get(jjField);
-    			syslogMap.put(skyeyeField, object);
-    			syslogMap.remove(jjField);
+    			if(!entry.getKey().equals(entry.getValue())) {
+    				logger.info("+++++++++++++++entry key " + entry.getKey());
+    				logger.info("+++++++++++++++entry value " + entry.getValue());
+        			String jjField = entry.getKey();
+        			String skyeyeField = entry.getValue();
+        			Object object = syslogMap.get(jjField);
+        			syslogMap.put(skyeyeField, object);
+        			syslogMap.remove(jjField);
+    			}
+
     		}
     	}
     }
@@ -222,7 +233,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
     		List<String> logValues) {
     	
     	//之所以判断topicOutput是为了使用不同的映射
-    	if(type.equals("bde_conn") && topicOutput.equals("skyeye_tcp_out")) {
+    	if(type.equals("bde_conn") && topicOutput.equals("skyeye_tcpflow")) {
     		fillToMap(syslogMap, connFields, logValues);
     		convertDataName(jjconnToTcp, syslogMap);
     		
@@ -232,7 +243,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
     	    syslogMap.remove("proto");
     	    
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeTcpUnmapped);
-    	}else if(type.equals("bde_conn") && topicOutput.equals("skyeye_udp_out")) {
+    	}else if(type.equals("bde_conn") && topicOutput.equals("skyeye_udpflow")) {
     		fillToMap(syslogMap, connFields, logValues);
     		convertDataName(jjconnToUdp, syslogMap);
     		
@@ -242,27 +253,32 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
     	    syslogMap.remove("proto");
     	    
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeUdpUnmapped);
-    	}else if(type.equals("bde_ssl") && topicOutput.equals("skyeye_ssl_out")) {
+    	}else if(type.equals("bde_ssl") && topicOutput.equals("skyeye_ssl")) {
     		fillToMap(syslogMap, sslFields, logValues);
     		convertDataName(jjsslToSsl, syslogMap);
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeSslUnmapped);
-    	}else if(type.equals("bde_http") && topicOutput.equals("skyeye_weblog_out")) {
+    	}else if(type.equals("bde_http") && topicOutput.equals("skyeye_weblog")) {
     		fillToMap(syslogMap, httpFields, logValues);
     		convertDataName(jjhttpToWeblog, syslogMap);
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeWeblogUnmapped);
-    	}else if(type.equals("bde_dns") && topicOutput.equals("skyeye_dns_out")) {
+    	}else if(type.equals("bde_dns") && topicOutput.equals("skyeye_dns")) {
     		fillToMap(syslogMap, dnsFields, logValues);
     		convertDataName(jjdnsToDns, syslogMap);
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeDnsUnmapped);
-    	}else if(type.equals("bde_ftp") && topicOutput.equals("skyeye_file_out")) {
+    	}else if(type.equals("bde_ftp") && topicOutput.equals("skyeye_file")) {
     		fillToMap(syslogMap, ftpFields, logValues);
     		convertDataName(jjftpToFile, syslogMap);
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeFileUnmapped);
-    	}else if(type.equals("bde_ftp") && topicOutput.equals("skyeye_ftpop_out")) {
+    	}else if(type.equals("bde_ftp") && topicOutput.equals("skyeye_ftp_op")) {
     		fillToMap(syslogMap, ftpFields, logValues);
     		convertDataName(jjftpToFtpop, syslogMap);
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeFtpopUnmapped);
-    	}else if(type.equals("bde_smtp") && topicOutput.equals("skyeye_mail_out")) {
+            if (syslogMap.containsKey("user")) {
+                Object esUser = syslogMap.get("user");
+                syslogMap.put("es_user", esUser);
+                syslogMap.remove("user");
+            }
+    	}else if(type.equals("bde_smtp") && topicOutput.equals("skyeye_mail")) {
     		fillToMap(syslogMap, smtpFields, logValues);
     		convertDataName(jjsmtpToMail, syslogMap);
     		
@@ -272,7 +288,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 //    	    syslogMap.remove("to");
     	    
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeMailUnmapped);
-    	}else if(type.equals("bde_mysql") && topicOutput.equals("skyeye_sql_out")) {
+    	}else if(type.equals("bde_mysql") && topicOutput.equals("skyeye_sql")) {
     		fillToMap(syslogMap, mysqlFields, logValues);
     		convertDataName(jjmysqlToSql, syslogMap);
     		fillSkyeyeFiledsToMap(syslogMap, skyeyeSqlUnmapped);
@@ -296,6 +312,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 			if(StringUtils.isNotBlank(type) && syslogValues != null && syslogValues.size() > 0) {
 				
 				fillToMapAndConvertDataName(type, topicOutput, syslogMap, syslogValues);
+	        	logger.info("syslogMap sport-------------is" + (String)syslogMap.get("sport"));
 				//(1) ip 富化(sip, dip)
 				enrichmentIp(syslogMap);
 				//(2) md5 富化--------由于数据源（dns http）没有  host 字段所以不用做
@@ -306,14 +323,14 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 				//(3)  添加found_time字段--格式：yyyy-MM-dd HH:mm:ss.SSS
 				syslogMap.put("es_timestamp", Long.valueOf(System.currentTimeMillis()));
 				//(4) 添加es_version字段 “1” 
-				syslogMap.put("es_version", 1);
+				syslogMap.put("es_version", "1");
 				//(5) 添加event_id字段 uuid
 				syslogMap.put("event_id", UUID.randomUUID().toString());
 				//(6) 分区字段 hive_partition_time，小时 update
 				syslogMap.put("hive_partition_time", getPartitionTime());
 				
 				// ip 富化过程中的 字段名称修改（以前的）
-				if(type.equals("bde_smtp") && topicOutput.equals("skyeye_mail_out")) {
+				if(type.equals("bde_smtp") && topicOutput.equals("skyeye_mail")) {
 		            // mail_from --> es_from
 		            Object esFrom = syslogMap.get("mail_from");
 		            syslogMap.put("es_from", esFrom);
@@ -377,13 +394,15 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
         if (sipMap != null) {
         	syslogMap.put("geo_sip", sipMap);
         } else {
-        	syslogMap.put("geo_sip", new HashMap<String, String>());
+        	//syslogMap.put("geo_sip", new HashMap<String, String>());
+        	syslogMap.put("geo_sip", null);
         }
 
         if (dipMap != null) {
         	syslogMap.put("geo_dip", dipMap);
         } else {
-        	syslogMap.put("geo_dip", new HashMap<String, String>());
+        	//syslogMap.put("geo_dip", new HashMap<String, String>());
+        	syslogMap.put("geo_dip", null);
         }
         
         //此富化没有 webshell， webattack类型
@@ -398,10 +417,18 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
      */
     private void enrichmentConvertDataType(String topicOutput, Map<String, Object> syslogMap) {
         switch (topicOutput) {
-        case "skyeye_dns_out":
+        case "skyeye_dns":
         	
         	Object reply_code = syslogMap.get("reply_code");
-        	syslogMap.put("reply_code", Integer.parseInt(reply_code.toString()));
+        	if(StringUtils.isNotBlank(reply_code.toString())) {
+        		syslogMap.put("reply_code", Integer.parseInt(reply_code.toString()));
+        	}else {
+        		syslogMap.put("reply_code", 0);
+        	}
+        	
+        	
+        	//默认值
+        	syslogMap.put("dns_type", 0);
         	
         	//sport ， dport
         	Object sportdns = syslogMap.get("sport");
@@ -410,8 +437,8 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
         	syslogMap.put("dport", Integer.parseInt(dportdns.toString()));
         	break;
         	
-        case "skyeye_tcp_out":
-        case "skyeye_udp_out":
+        case "skyeye_tcpflow":
+        case "skyeye_udpflow":
             // uplink_length
             Object uplinkLengthWebLog = syslogMap.get("uplink_length");
             syslogMap.put("uplink_length", Long.parseLong(uplinkLengthWebLog.toString()));
@@ -429,9 +456,11 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
         default:
         	//sport ， dport
         	Object sport = syslogMap.get("sport");
-        	syslogMap.put("sport", Integer.parseInt(sport.toString()));
+        	logger.info("sport-------------is" + (String)sport);
+        	syslogMap.put("sport", Integer.parseInt((String)sport));
         	Object dport = syslogMap.get("dport");
-        	syslogMap.put("dport", Integer.parseInt(dport.toString()));
+        	logger.info("sport-------------is" + (String)dport);
+        	syslogMap.put("dport", Integer.parseInt((String)dport));
         	
             break;
         }

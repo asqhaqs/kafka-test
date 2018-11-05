@@ -41,7 +41,7 @@ public class KafkaConsumerManager {
 		Properties properties = new Properties();
 		properties.put("bootstrap.servers", SystemMapEnrichConstants.BROKER_URL);
 		properties.put("group.id", SystemMapEnrichConstants.KAFKA_CONSUMER_GROUP_ID_3052);
-		properties.put("enable.auto.commit", "false");
+		properties.put("enable.auto.commit", "true");
 		properties.put("auto.commit.interval.ms", "1000");
         properties.put("auto.offset.reset", SystemMapEnrichConstants.KAFKA_CONSUMER_AUTO_OFFSET_RESET_GYWA3061);
         properties.put("session.timeout.ms", "30000");
@@ -63,14 +63,14 @@ public class KafkaConsumerManager {
 		
 		try {
 			this.consumer.subscribe(Arrays.asList(topic));
-			while(true) {
-				ConsumerRecords<String,String> records = consumer.poll(100);
-				sumCount += records.count();
-				consumer.commitSync();
-				for(ConsumerRecord<String, String> record : records) {
-					collector.emit(new Values(record.value()));
-				}
+
+			ConsumerRecords<String,String> records = consumer.poll(100);
+			sumCount += records.count();
+			consumer.commitSync();
+			for(ConsumerRecord<String, String> record : records) {
+				collector.emit(new Values(record.value()));
 			}
+
 			
 		}catch(Exception e) {
 			logger.error("--------------------------KafkaConsumerTask error!");
