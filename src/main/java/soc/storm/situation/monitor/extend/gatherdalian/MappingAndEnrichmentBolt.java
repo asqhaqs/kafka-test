@@ -37,6 +37,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	
 	private final String topicOutput;
 	private OutputCollector outputCollector;
+	private final String boltName;
 	
     static {
         System.out.println("--------------------MappingAndEnrichmentBolt-------------SystemMapEnrichConstants.BROKER_URL:" + SystemMapEnrichConstants.BROKER_URL);
@@ -160,9 +161,9 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	}
 	
 	
-	public MappingAndEnrichmentBolt(String topicOutput) {
-		
-		this.topicOutput = topicOutput;
+	public MappingAndEnrichmentBolt(String name) {
+		this.boltName = name;
+		this.topicOutput = name.split(":")[1];
 	}
 
 	@SuppressWarnings("rawtypes")

@@ -60,15 +60,18 @@ public class MappedFlowAndIpEnrichmentTopology {
 			Map<String, KafkaProducerBolt> kafkaProducerBolts = new HashMap<String, KafkaProducerBolt>();
 			// 连接 映射富化 和 发送的 bolt， 这两个按 topic_output进行分组 先初始化 对象
 			for(int j = 0; j < topicMapEnrichOutputArray.length; j++){
-				String topicOutput = topicMapEnrichOutputArray[j].trim();
-				
-				MappingAndEnrichmentBolt mappingAndEnrichmentBolt = new MappingAndEnrichmentBolt(topicOutput);
-				mapEnrichBolts.put(topicOutput, mappingAndEnrichmentBolt);
-				
-				logger.info("********kafkaProducerBolt init -----------");
-				KafkaProducerBolt kafkaProducerBolt = new KafkaProducerBolt(topicOutput);
-				logger.info("********kafkaProducerBolt init -----------");
-				kafkaProducerBolts.put(topicOutput, kafkaProducerBolt);
+				for(int i = 0; i < topicMapEnrichInputArray.length; i++) {
+					String topicOutput = topicMapEnrichOutputArray[j].trim();
+					String topicInput = topicMapEnrichInputArray[i].trim();
+					String bolt_name = topicInput + ":" + topicOutput;
+					MappingAndEnrichmentBolt mappingAndEnrichmentBolt = new MappingAndEnrichmentBolt(bolt_name);
+					mapEnrichBolts.put(bolt_name, mappingAndEnrichmentBolt);
+					
+					logger.info("********kafkaProducerBolt init -----------");
+					KafkaProducerBolt kafkaProducerBolt = new KafkaProducerBolt(bolt_name);
+					logger.info("********kafkaProducerBolt init -----------");
+					kafkaProducerBolts.put(bolt_name, kafkaProducerBolt);
+				}
 				
 			}
 			
@@ -88,27 +91,26 @@ public class MappedFlowAndIpEnrichmentTopology {
 				topologyBuilder.setBolt(ANALYSIS_BOLT_ID + topicInput, analysisBolt, ANALYSIS_BOLT_THREADS)
 					.localOrShuffleGrouping(KAFKA_CONSUMER_SPOUT_ID + topicInput);
 				
-				for(Map.Entry<String, MappingAndEnrichmentBolt> entry : mapEnrichBolts.entrySet()) {
-					
-					String out = entry.getKey();
+				//for(Map.Entry<String, MappingAndEnrichmentBolt> entry : mapEnrichBolts.entrySet()) {
+				for(int j = 0; j < topicMapEnrichOutputArray.length; j++) {
+					String topicOutput = topicMapEnrichOutputArray[j];
+					String bolt_name = topicInput+ ":" +topicOutput;
 					// 定义 analysis bolt   以及  mapping_enrichment bolt 的  连接拓扑， 以及 流 id
-					logger.info("-----------------------the out topic name is-----{}---------------------", out);
+					logger.info("-----------------------the out topic name is-----{}---------------------", bolt_name.split(":")[1]);
 					String analysisId = ANALYSIS_BOLT_ID + topicInput;
-					String maprichId = MAPPING_ENRICHMENT_BOLT_ID + out;
+					String maprichId = MAPPING_ENRICHMENT_BOLT_ID + bolt_name;
 					String streamId =  analysisId + maprichId;
-					topologyBuilder.setBolt(maprichId, entry.getValue(), 
+					topologyBuilder.setBolt(maprichId, mapEnrichBolts.get(bolt_name), 
 							MAPPING_ENRICHMENT_BOLT_THREADS).localOrShuffleGrouping(analysisId, 
 									streamId);
 					logger.info("***************the analysis is"+ analysisId + ";the mapenrich is: " + maprichId +
 							";the streaming id is： " + streamId + "***********************");
 
 					
-					// 富化 和 输出端bolt 的拓扑连接，只连接一次
-					if(i < 1) {
-						logger.info("--------------contect the producer boltname is " + kafkaProducerBolts.get(out).getTopicProper());
-						topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + out, kafkaProducerBolts.get(out), 
-								KAFKA_BOLT_THREADS).localOrShuffleGrouping(MAPPING_ENRICHMENT_BOLT_ID + out);
-					}	
+					logger.info("--------------contect the producer boltid is " + KAFKA_PRODUCER_BOLT_ID + bolt_name);
+					topologyBuilder.setBolt(KAFKA_PRODUCER_BOLT_ID + bolt_name, kafkaProducerBolts.get(bolt_name), 
+							KAFKA_BOLT_THREADS).localOrShuffleGrouping(MAPPING_ENRICHMENT_BOLT_ID + bolt_name);
+					
 				}
 			}
 			
