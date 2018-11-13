@@ -48,7 +48,6 @@ public class KafkaProducerBolt extends BaseRichBolt {
     }
     
     private static Properties kafkaProducerProperties = new Properties();
-    private String producerName;
 	private String topic;
 	private String topicProperties;
 	
@@ -82,9 +81,8 @@ public class KafkaProducerBolt extends BaseRichBolt {
     	}
     }
 
-	public KafkaProducerBolt(String name) {
-		this.producerName = name;
-		topic = name.split(":")[1];
+	public KafkaProducerBolt(String topicOutput) {
+		topic = topicOutput;
 		topicProperties = producer.getTopicProperties(topic);
 		logger.info("--------------------------topic: " + topic + "topicProperties: " + topicProperties);
 		

@@ -37,7 +37,6 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	
 	private final String topicOutput;
 	private OutputCollector outputCollector;
-	private final String boltName;
 	
     static {
         System.out.println("--------------------MappingAndEnrichmentBolt-------------SystemMapEnrichConstants.BROKER_URL:" + SystemMapEnrichConstants.BROKER_URL);
@@ -57,25 +56,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	private static String[] smtpFields;
 	private static String[] mysqlFields;
 	
-	//金睛流量字段与360字段映射
-//	private static String[] jjconnToTcp;
-//	private static String[] qatcpFromConn;
-//	private static String[] jjconnToUdp;
-//	private static String[] qaudpFromConn;
-//	private static String[] jjsslToSsl;
-//	private static String[] qasslFromSsl;
-//	private static String[] jjhttpToWeblog;
-//	private static String[] qaweblogFromHttp;
-//	private static String[] jjdnsToDns;
-//	private static String[] qadnsFromDns;
-//	private static String[] jjftpToFile;
-//	private static String[] qafileFromFtp;
-//	private static String[] jjftpToFtpop;
-//	private static String[] qaftpopFromFtp;
-//	private static String[] jjsmtpToMail;
-//	private static String[] qamailFromsmtp;
-//	private static String[] jjmysqlToSql;
-//	private static String[] qasqlFromMysql;
+
 	private static Map<String, String> jjconnToTcp;
 	private static Map<String, String> jjconnToUdp;
 	private static Map<String, String> jjsslToSsl;
@@ -107,24 +88,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 		smtpFields = SystemMapEnrichConstants.SMTP_FIELDS.split(",");
 		mysqlFields = SystemMapEnrichConstants.MYSQL_FIELDS.split(",");
 		
-//		jjconnToTcp = SystemMapEnrichConstants.JJCONN_TO_TCP.split(",");
-//		qatcpFromConn = SystemMapEnrichConstants.QATCP_FROM_CONN.split(",");
-//		jjconnToUdp = SystemMapEnrichConstants.JJCONN_TO_UDP.split(",");
-//		qaudpFromConn = SystemMapEnrichConstants.QAUDP_FROM_CONN.split(",");
-//		jjsslToSsl = SystemMapEnrichConstants.JJSSL_TO_SSL.split(",");
-//		qasslFromSsl = SystemMapEnrichConstants.QASSL_FROM_SSL.split(",");
-//		jjhttpToWeblog = SystemMapEnrichConstants.JJHTTP_TO_WEBLOG.split(",");
-//		qaweblogFromHttp = SystemMapEnrichConstants.QAWEBLOG_FROM_HTTP.split(",");
-//		jjdnsToDns = SystemMapEnrichConstants.JJDNS_TO_DNS.split(",");
-//		qadnsFromDns = SystemMapEnrichConstants.QADNS_FROM_DNS.split(",");
-//		jjftpToFile = SystemMapEnrichConstants.JJFTP_TO_FILE.split(",");
-//		qafileFromFtp = SystemMapEnrichConstants.QAFILE_FROM_FTP.split(",");
-//		jjftpToFtpop = SystemMapEnrichConstants.JJFTP_TO_FTPOP.split(",");
-//		qaftpopFromFtp = SystemMapEnrichConstants.QAFTPOP_FROM_FTP.split(",");
-//		jjsmtpToMail = SystemMapEnrichConstants.JJSMTP_TO_MAIL.split(",");
-//		qamailFromsmtp = SystemMapEnrichConstants.QAMAIL_FROM_SMTP.split(",");
-//		jjmysqlToSql = SystemMapEnrichConstants.JJMYSQL_TO_SQL.split(",");
-//		qasqlFromMysql = SystemMapEnrichConstants.QASQL_FROM_MYSQL.split(",");
+
 		jjconnToTcp = listToMap(SystemMapEnrichConstants.JJCONN_TO_TCP);
 		jjconnToUdp = listToMap(SystemMapEnrichConstants.JJCONN_TO_UDP);
 		jjsslToSsl = listToMap(SystemMapEnrichConstants.JJSSL_TO_SSL);
@@ -161,9 +125,8 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	}
 	
 	
-	public MappingAndEnrichmentBolt(String name) {
-		this.boltName = name;
-		this.topicOutput = name.split(":")[1];
+	public MappingAndEnrichmentBolt(String topicOutput) {
+		this.topicOutput = topicOutput;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -374,9 +337,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	
     /**
      * 富化ip(sip、dip; Webids：victim、attacker)
-     * 
-     * @param skyeyeWebFlowLog
-     * @throws Exception
+     *
      */
     private void enrichmentIp(Map<String, Object> syslogMap) throws Exception {
         // （1）sip、dip
@@ -412,9 +373,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
     
     /**
      * 转化数据类型
-     * 
-     * @param topicMethod
-     * @param skyeyeWebFlowLog
+     *
      */
     private void enrichmentConvertDataType(String topicOutput, Map<String, Object> syslogMap) {
         switch (topicOutput) {

@@ -25,37 +25,37 @@ import soc.storm.situation.contants.SystemMapEnrichConstants;
  */
 
 public class AnalysisBolt extends BaseRichBolt {
-	
+
 	//手动指定序列化id，防止后续类修改导致反序列化失败
 	private static final long serialVersionUID = -2639126860311224666L;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(AnalysisBolt.class);
-	
+
 	private OutputCollector outputCollector;
-	
+
 	private static String[] flowTypes;
 	private static String[] topicOutputs;
 	private static String[] typeMappingRules;
 	private static String separator;
-	
+
 	// 应该是从日志中提取出多条日志的 数组的 方法
 	private final String topicInput;
-	
+
 	//映射富化 bolt 组件的标识
 	private final String MAPPING_ENRICHMENT_BOLT_ID;
-	
+
 	//分析 bolt 组件的 标识
 	private final String ANALYSIS_BOLT_ID;
-	
-    static {
-        System.out.println("--------------------AnalysisBolt-------------SystemMapEnrichConstants.BROKER_URL:" + SystemMapEnrichConstants.BROKER_URL);
-        if (SystemMapEnrichConstants.IS_KERBEROS.equals("true")) {
-            System.setProperty("java.security.auth.login.config",
-            		SystemMapEnrichConstants.KAFKA_KERBEROS_PATH + File.separator + "kafka_server_jaas.conf");
-            System.setProperty("java.security.krb5.conf", SystemMapEnrichConstants.KAFKA_KERBEROS_PATH + File.separator + "krb5.conf");
-        }
-    }
-	
+
+	static {
+		System.out.println("--------------------AnalysisBolt-------------SystemMapEnrichConstants.BROKER_URL:" + SystemMapEnrichConstants.BROKER_URL);
+		if (SystemMapEnrichConstants.IS_KERBEROS.equals("true")) {
+			System.setProperty("java.security.auth.login.config",
+					SystemMapEnrichConstants.KAFKA_KERBEROS_PATH + File.separator + "kafka_server_jaas.conf");
+			System.setProperty("java.security.krb5.conf", SystemMapEnrichConstants.KAFKA_KERBEROS_PATH + File.separator + "krb5.conf");
+		}
+	}
+
 	static {
 		//需要的 流量种类 & 输出topic & 金睛与360 流量 映射规则  &  金睛流量日志分隔符
 		flowTypes = SystemMapEnrichConstants.FLOW_TYPES.split(",");
@@ -63,20 +63,20 @@ public class AnalysisBolt extends BaseRichBolt {
 		typeMappingRules = SystemMapEnrichConstants.TYPE_MAPPING_RULES.split(",");
 		separator = SystemMapEnrichConstants.FLOW_LOG_SEPARATOR;
 	}
-	
-	
+
+
 	public AnalysisBolt(String topicInput, String analysisId, String maprichId) {
-		
+
 		this.topicInput = topicInput;
 		this.MAPPING_ENRICHMENT_BOLT_ID = maprichId;
 		this.ANALYSIS_BOLT_ID = analysisId;
-		
+
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-		
+
 		this.outputCollector = collector;
 
 	}
@@ -104,41 +104,41 @@ public class AnalysisBolt extends BaseRichBolt {
 			long analysisend = System.currentTimeMillis();
 			logger.info("----------------------------- split time is: {} ms", (analysisend-analysisbegin));
 			logger.info("============================= split type is: " + type + "flowTypes.length  is" + flowTypes.length);
-			
-			
+
+
 			// 对于bde_conn 根据传输层协议字段判断是tcp还是udp然后分别转发， 对于其他几种流量轮询判断后选择发送   
 			if(StringUtils.isNotBlank(type) && type.equals("bde_conn")) {
 				//判断是udp还是tcp
 				String transportProtocol = fieldList.get(11).trim();
 				if(StringUtils.isNotBlank(transportProtocol) && transportProtocol.equals("tcp")) {
-					String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + topicInput + ":skyeye_tcpflow";
+					String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + "skyeye_tcpflow";
 					logger.info("----------------------------- streamID is: {}", streamID);
 					outputCollector.emit(streamID,tuple,new Values(type, fieldList));
 				}else if(StringUtils.isNotBlank(transportProtocol) && transportProtocol.equals("udp")){
-					String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + topicInput + ":skyeye_udpflow";
+					String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + "skyeye_udpflow";
 					logger.info("----------------------------- streamID is: {}", streamID);
 					outputCollector.emit(streamID,tuple,new Values(type, fieldList));
 				}
 			}else {
-				
+
 				//判断该type是否是我们需要的类型 && 对相应的输出topic bolt进行分发   （除了bde_conn）
-				//这里使用了 下标映射 使其可配置 1.找到jj 流量类型在数组位置；2.找到其在对应关系中对应360类型的下标；3.转发至相应360类型的的 enrichment bolt处理 
+				//这里使用了 下标映射 使其可配置 1.找到jj 流量类型在数组位置；2.找到其在对应关系中对应360类型的下标；3.转发至相应360类型的的 enrichment bolt处理
 				for(int i = 0; i < flowTypes.length; i++) {
 					if(StringUtils.isNotBlank(type) && type.equals(flowTypes[i].trim())) {
-							for(int j = 0; j < typeMappingRules.length; j++) {
-								if(Integer.parseInt(typeMappingRules[j].trim()) == i) {
-									String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + topicInput + ":" +topicOutputs[j].trim();
-									logger.info("----------------------------- streamID is: {}", streamID);
-									outputCollector.emit(streamID,tuple,new Values(type, fieldList));
-								}
-									
+						for(int j = 0; j < typeMappingRules.length; j++) {
+							if(Integer.parseInt(typeMappingRules[j].trim()) == i) {
+								String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID +topicOutputs[j].trim();
+								logger.info("----------------------------- streamID is: {}", streamID);
+								outputCollector.emit(streamID,tuple,new Values(type, fieldList));
 							}
+
 						}
+					}
 				}
-				
-				
+
+
 			}
-			
+
 			long taskend = System.currentTimeMillis();
 			logger.info("----------------------------- analysis task time is: {} ms", (taskend-taskbegin));
 		}
@@ -147,9 +147,9 @@ public class AnalysisBolt extends BaseRichBolt {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		
+
 		for (String topicOutput : topicOutputs) {
-			String streamId = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + topicInput + ":" +topicOutput.trim();
+			String streamId = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + topicOutput.trim();
 			declarer.declareStream(streamId, new Fields("type", "fieldList"));
 		}
 
