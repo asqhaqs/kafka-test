@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -36,7 +37,8 @@ public class AnalysisBolt extends BaseRichBolt {
 	private static String[] flowTypes;
 	private static String[] topicOutputs;
 	private static String[] typeMappingRules;
-	private static String separator;
+	private static String flowSeparator;
+	private static String alertSeparator;
 
 	// 应该是从日志中提取出多条日志的 数组的 方法
 	private final String topicInput;
@@ -61,7 +63,8 @@ public class AnalysisBolt extends BaseRichBolt {
 		flowTypes = SystemMapEnrichConstants.FLOW_TYPES.split(",");
 		topicOutputs = SystemMapEnrichConstants.TOPIC_MAP_ENRICH_OUTPUT.split(",");
 		typeMappingRules = SystemMapEnrichConstants.TYPE_MAPPING_RULES.split(",");
-		separator = SystemMapEnrichConstants.FLOW_LOG_SEPARATOR;
+        flowSeparator = SystemMapEnrichConstants.FLOW_LOG_SEPARATOR;    // metadata - - -
+        alertSeparator = SystemMapEnrichConstants.ALERT_LOG_SEPARATOR;  // notice - - -
 	}
 
 
@@ -90,15 +93,24 @@ public class AnalysisBolt extends BaseRichBolt {
 		long analysisbegin = System.currentTimeMillis();
 		//提取日志字段部分
 		String syslogValue = (String)tuple.getValue(0);
-		String[] syslogpre = syslogValue.split(separator.trim());
+		// 判断是否是告警日志
+		String[] syslogFlow = syslogValue.split(flowSeparator.trim());
+		String[] syslogAlert = syslogValue.split(alertSeparator.trim());
+		Boolean isAlert = false;
 		String syslog = null;
-		if(syslogpre.length == 2) {
-			syslog = syslogpre[1];
-		}
+		if(syslogFlow.length == 2) {
+			syslog = syslogFlow[1];
+		}else if(syslogAlert.length == 2){
+		    syslog = syslogAlert[1];
+		    isAlert = true;
+        }
+
+
 		List<String> fieldList = null;
 		String type = null;
-		if(StringUtils.isNotBlank(syslog)) {
-			//截断 syslog 并进行 判断
+		//流量数据处理
+		if(StringUtils.isNotBlank(syslog) && !isAlert) {
+			//切分 syslog 并进行 判断
 			fieldList = Arrays.asList(syslog.split("\\^", -1));
 			type = fieldList.get(3).trim();
 			long analysisend = System.currentTimeMillis();
@@ -106,18 +118,18 @@ public class AnalysisBolt extends BaseRichBolt {
 			logger.info("============================= split type is: " + type + "flowTypes.length  is" + flowTypes.length);
 
 
-			// 对于bde_conn 根据传输层协议字段判断是tcp还是udp然后分别转发， 对于其他几种流量轮询判断后选择发送   
+			// 对于bde_conn 根据传输层协议字段判断是tcp还是udp然后分别转发， 对于其他几种流量轮询判断后选择发送
 			if(StringUtils.isNotBlank(type) && type.equals("bde_conn")) {
 				//判断是udp还是tcp
 				String transportProtocol = fieldList.get(11).trim();
 				if(StringUtils.isNotBlank(transportProtocol) && transportProtocol.equals("tcp")) {
 					String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + "skyeye_tcpflow";
 					logger.info("----------------------------- streamID is: {}", streamID);
-					outputCollector.emit(streamID,tuple,new Values(type, fieldList));
+					outputCollector.emit(streamID,tuple,new Values(type, fieldList, isAlert));
 				}else if(StringUtils.isNotBlank(transportProtocol) && transportProtocol.equals("udp")){
 					String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + "skyeye_udpflow";
 					logger.info("----------------------------- streamID is: {}", streamID);
-					outputCollector.emit(streamID,tuple,new Values(type, fieldList));
+					outputCollector.emit(streamID,tuple,new Values(type, fieldList, isAlert));
 				}
 			}else {
 
@@ -129,7 +141,7 @@ public class AnalysisBolt extends BaseRichBolt {
 							if(Integer.parseInt(typeMappingRules[j].trim()) == i) {
 								String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID +topicOutputs[j].trim();
 								logger.info("----------------------------- streamID is: {}", streamID);
-								outputCollector.emit(streamID,tuple,new Values(type, fieldList));
+								outputCollector.emit(streamID,tuple,new Values(type, fieldList, isAlert));
 							}
 
 						}
@@ -141,7 +153,16 @@ public class AnalysisBolt extends BaseRichBolt {
 
 			long taskend = System.currentTimeMillis();
 			logger.info("----------------------------- analysis task time is: {} ms", (taskend-taskbegin));
-		}
+		}else if(StringUtils.isNotBlank(syslog) && isAlert){  // 告警处理
+
+            //切分 syslog
+            fieldList = Arrays.asList(syslog.split("\\^", -1));
+            //随机选择流id 发送 到富化映射bolt
+		    int topicOutputRandomIndex = new Random().nextInt(topicOutputs.length);
+		    String streamID = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID +topicOutputs[topicOutputRandomIndex].trim();
+		    logger.info("------------------------------------------- random streamID is: {}", streamID);
+		    outputCollector.emit(streamID, tuple, new Values(type, fieldList, isAlert));
+        }
 
 	}
 
@@ -150,7 +171,7 @@ public class AnalysisBolt extends BaseRichBolt {
 
 		for (String topicOutput : topicOutputs) {
 			String streamId = ANALYSIS_BOLT_ID + topicInput + MAPPING_ENRICHMENT_BOLT_ID + topicOutput.trim();
-			declarer.declareStream(streamId, new Fields("type", "fieldList"));
+			declarer.declareStream(streamId, new Fields("type", "fieldList", "isAlert"));
 		}
 
 	}

@@ -23,6 +23,7 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import soc.storm.situation.contants.SystemMapEnrichConstants;
+import soc.storm.situation.utils.DicUtil;
 import soc.storm.situation.utils.JsonUtils;
 
 /**
@@ -50,6 +51,7 @@ public class KafkaProducerBolt extends BaseRichBolt {
     private static Properties kafkaProducerProperties = new Properties();
 	private String topic;
 	private String topicProperties;
+	private String redisAlertKey = SystemMapEnrichConstants.REDIS_ALERT_KEY;
 	
     // private OutputCollector outputCollector;
     private static KafkaProducer<String, byte[]> producer = null;
@@ -106,73 +108,85 @@ public class KafkaProducerBolt extends BaseRichBolt {
 		
 		long begin = System.currentTimeMillis();
 		Map<String, Object> syslogMap = (Map<String, Object>) input.getValue(0);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-        
-		long avroCompressBegin = System.currentTimeMillis();
-		
-		if(syslogMap != null && syslogMap.size() > 0) { 
-            logger.info("--------------------[" + topic + "] KafkaProcuderBolt syslogMap: "
-                    + JsonUtils.mapToJson(syslogMap));
-            
-            logger.info("--------------------topicProperties is [" + topicProperties + "]");
-            logger.info("--------------------proucer's topicProperties is [" + producer.getTopicProperties(topic) + "]");
-    		Schema toppicSchema = new Schema.Parser().parse(topicProperties);
-    		DatumWriter<GenericRecord> writer = new GenericDatumWriter<GenericRecord>(toppicSchema);
-    		
-    		GenericRecord record = new GenericData.Record(toppicSchema);
-    		
-    		try {
-    			logger.info("--------------------syslogmap size is ******" + syslogMap.size());
-    			for(Map.Entry<String, Object> entry : syslogMap.entrySet()) {
-    				logger.info("--------------------syslogmap key is [" + entry.getKey() + "]");
-    				record.put(entry.getKey(), entry.getValue());
-    			}
-    			writer.write(record, encoder);
-    	        encoder.flush();
-    	        out.flush();
-    	        
-                long avroCompressEnd = System.currentTimeMillis();
-                logger.info("###########################KafkaProcuderBolt, avroCompress use time: "
-                 + (avroCompressEnd - avroCompressBegin) + "ms, syslogMap.size():" +
-                 syslogMap.size() + "&&&&& topic name: " + topic);
+		Boolean isAlert = (Boolean)input.getValue(1);
 
-                long compressBegin = System.currentTimeMillis();
-                byte[] sendData = out.toByteArray();
-                // TODO:
-                // byte[] sendData = SnappyCompress.compress(out.toByteArray());
+		if(!isAlert && syslogMap != null && syslogMap.size() > 0){
+			logger.info("====================================syslogMap is alert?  {}", isAlert );
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
 
-                // System.out.println("----------------------------out.toByteArray().length:" + out.toByteArray().length);
-                // byte[] sendData = SnappyCompress.compress001(out.toByteArray());
-                // System.out.println("----------------------------SnappyCompress.compress001(out.toByteArray()).length:" +
-                // SnappyCompress.compress001(out.toByteArray()).length);
-                long compressEnd = System.currentTimeMillis();
-                System.out.println("###########################KafkaProcuderBolt, compress use time: "
-                + (compressEnd - compressBegin) + "ms");
+			long avroCompressBegin = System.currentTimeMillis();
 
-                long sendBegin = System.currentTimeMillis();
-                // TODO: test
-                producer.send(new ProducerRecord<String, byte[]>(topic, null, sendData));
-                long sendEnd = System.currentTimeMillis();
-                System.out.println("###########################KafkaProcuderBolt, send use time: "
-                + (sendEnd - sendBegin) + "ms");
+			logger.info("--------------------[" + topic + "] KafkaProcuderBolt syslogMap: "
+					+ JsonUtils.mapToJson(syslogMap));
 
-                // producer.send(new ProducerRecord<String, byte[]>(topic, null, "sendData".getBytes()));
-                // System.out.println("------------KafkaProcuderBolt---topic:" + topic + "--------sendData.length:" +
-                // sendData.length);
-                // ------------KafkaProcuderBolt---topic:ty_tcpflow_outputtest1--------sendData.length:1646000
-                // ------------KafkaProcuderBolt---topic:ty_tcpflow_outputtest1--------sendData.length:94412
+			logger.info("--------------------topicProperties is [" + topicProperties + "]");
+			logger.info("--------------------proucer's topicProperties is [" + producer.getTopicProperties(topic) + "]");
+			Schema toppicSchema = new Schema.Parser().parse(topicProperties);
+			DatumWriter<GenericRecord> writer = new GenericDatumWriter<GenericRecord>(toppicSchema);
 
-                long end = System.currentTimeMillis();
-                System.out
-                        .println("#################################################################################KafkaProcuderBolt, use time: "
-                                + (end - begin) + "ms");
-    		}catch(Exception e) {
-                e.printStackTrace();
-                System.out.println("--------------------[" + topic + "] syslogMap: " + JsonUtils
-                        .mapToJson(syslogMap) + ",  " + e.getMessage());
-    		}
+			GenericRecord record = new GenericData.Record(toppicSchema);
+
+			try {
+				logger.info("--------------------syslogmap size is ******" + syslogMap.size());
+				for(Map.Entry<String, Object> entry : syslogMap.entrySet()) {
+					logger.info("--------------------syslogmap key is [" + entry.getKey() + "]");
+					record.put(entry.getKey(), entry.getValue());
+				}
+				writer.write(record, encoder);
+				encoder.flush();
+				out.flush();
+
+				long avroCompressEnd = System.currentTimeMillis();
+				logger.info("###########################KafkaProcuderBolt, avroCompress use time: "
+						+ (avroCompressEnd - avroCompressBegin) + "ms, syslogMap.size():" +
+						syslogMap.size() + "&&&&& topic name: " + topic);
+
+				long compressBegin = System.currentTimeMillis();
+				byte[] sendData = out.toByteArray();
+				// TODO:
+				// byte[] sendData = SnappyCompress.compress(out.toByteArray());
+
+				// System.out.println("----------------------------out.toByteArray().length:" + out.toByteArray().length);
+				// byte[] sendData = SnappyCompress.compress001(out.toByteArray());
+				// System.out.println("----------------------------SnappyCompress.compress001(out.toByteArray()).length:" +
+				// SnappyCompress.compress001(out.toByteArray()).length);
+				long compressEnd = System.currentTimeMillis();
+				System.out.println("###########################KafkaProcuderBolt, compress use time: "
+						+ (compressEnd - compressBegin) + "ms");
+
+				long sendBegin = System.currentTimeMillis();
+				// TODO: test
+				producer.send(new ProducerRecord<String, byte[]>(topic, null, sendData));
+				long sendEnd = System.currentTimeMillis();
+				System.out.println("###########################KafkaProcuderBolt, send use time: "
+						+ (sendEnd - sendBegin) + "ms");
+
+				// producer.send(new ProducerRecord<String, byte[]>(topic, null, "sendData".getBytes()));
+				// System.out.println("------------KafkaProcuderBolt---topic:" + topic + "--------sendData.length:" +
+				// sendData.length);
+				// ------------KafkaProcuderBolt---topic:ty_tcpflow_outputtest1--------sendData.length:1646000
+				// ------------KafkaProcuderBolt---topic:ty_tcpflow_outputtest1--------sendData.length:94412
+
+				long end = System.currentTimeMillis();
+				System.out
+						.println("#################################################################################KafkaProcuderBolt, use time: "
+								+ (end - begin) + "ms");
+			}catch(Exception e) {
+				e.printStackTrace();
+				System.out.println("--------------------[" + topic + "] syslogMap: " + JsonUtils
+						.mapToJson(syslogMap) + ",  " + e.getMessage());
+			}
+		}else if(isAlert && syslogMap != null && syslogMap.size() > 0){
+
+			logger.info("====================================syslogMap is Alert? {}", isAlert );
+			String syslogJson = JsonUtils.mapToJson(syslogMap);
+			logger.info("====================================syslogJson is: {}", syslogJson );
+			DicUtil.rpush(redisAlertKey,syslogJson);
+
 		}
+
+
 		
 		
 

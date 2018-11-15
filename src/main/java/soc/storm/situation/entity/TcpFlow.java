@@ -2,6 +2,7 @@
 package soc.storm.situation.entity;
 
 import java.util.Arrays;
+import java.util.Random;
 import java.util.StringTokenizer;
 
 @Deprecated
@@ -23,6 +24,29 @@ public class TcpFlow {
 		    i++;
 		}
 		System.out.println(i);
+
+
+		String separator1 = "metadata - - -";
+		String separator2 = "notice - - -";
+		String testGJ = "Chr <14>1 2017-05-08T08:29:18.334Z 192.168.10.212 notice - - - 1494232158334^ATD^10.0.0.172^NDE^7c938b87-c0f7-4689-938b-87c0f7d689c9^p6p1^2016149^........................^INFO^Session Traversal^192.168.20.187^64110^^54.172.47.69^3478^^UDP^^............^....!..BXMaESP7SRWtW^^^^^SDE INFO Session Traversal Utilities for NAT (STUN Binding Request)^^SDE INFO Session Traversal Utilities for NAT (STUN Binding Request)^China^Beijing^39.9047,116.4072^CN^United States^Ashburn^39.0481,-77.4728^US^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+		String testLL = "Chr <14>1 2018-10-25T23:31:03.341Z 10.0.0.168 metadata - - - 1540510263340^ATD^10.0.0.249^bde_dns^eth1^1540510210.811544^CQnDD40J1qtAwSEG5^10.0.4.22^62983^224.0.0.252^5355^udp^18475^^desktop-2qorao4^1^C_INTERNET^255^*^^^F^F^F^F^0^^^F^^^^^^^^^^^^^^^^^^^^^^";
+
+//		String input = testGJ;
+		String input = testLL;
+		String log = "";
+		String[] logsLL = input.split(separator1);
+		String[] logsGJ = input.split(separator2);
+		if(logsLL.length == 2){
+			System.out.println("LL log is: " + logsLL[1]);
+		}else if(logsGJ.length == 2){
+			System.out.println("GJ log is: " + logsGJ[1]);
+		}
+		int j = 0;
+		while (j < 10){
+			System.out.println(new Random().nextInt(9));
+			j++;
+		}
+
 	}
 
 }

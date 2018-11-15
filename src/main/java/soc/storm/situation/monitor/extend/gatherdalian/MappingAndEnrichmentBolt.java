@@ -55,8 +55,12 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	private static String[] sslFields;
 	private static String[] smtpFields;
 	private static String[] mysqlFields;
+	//金睛告警数据字段名称列表
+	private static String[] alertFields;
+	//360告警字段（不在金睛告警字段中的）
+	private static String[] qhAlertFields;
 	
-
+	//金睛流量字段映射规则
 	private static Map<String, String> jjconnToTcp;
 	private static Map<String, String> jjconnToUdp;
 	private static Map<String, String> jjsslToSsl;
@@ -87,6 +91,9 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 		sslFields = SystemMapEnrichConstants.SSL_FIELDS.split(",");
 		smtpFields = SystemMapEnrichConstants.SMTP_FIELDS.split(",");
 		mysqlFields = SystemMapEnrichConstants.MYSQL_FIELDS.split(",");
+
+		alertFields = SystemMapEnrichConstants.ALERT_FIELDS.split(",");
+		qhAlertFields = SystemMapEnrichConstants.QH_ALERT_FIELDS_NOT_IN_JJ.split(",");
 		
 
 		jjconnToTcp = listToMap(SystemMapEnrichConstants.JJCONN_TO_TCP);
@@ -161,18 +168,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 		}
 	}
 	
-	//映射金睛 与 360 的字段
-//    private void convertDataName(String[] mapFromFields, String[] mapToFields, Map<String, Object> map) {
-//    	if(mapFromFields != null && mapToFields != null && mapFromFields.length == mapToFields.length) {
-//    		for(int i = 0; i < mapFromFields.length; i++) {
-//    			String fromKey = mapFromFields[i].trim();
-//    			String toKey = mapToFields[i].trim();
-//    			Object object = map.get(fromKey);
-//    			map.put(toKey, object);
-//    			map.remove(fromKey);
-//    		}
-//    	}
-//    } 
+
     private void convertDataName(Map<String, String> relationMap, Map<String, Object> syslogMap) {
     	if(relationMap != null && relationMap.size() > 0){
     		for(Map.Entry<String, String> entry : relationMap.entrySet()) {
@@ -191,7 +187,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
     }
 
     /**
-     *  map字段填充 & 字段名称修改 （映射）
+     *  map字段填充 & 字段名称修改 （映射）流量数据
      */
     private void fillToMapAndConvertDataName(String type, String topicOutput, Map<String, Object> syslogMap,
     		List<String> logValues) {
@@ -270,15 +266,17 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 			String type = (String)input.getValue(0);
 			//得到 该syslog 内容
 			List<String> syslogValues = (List<String>)input.getValue(1);
+			//得到 该syslog 是否是告警的标志位
+			Boolean isAlert = (Boolean)input.getValue(2);
 			
 			Map<String, Object> syslogMap = new HashMap<String,Object>();
 			
-			if(StringUtils.isNotBlank(type) && syslogValues != null && syslogValues.size() > 0) {
-				
+			if(!isAlert && StringUtils.isNotBlank(type) && syslogValues != null && syslogValues.size() > 0) {
+
+				logger.info("======================== syslog is flow data, and isAlert : {}", isAlert);
 				fillToMapAndConvertDataName(type, topicOutput, syslogMap, syslogValues);
-	        	logger.info("syslogMap sport-------------is" + (String)syslogMap.get("sport"));
 				//(1) ip 富化(sip, dip)
-				enrichmentIp(syslogMap);
+				enrichmentIp(syslogMap, isAlert);
 				//(2) md5 富化--------由于数据源（dns http）没有  host 字段所以不用做
 				
 				//字段类型转型
@@ -318,10 +316,34 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 				long enrichend = System.currentTimeMillis();
 				logger.info("the mapAndEnrich time is: {}ms", enrichend-enrichbegin);
 				long emitbegin = System.currentTimeMillis();
-				outputCollector.emit(input,new Values(syslogMap));
+				outputCollector.emit(input,new Values(syslogMap, isAlert));
 				long emitend = System.currentTimeMillis();
 				logger.info("the emit time is: {}ms", emitend-emitbegin);
 				
+			}else if(isAlert && syslogValues != null && syslogValues.size() > 0){   //告警数据处理
+
+				logger.info("======================== syslog is alert data, and isAlert : {}", isAlert);
+				//导入map中
+				fillToMap(syslogMap, alertFields, syslogValues);
+				//加入 360 字段，全部置空
+				for(String qhField : qhAlertFields){
+					syslogMap.put(qhField, null);
+				}
+				//使用 金睛的sip 和 dip 进行 ip 富化
+				enrichmentIp(syslogMap, isAlert);
+				//添加公共头使得该条告警通过规则引擎
+				syslogMap.put("found_time", DateTimeUtils.timestampToDate(syslogMap.get("timestamp").toString(),
+						"yyyy-MM-dd HH:mm:ss"));
+				syslogMap.put("event_type", "005");
+				syslogMap.put("event_subtype", "005100");
+				syslogMap.put("industry_id", 0);
+				syslogMap.put("vendor", "jinjing");
+				syslogMap.put("system_id", 0);
+				syslogMap.put("sip", syslogMap.get("src_ip").toString());
+				syslogMap.put("dip", syslogMap.get("dst_ip").toString());
+				syslogMap.put("event_id", UUID.randomUUID().toString());
+
+				outputCollector.emit(input,new Values(syslogMap, isAlert));
 			}
 			
 		}catch(ClassCastException e) {
@@ -339,10 +361,17 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
      * 富化ip(sip、dip; Webids：victim、attacker)
      *
      */
-    private void enrichmentIp(Map<String, Object> syslogMap) throws Exception {
-        // （1）sip、dip
-        String sipStr = (null == syslogMap.get("sip")) ? null : (String)syslogMap.get("sip");
-        String dipStr = (null == syslogMap.get("sip")) ? null : (String)syslogMap.get("sip");
+    private void enrichmentIp(Map<String, Object> syslogMap, Boolean isAleart) throws Exception {
+		String sipStr = null;
+		String dipStr = null;
+    	if(!isAleart){
+			// （1）sip、dip
+			sipStr = (null == syslogMap.get("sip")) ? null : (String)syslogMap.get("sip");
+			dipStr = (null == syslogMap.get("dip")) ? null : (String)syslogMap.get("dip");
+		}else {
+    		sipStr = (null == syslogMap.get("sip")) ? null : (String)syslogMap.get("src_ip");
+			dipStr = (null == syslogMap.get("dip")) ? null : (String)syslogMap.get("dst_ip");
+		}
 
         Result sipResult = Geoip.getInstance().query(sipStr);
         Result dipResult = Geoip.getInstance().query(dipStr);
@@ -450,7 +479,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		
-		declarer.declare(new Fields("convertedMap"));
+		declarer.declare(new Fields("convertedMap", "isAlert"));
 	}
 
 }

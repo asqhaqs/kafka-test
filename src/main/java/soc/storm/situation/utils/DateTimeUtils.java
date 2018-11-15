@@ -1,6 +1,8 @@
 
 package soc.storm.situation.utils;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -57,5 +59,19 @@ public class DateTimeUtils {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH");
         String dateString = formatter.format(currentTime);
         return dateString;
+    }
+
+    /**
+     * 将时间戳转化为 “yyyy-MM-dd HH:mm:ss” 字符串
+     */
+    public static String timestampToDate(String timestamp, String format){
+        if(StringUtils.isEmpty(timestamp)) {
+            return "";
+        }
+        if(StringUtils.isEmpty(format)){
+            format = "yyyy-MM-dd HH:mm:ss";
+        }
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
+        return simpleDateFormat.format(new Date(Long.valueOf(timestamp)));
     }
 }
