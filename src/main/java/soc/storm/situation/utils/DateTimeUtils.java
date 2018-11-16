@@ -69,7 +69,7 @@ public class DateTimeUtils {
             return "";
         }
         if(StringUtils.isEmpty(format)){
-            format = "yyyy-MM-dd HH:mm:ss";
+            format = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
         }
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
         return simpleDateFormat.format(new Date(Long.valueOf(timestamp)));

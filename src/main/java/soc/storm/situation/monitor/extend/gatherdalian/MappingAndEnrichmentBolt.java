@@ -333,7 +333,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 				enrichmentIp(syslogMap, isAlert);
 				//添加公共头使得该条告警通过规则引擎
 				syslogMap.put("found_time", DateTimeUtils.timestampToDate(syslogMap.get("timestamp").toString(),
-						"yyyy-MM-dd HH:mm:ss"));
+						"yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
 				syslogMap.put("event_type", "005");
 				syslogMap.put("event_subtype", "005100");
 				syslogMap.put("industry_id", 0);
@@ -341,7 +341,7 @@ public class MappingAndEnrichmentBolt extends BaseRichBolt {
 				syslogMap.put("system_id", 0);
 				syslogMap.put("sip", syslogMap.get("src_ip").toString());
 				syslogMap.put("dip", syslogMap.get("dst_ip").toString());
-				syslogMap.put("event_id", UUID.randomUUID().toString());
+				syslogMap.put("organization_id",0);
 
 				outputCollector.emit(input,new Values(syslogMap, isAlert));
 			}
