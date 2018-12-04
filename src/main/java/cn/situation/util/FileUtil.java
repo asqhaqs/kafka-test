@@ -118,57 +118,51 @@ public class FileUtil {
 	     * @param outputDir 要解压到某个指定的目录下 
 	     * @throws IOException 
 	     */  
-    public static List<File> unTarGz(File file,String outputDir) throws IOException{  
+    public static List<File> unTarGz(File file,String outputDir) throws IOException {
         TarInputStream tarIn = null;  
         List<File> fileList = new ArrayList<>();
         try{  
             tarIn = new TarInputStream(new GZIPInputStream(  
                     new BufferedInputStream(new FileInputStream(file))),  
-                    1024 * 2);  
-              
-            createDirectory(outputDir,null);//创建输出目录  
-
+                    1024 * 2);
+            createDirectory(outputDir,null);//创建输出目录
             TarEntry entry = null;  
-            while( (entry = tarIn.getNextEntry()) != null ){  
-                  
-                if(entry.isDirectory()){//是目录
+            while ((entry = tarIn.getNextEntry()) != null) {
+                if (entry.isDirectory()) {//是目录
                     entry.getName();
                     createDirectory(outputDir,entry.getName());//创建空目录  
-                }else{//是文件
+                } else { //是文件
                     File tmpFile = new File(outputDir + "/" + entry.getName());  
-                    createDirectory(tmpFile.getParent() + "/",null);//创建输出目录  
-                    OutputStream out = null;  
-                    try{  
+                    OutputStream out = null;
+                    try {
                         out = new FileOutputStream(tmpFile);  
-                        int length = 0;  
-                          
-                        byte[] b = new byte[2048];  
-                          
-                        while((length = tarIn.read(b)) != -1){  
+                        int length;
+                        byte[] b = new byte[2048];
+                        while ((length = tarIn.read(b)) != -1) {
                             out.write(b, 0, length);  
                         }  
                         fileList.add(tmpFile);
-                    }catch(IOException ex){  
+                    } catch(IOException ex) {
                         throw ex;  
-                    }finally{  
-                          
-                        if(out!=null)  
-                            out.close();  
+                    } finally {
+                        if(out != null) {
+                            out.close();
+                        }
                     }  
                 }
-            }  
-        return fileList;
-        }catch(IOException ex){  
-            throw new IOException("解压归档文件出现异常",ex);  
-        } finally{  
+            }
+        } catch(IOException ex) {
+            throw new IOException("解压归档文件出现异常", ex);
+        } finally {
             try{  
-                if(tarIn != null){  
+                if (tarIn != null) {
                     tarIn.close();  
                 }  
-            }catch(IOException ex){  
+            } catch(IOException ex) {
                 throw new IOException("关闭tarFile出现异常",ex);  
             }  
-        }  
+        }
+        return fileList;
     }
     
     /** 

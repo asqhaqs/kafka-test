@@ -20,6 +20,8 @@ public class Worker implements Runnable {
 
     private static SqliteUtil sqliteUtil = SqliteUtil.getInstance();
 
+    private static SFTPUtil sftpUtil = new SFTPUtil();
+
     static {
 
     }
@@ -79,24 +81,25 @@ public class Worker implements Runnable {
             throw e;
         }
     }
-    
-    private void alertEvent(String remotePath, String fileName, String localPath) {
-    	SFTPUtil sftp = new SFTPUtil();
-    	String filename = sftp.downLoadOneFile(remotePath, fileName, localPath, "", ".gz", true);
-    	File file = new File(filename);
-    	try {
-    		String outputDir = remotePath + "\\" + fileName.split(".")[0];
-    		List<File> fileList = FileUtil.unTarGz(file, outputDir);
-			if(fileList != null && fileList.size() > 0) {
-				File eventFile = fileList.get(0);
-				List<String> eventList = FileUtil.getFileContentByLine(eventFile.getPath());
+
+    private void alertEvent(String remotePath, String fileName) {
+        try {
+            boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
+                    SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
+            LOG.error(String.format("[%s]: rsult<%s>", "alertEvent", result));
+            if (result) {
+                File file = new File(SystemConstant.LOCAL_FILE_DIR + fileName);
+                String outputDir = remotePath + "\\" + fileName.substring(0, fileName.indexOf("."));
+                List<File> fileList = FileUtil.unTarGz(file, outputDir);
+                if(fileList != null && fileList.size() > 0) {
+                    File eventFile = fileList.get(0);
+                    List<String> eventList = FileUtil.getFileContentByLine(eventFile.getPath());
 //				System.out.println(eventList.toString());
-				
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+                }
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        }
     }
     
     private long getId() {

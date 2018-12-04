@@ -1,6 +1,5 @@
 package cn.situation;
 
-import ch.qos.logback.classic.net.SyslogAppender;
 import cn.situation.cons.SystemConstant;
 import cn.situation.file.Worker;
 import cn.situation.util.JsonUtil;

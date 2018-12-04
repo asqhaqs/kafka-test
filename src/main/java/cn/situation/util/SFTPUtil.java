@@ -274,58 +274,43 @@ public class SFTPUtil {
      * @param del: 下载后是否删除sftp文件
      * @return
      */
-    public String downLoadOneFile(String remotePath, String remoteFileName, String localPath,
+    public boolean downLoadOneFile(String remotePath, String remoteFileName, String localPath,
                                           String fileFormat, String fileEndFormat, boolean del) {
-        String filenames = null;
+        boolean flag = false;
         try {
             File localDir = new File(localPath);
             if (!localDir.exists()) {
                 localDir.mkdirs();
             }
             connect();
-            String filename = remoteFileName;
-            boolean flag;
-            String localFileName = localPath + filename;
             fileFormat = StringUtil.trim(fileFormat);
             fileEndFormat = StringUtil.trim(fileEndFormat);
             // 三种情况
             if (fileFormat.length() > 0 && fileEndFormat.length() > 0) {
-                if (filename.startsWith(fileFormat) && filename.endsWith(fileEndFormat)) {
-                    flag = downloadFile(remotePath, filename,localPath, filename);
-                    if (flag) {
-                        filenames = localFileName;
-                        if (del) {
-                            deleteSFTP(remotePath, filename);
-                        }
+                if (remoteFileName.startsWith(fileFormat) && remoteFileName.endsWith(fileEndFormat)) {
+                    flag = downloadFile(remotePath, remoteFileName,localPath, remoteFileName);
+                    if (flag && del) {
+                        deleteSFTP(remotePath, remoteFileName);
                     }
                 }
             } else if (fileFormat.length() > 0 && "".equals(fileEndFormat)) {
-                if (filename.startsWith(fileFormat)) {
-                    flag = downloadFile(remotePath, filename, localPath, filename);
-                    if (flag) {
-                    	filenames = localFileName;
-                        if (del) {
-                            deleteSFTP(remotePath, filename);
-                        }
+                if (remoteFileName.startsWith(fileFormat)) {
+                    flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
+                    if (flag && del) {
+                        deleteSFTP(remotePath, remoteFileName);
                     }
                 }
             } else if (fileEndFormat.length() > 0 && "".equals(fileFormat)) {
-                if (filename.endsWith(fileEndFormat)) {
-                    flag = downloadFile(remotePath, filename,localPath, filename);
-                    if (flag) {
-                    	filenames = localFileName;
-                        if (del) {
-                            deleteSFTP(remotePath, filename);
-                        }
+                if (remoteFileName.endsWith(fileEndFormat)) {
+                    flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
+                    if (flag && del) {
+                        deleteSFTP(remotePath, remoteFileName);
                     }
                 }
             } else {
-                flag = downloadFile(remotePath, filename,localPath, filename);
-                if (flag) {
-                	filenames = localFileName;
-                    if (del) {
-                        deleteSFTP(remotePath, filename);
-                    }
+                flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
+                if (flag && del) {
+                    deleteSFTP(remotePath, remoteFileName);
                 }
             }
         }
@@ -334,7 +319,7 @@ public class SFTPUtil {
         } finally {
             disconnect();
         }
-        return filenames;
+        return flag;
     }
     
 
