@@ -264,6 +264,79 @@ public class SFTPUtil {
         }
         return filenames;
     }
+    /**
+     * 下载单个文件
+     * @param remotePath: 远程下载目录(以路径符号结束,可以为相对路径eg:/assess/sftp/jiesuan_2/2014/)
+     * @param remoteFileName: 下载文件名
+     * @param localPath: 本地保存目录(以路径符号结束,D:\Duansha\sftp\)
+     * @param fileFormat: 下载文件格式(以特定字符开头,为空不做检验)
+     * @param fileEndFormat: 下载文件格式(文件格式)
+     * @param del: 下载后是否删除sftp文件
+     * @return
+     */
+    public String downLoadOneFile(String remotePath, String remoteFileName, String localPath,
+                                          String fileFormat, String fileEndFormat, boolean del) {
+        String filenames = null;
+        try {
+            File localDir = new File(localPath);
+            if (!localDir.exists()) {
+                localDir.mkdirs();
+            }
+            connect();
+            String filename = remoteFileName;
+            boolean flag;
+            String localFileName = localPath + filename;
+            fileFormat = StringUtil.trim(fileFormat);
+            fileEndFormat = StringUtil.trim(fileEndFormat);
+            // 三种情况
+            if (fileFormat.length() > 0 && fileEndFormat.length() > 0) {
+                if (filename.startsWith(fileFormat) && filename.endsWith(fileEndFormat)) {
+                    flag = downloadFile(remotePath, filename,localPath, filename);
+                    if (flag) {
+                        filenames = localFileName;
+                        if (del) {
+                            deleteSFTP(remotePath, filename);
+                        }
+                    }
+                }
+            } else if (fileFormat.length() > 0 && "".equals(fileEndFormat)) {
+                if (filename.startsWith(fileFormat)) {
+                    flag = downloadFile(remotePath, filename, localPath, filename);
+                    if (flag) {
+                    	filenames = localFileName;
+                        if (del) {
+                            deleteSFTP(remotePath, filename);
+                        }
+                    }
+                }
+            } else if (fileEndFormat.length() > 0 && "".equals(fileFormat)) {
+                if (filename.endsWith(fileEndFormat)) {
+                    flag = downloadFile(remotePath, filename,localPath, filename);
+                    if (flag) {
+                    	filenames = localFileName;
+                        if (del) {
+                            deleteSFTP(remotePath, filename);
+                        }
+                    }
+                }
+            } else {
+                flag = downloadFile(remotePath, filename,localPath, filename);
+                if (flag) {
+                	filenames = localFileName;
+                    if (del) {
+                        deleteSFTP(remotePath, filename);
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        } finally {
+            disconnect();
+        }
+        return filenames;
+    }
+    
 
     /**
      * 下载单个文件
@@ -472,7 +545,7 @@ public class SFTPUtil {
     public static void main(String[] args) {
         SFTPUtil sftp = null;
         // 本地存放地址
-        String localPath = "D:/tomcat5/webapps/ASSESS/DocumentsDir/DocumentTempDir/txtData/";
+        String localPath = "E:\\Event_detection";
         // Sftp下载路径
         String sftpPath = "/home/assess/sftp/jiesuan_2/2014/";
         List<String> filePathList = new ArrayList<String>();
@@ -481,6 +554,7 @@ public class SFTPUtil {
             sftp.connect();
             // 下载
             sftp.batchDownLoadFile(sftpPath, localPath, "ASSESS", ".txt", true);
+//            sftp.downLoadOneFile(sftpPath, localPath, "ASSESS", ".txt", true);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

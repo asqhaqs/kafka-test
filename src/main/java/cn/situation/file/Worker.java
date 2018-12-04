@@ -1,9 +1,16 @@
 package cn.situation.file;
 
 import cn.situation.cons.SystemConstant;
+import cn.situation.util.FileUtil;
 import cn.situation.util.LogUtil;
+import cn.situation.util.SFTPUtil;
 import cn.situation.util.SqliteUtil;
 import net.sf.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
 
@@ -72,7 +79,26 @@ public class Worker implements Runnable {
             throw e;
         }
     }
-
+    
+    private void alertEvent(String remotePath, String fileName, String localPath) {
+    	SFTPUtil sftp = new SFTPUtil();
+    	String filename = sftp.downLoadOneFile(remotePath, fileName, localPath, "", ".gz", true);
+    	File file = new File(filename);
+    	try {
+    		String outputDir = remotePath + "\\" + fileName.split(".")[0];
+    		List<File> fileList = FileUtil.unTarGz(file, outputDir);
+			if(fileList != null && fileList.size() > 0) {
+				File eventFile = fileList.get(0);
+				List<String> eventList = FileUtil.getFileContentByLine(eventFile.getPath());
+//				System.out.println(eventList.toString());
+				
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
     private long getId() {
         return Thread.currentThread().getId();
     }
