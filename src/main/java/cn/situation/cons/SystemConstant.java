@@ -20,7 +20,7 @@ public class SystemConstant {
             InputStreamReader inputStreamReader = new InputStreamReader(in, "UTF-8");
             props.load(inputStreamReader);
         } catch (IOException e) {
-            LOG.error(e.getLocalizedMessage());
+            LOG.error(e.getMessage(), e);
         } finally {
             if (in != null) {
                 try {
@@ -58,11 +58,23 @@ public class SystemConstant {
     public static final String REDIS_POOL_MAX_WAIT = getProperty("redis.poolMaxWait", "5000");
     public static final String REDIS_KEY_PREFIX = getProperty("redis_key_prefix", "logcenter");
 
-    //sftp 配置
+    //sftp 配置  SFTP01默认为天堤SFTP服务器
     public static final String SFTP_HOST = getProperty("sftp.host", "");
     public static final String SFTP_PORT = getProperty("sftp.port", "22");
     public static final String SFTP_USERNAME = getProperty("sftp.username", "");
     public static final String SFTP_PASSWORD = getProperty("sftp.password", "");
+
+    public static final String LEVEL1_DIR = getProperty("level1.dir", "");
+
+    public static final String IF_DOWNLOAD_METADATA = getProperty("if.download.metadata", "1");
+    public static final String IF_DOWNLOAD_EVENT = getProperty("if.download.event", "1");
+    public static final String IF_DOWNLOAD_ASSERT = getProperty("if.download.assert", "1");
+
+    public static final String EVENT_DIR = getProperty("event.dir", "");
+    public static final String META_DIR = getProperty("meta.dir", "");
+    public static final String ASSERT_DIR = getProperty("assert.dir", "");
+
+    public static final String PACKAGE_SUFFIX = getProperty("package.suffix", "");
 
     public static final String EXEC_INTERVAL_MS = getProperty("exec.interval.ms", "1000");
 

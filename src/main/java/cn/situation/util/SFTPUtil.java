@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import cn.situation.cons.SystemConstant;
 import com.jcraft.jsch.Channel;
@@ -36,7 +37,7 @@ public class SFTPUtil {
     private ChannelSftp sftp = null;
     private Session sshSession = null;
 
-    public SFTPUtil(){
+    public SFTPUtil() {
         this.host = SystemConstant.SFTP_HOST;
         this.username = SystemConstant.SFTP_USERNAME;
         this.password = SystemConstant.SFTP_PASSWORD;
@@ -97,6 +98,90 @@ public class SFTPUtil {
                 this.sshSession.disconnect();
             }
         }
+    }
+
+    public List<String> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat,
+                                          List<String> existList) {
+        List<String> fileNameList = new ArrayList<>();
+        try {
+            connect();
+            Vector v = listFiles(remotePath);
+            if (v.size() > 0) {
+                LOG.info(String.format("[%s]: fileSize<%s>", "getRemoteFileName", v.size()));
+                Iterator it = v.iterator();
+                while (it.hasNext()) {
+                    LsEntry entry = (LsEntry) it.next();
+                    String fileName = entry.getFilename();
+                    SftpATTRS attrs = entry.getAttrs();
+                    if (!attrs.isDir()) {
+                        boolean flag = checkFileName(fileName, fileFormat, fileEndFormat);
+
+                    }
+                }
+            }
+            sortFileName(fileNameList);
+        } catch (SftpException e) {
+            LOG.error(e.getMessage(), e);
+        } finally {
+            disconnect();
+        }
+        return fileNameList;
+    }
+
+    /**
+     * 检查文件名称
+     * @param fileName
+     * @param fileFormat
+     * @param fileEndFormat
+     * @return
+     */
+    public boolean checkFileName(String fileName, String fileFormat, String fileEndFormat) {
+        boolean result = false;
+        if (!StringUtil.isBlank(fileName)) {
+            if (!StringUtil.isBlank(fileFormat) && !StringUtil.isBlank(fileEndFormat)) {
+                result = fileName.startsWith(fileFormat) && fileName.endsWith(fileEndFormat);
+            } else if (!StringUtil.isBlank(fileFormat) && StringUtil.isBlank(fileEndFormat)) {
+                result = fileName.startsWith(fileFormat);
+            } else if (StringUtil.isBlank(fileFormat) && !StringUtil.isBlank(fileEndFormat)) {
+                result = fileName.endsWith(fileEndFormat);
+            } else if (StringUtil.isBlank(fileFormat) && StringUtil.isBlank(fileEndFormat)) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 根据文件名进行排序
+     * @param list
+     */
+    public void sortFileName(List<String> list) {
+        if (list.size() > 0) {
+            list.sort((a, b) -> {
+                int num1 = Integer.parseInt(a.substring(a.lastIndexOf("_") + 1, a.indexOf(".")));
+                int num2 = Integer.parseInt(a.substring(b.lastIndexOf("_") + 1, b.indexOf(".")));
+                if (num1 == num2)
+                    return 0;
+                if (num1 > num2)
+                    return 1;
+                return -1;
+            });
+        }
+    }
+
+    /**
+     * 过滤文件名称
+     * @param list
+     * @param position
+     * @return
+     */
+    public List<String> filterFileName(List<String> list, int position) {
+        List<String> result;
+        result = list.stream().filter((a) -> {
+            int num = Integer.parseInt(a.substring(a.lastIndexOf("_") + 1, a.indexOf(".")));
+            return num > position;
+        }).collect(Collectors.toList());
+        return result;
     }
 
     /**
@@ -177,7 +262,7 @@ public class SFTPUtil {
         catch (SftpException e) {
             LOG.error(e.getMessage(), e);
         } finally {
-            this.disconnect();
+            disconnect();
         }
         return filenames;
     }
