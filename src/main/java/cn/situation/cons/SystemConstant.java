@@ -47,6 +47,8 @@ public class SystemConstant {
 
     public static final String WORKER_THREAD_NUM = getProperty("worker_thread_num", "10");
 
+    public static final String EXCEPT_INTERVAL_MS = getProperty("except.interval.ms", "");
+
     // redis 配置
     public static final String REDIS_HOST = getProperty("redis.host", "127.0.0.1");
     public static final String REDIS_PORT = getProperty("redis.port", "6379");
@@ -71,11 +73,26 @@ public class SystemConstant {
     public static final String IF_DOWNLOAD_ASSERT = getProperty("if.download.assert", "1");
 
     public static final String EVENT_DIR = getProperty("event.dir", "");
-    public static final String META_DIR = getProperty("meta.dir", "");
+    public static final String METAdDATA_DIR = getProperty("metadata.dir", "");
     public static final String ASSERT_DIR = getProperty("assert.dir", "");
 
     public static final String PACKAGE_SUFFIX = getProperty("package.suffix", "");
 
     public static final String EXEC_INTERVAL_MS = getProperty("exec.interval.ms", "1000");
+
+    public static final String LOCAL_FILE_DIR = getProperty("local.file.dir", "");
+
+    public static final String SQLITE_DB_PATH = getProperty("sqlite.db.path", "");
+
+    public static final String KIND_EVENT = getProperty("kind.event", "");
+    public static final String KIND_METADATA = getProperty("kind.metadata", "");
+    public static final String KIND_ASSERT = getProperty("kind.assert", "");
+
+    public static final String TYPE_EVENT = getProperty("type.event", "");
+    public static final String TYPE_METADATA = getProperty("type.metadata", "");
+    public static final String TYPE_ASSERT = getProperty("type.assert", "");
+
+    public static final String EVENT_PREFIX = getProperty("event.prefix", "");
+    public static final String ASSERT_PREFIX = getProperty("assert.prefix", "");
 
 }

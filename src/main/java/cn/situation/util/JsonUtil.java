@@ -1,6 +1,7 @@
 package cn.situation.util;
 
 import com.alibaba.fastjson.JSON;
+import net.sf.json.JSONObject;
 
 import java.util.*;
 
@@ -42,16 +43,18 @@ public class JsonUtil {
         try {
             return JSON.parseObject(json, Map.class);
         } catch (Exception e) {
-            // System.out.println("------------------------skyeyeWebFlowLogStr:" + json);
             e.printStackTrace();
-            // //
-            // // Gson gson = new Gson();
-            // JsonParser parser = new JsonParser();
-            // JsonElement jsonElement = parser.parse(json);
-            // // System.out.println("------------------------skyeyeWebFlowLogStr:" + json + ", jsonElement:" +
-            // // jsonElement);
         }
         return null;
+    }
+
+    public static String pack2Json(String filePath, String fileName, String kind, String type) {
+        JSONObject json = new JSONObject();
+        json.put("filePath", filePath);
+        json.put("fileName", fileName);
+        json.put("kind", kind);
+        json.put("type", type);
+        return json.toString();
     }
 
     /**
@@ -63,35 +66,7 @@ public class JsonUtil {
         return JSON.toJSONString(map);
     }
 
-    @SuppressWarnings("unchecked")
     public static void main(String[] args) {
-        Map<String, Object> dataMap = new HashMap<String, Object>();
-        dataMap.put("english", "aabbcc");
-        dataMap.put("chinese", "天眼");
-        dataMap.put("boolean", true);
-        dataMap.put("Integer", 28);
-        dataMap.put("Double", 28.55);
-        dataMap.put("Date", new Date());
 
-        List<String> listSrc = new ArrayList<String>();
-        listSrc.add("1");
-        listSrc.add("2");
-        listSrc.add("3");
-        // dataMap.put("list", listSrc);
-        // System.out.println(JSON.toJSONString(listSrc).replace("\\", ""));
-        // dataMap.put("list", JSON.toJSONString(listSrc).replace("\\", ""));
-        dataMap.put("list", JSON.toJSONString(listSrc));
-        String jsonString = JSON.toJSONString(dataMap).replace("\\", "");
-        System.out.println(jsonString);
-
-        Map<?, ?> object = jsonToMap(jsonString);
-        System.out.println(object.get("english"));
-        System.out.println(object.get("chinese"));
-        System.out.println(object.get("boolean"));
-        System.out.println(object.get("Integer"));
-        System.out.println(object.get("Double"));
-        System.out.println(object.get("Date"));
-        List<String> listDes = (List<String>) object.get("list");
-        System.out.println(listDes);
     }
 }

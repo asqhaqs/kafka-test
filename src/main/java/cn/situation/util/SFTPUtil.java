@@ -101,7 +101,7 @@ public class SFTPUtil {
     }
 
     public List<String> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat,
-                                          List<String> existList) {
+                                          int position) {
         List<String> fileNameList = new ArrayList<>();
         try {
             connect();
@@ -114,14 +114,16 @@ public class SFTPUtil {
                     String fileName = entry.getFilename();
                     SftpATTRS attrs = entry.getAttrs();
                     if (!attrs.isDir()) {
-                        boolean flag = checkFileName(fileName, fileFormat, fileEndFormat);
-
+                        if (checkFileName(fileName, fileFormat, fileEndFormat) && filterFileName(fileName, position)) {
+                            fileNameList.add(fileName);
+                        }
                     }
                 }
             }
             sortFileName(fileNameList);
         } catch (SftpException e) {
-            LOG.error(e.getMessage(), e);
+            LOG.error(String.format("[%s]: remotePath<%s>, fileFormat<%s>, fileEndFormat<%s>, position<%s>, " +
+                    "message<%s>", "getRemoteFileName", remotePath, fileFormat, fileEndFormat, position, e.getMessage()));
         } finally {
             disconnect();
         }
@@ -135,7 +137,7 @@ public class SFTPUtil {
      * @param fileEndFormat
      * @return
      */
-    public boolean checkFileName(String fileName, String fileFormat, String fileEndFormat) {
+    private boolean checkFileName(String fileName, String fileFormat, String fileEndFormat) {
         boolean result = false;
         if (!StringUtil.isBlank(fileName)) {
             if (!StringUtil.isBlank(fileFormat) && !StringUtil.isBlank(fileEndFormat)) {
@@ -155,7 +157,7 @@ public class SFTPUtil {
      * 根据文件名进行排序
      * @param list
      */
-    public void sortFileName(List<String> list) {
+    private void sortFileName(List<String> list) {
         if (list.size() > 0) {
             list.sort((a, b) -> {
                 int num1 = Integer.parseInt(a.substring(a.lastIndexOf("_") + 1, a.indexOf(".")));
@@ -171,17 +173,13 @@ public class SFTPUtil {
 
     /**
      * 过滤文件名称
-     * @param list
+     * @param fileName
      * @param position
      * @return
      */
-    public List<String> filterFileName(List<String> list, int position) {
-        List<String> result;
-        result = list.stream().filter((a) -> {
-            int num = Integer.parseInt(a.substring(a.lastIndexOf("_") + 1, a.indexOf(".")));
-            return num > position;
-        }).collect(Collectors.toList());
-        return result;
+    private boolean filterFileName(String fileName, int position) {
+        int num = Integer.parseInt(fileName.substring(fileName.lastIndexOf("_") + 1, fileName.indexOf(".")));
+        return num > position;
     }
 
     /**

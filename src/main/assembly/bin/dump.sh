@@ -4,7 +4,7 @@ BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
 
-SERVER_NAME=scheduler-service
+SERVER_NAME=collector-log
 
 if [ -z "$SERVER_NAME" ]; then
 	SERVER_NAME=`hostname`

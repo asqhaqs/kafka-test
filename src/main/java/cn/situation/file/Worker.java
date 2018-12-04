@@ -2,12 +2,16 @@ package cn.situation.file;
 
 import cn.situation.cons.SystemConstant;
 import cn.situation.util.LogUtil;
+import cn.situation.util.SqliteUtil;
+import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
 
 public class Worker implements Runnable {
 
     private static final Logger LOG = LogUtil.getInstance(Worker.class);
+
+    private static SqliteUtil sqliteUtil = SqliteUtil.getInstance();
 
     static {
 
@@ -34,7 +38,7 @@ public class Worker implements Runnable {
                 LOG.error("[%s]: message<%s>, thread-id<%s>", "Worker.run", e.getMessage(), getId());
                 LOG.error(e.getMessage(), e);
                 try {
-                    Thread.sleep(5 * 1000);
+                    Thread.sleep(Long.parseLong(SystemConstant.EXCEPT_INTERVAL_MS));
                 } catch (InterruptedException ie) {
                     LOG.error(ie.getMessage(), ie);
                 }
@@ -45,8 +49,24 @@ public class Worker implements Runnable {
 
     private void action(byte[] data) throws Exception {
         try {
-            String logValue = new String(data);
-
+            JSONObject json = JSONObject.fromObject(new String(data));
+            String kind = json.getString("kind");
+            String type = json.getString("type");
+            String filePath = json.getString("filePath");
+            String fileName = json.getString("fileName");
+            LOG.info(String.format("[%s]: kind<%s>, type<%s>, filePath<%s>, fileName<%s>", "action",
+                    kind, type, filePath, fileName));
+            if (SystemConstant.KIND_EVENT.equals(kind)) {
+                //TODO 告警处理逻辑
+            }
+            if (SystemConstant.KIND_METADATA.equals(kind)) {
+                //TODO 流量处理逻辑
+            }
+            if (SystemConstant.KIND_ASSERT.equals(kind)) {
+                //TODO 资产处理逻辑
+            }
+            String sql = "UPDATE t_position SET file_name='" + fileName + "' WHERE kind='" + kind + "' AND type='" + type + "'";
+            sqliteUtil.executeUpdate(sql);
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             throw e;

@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS t_position(kind text, type text PRIMARY KEY NOT NULL, file_name text NOT NULL);
+
+INSERT INTO t_position(kind, type, file_name) VALUES('event', 'event', 'event_detection_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('assert', 'assert', 'assets_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'http', 'http_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'mail', 'mail_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'ftp', 'ftp_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'telnet', 'telnet_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'dns', 'dns_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'icmp', 'icmp_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'ssl_tls_vpn', 'ssl_tls_vpn_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'ldap', 'ldap_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'database', 'database_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'login', 'login_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'tcp', 'tcp_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'udp', 'udp_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'modbus', 'modbus_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 's7', 's7_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'opc', 'opc_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'goose', 'goose_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'mqtt', 'mqtt_0.tar.gz');
+INSERT INTO t_position(kind, type, file_name) VALUES('metadata', 'coap', 'coap_0.tar.gz');
