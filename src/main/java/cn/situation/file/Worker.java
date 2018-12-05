@@ -85,7 +85,7 @@ public class Worker implements Runnable {
         try {
             boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                     type, SystemConstant.PACKAGE_SUFFIX, false);
-            LOG.info(String.format("[%s]: type<%s>, remotePath<%s>, fileName<%s>, rsult<%s>", "handleMetadata",
+            LOG.info(String.format("[%s]: type<%s>, remotePath<%s>, fileName<%s>, result<%s>", "handleMetadata",
                     type, remotePath, fileName, result));
             if (result) {
                 List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
@@ -104,7 +104,8 @@ public class Worker implements Runnable {
         try {
             boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                     SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
-            LOG.error(String.format("[%s]: rsult<%s>", "alertEvent", result));
+            LOG.info(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
+                    "handleEvent", remotePath, fileName, result));
             if (result) {
                 List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
                 for (File file : fileList) {
