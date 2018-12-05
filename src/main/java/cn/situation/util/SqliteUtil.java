@@ -41,6 +41,16 @@ public class SqliteUtil {
         return conn;
     }
 
+    public String getQuerySql() {
+        return "SELECT * FROM t_position;";
+    }
+
+    public String getUpdateSql(String kind, String type, String fileName) {
+        int position = FileUtil.getPositionByFileName(fileName);
+        return "UPDATE t_position SET file_name='" + fileName + "',position=" + position + " WHERE kind='" + kind
+                + "' AND type='" + type + "'";
+    }
+
     /**
      * 执行sql查询
      * @param sql sql select 语句
@@ -54,9 +64,7 @@ public class SqliteUtil {
             resultSet = getStatement().executeQuery(sql);
             while ( resultSet.next() ) {
                 String type = resultSet.getString("type");
-                String fileName = resultSet.getString("file_name");
-                int position = Integer.parseInt(fileName.substring(fileName.lastIndexOf("_") + 1,
-                        fileName.indexOf(".")));
+                int position = resultSet.getInt("position");
                 map.put(type, position);
             }
         } catch (Exception e) {

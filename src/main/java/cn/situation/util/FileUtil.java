@@ -181,6 +181,15 @@ public class FileUtil {
             file.mkdirs();  
         }  
     }
+
+    /**
+     * 根据压缩包文件名获取消费位置信息
+     * @param fileName
+     * @return
+     */
+    public static int getPositionByFileName(String fileName) {
+        return Integer.parseInt(fileName.substring(fileName.lastIndexOf("_") + 1, fileName.indexOf(".")));
+    }
     
     public static void main(String[] args) {
     	File file = new File("E:\\Event_detection\\event_detection_1.tar.gz");

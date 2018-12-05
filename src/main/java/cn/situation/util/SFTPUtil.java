@@ -36,6 +36,7 @@ public class SFTPUtil {
     private int port = 22;
     private ChannelSftp sftp = null;
     private Session sshSession = null;
+    private Channel channel;
 
     public SFTPUtil() {
         this.host = SystemConstant.SFTP_HOST;
@@ -74,7 +75,7 @@ public class SFTPUtil {
             sshSession.setConfig(sshConfig);
             sshSession.connect();
             LOG.info(String.format("[%s]: message<%s>", "connect", "Session connected."));
-            Channel channel = sshSession.openChannel("sftp");
+            channel = sshSession.openChannel("sftp");
             channel.connect();
             LOG.info(String.format("[%s]: message<%s>", "connect", "Opening Channel."));
             sftp = (ChannelSftp) channel;
@@ -88,20 +89,21 @@ public class SFTPUtil {
      * 关闭连接
      */
     private void disconnect() {
-        if (null != this.sftp) {
-            if (this.sftp.isConnected()) {
-                this.sftp.disconnect();
-            }
+        if (null != sftp) {
+            sftp.quit();
         }
-        if (null != this.sshSession) {
-            if (this.sshSession.isConnected()) {
-                this.sshSession.disconnect();
-            }
+        if (null != channel && channel.isConnected()) {
+            channel.disconnect();
         }
+        if (null != sshSession && sshSession.isConnected()) {
+            sshSession.disconnect();
+        }
+        LOG.info(String.format("[%s]: message<%s>", "disconnect", "session closed."));
     }
 
-    public List<String> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat,
-                                          int position) {
+    public List<String> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat, int position) {
+        LOG.info(String.format("[%s]: remotePath<%s>, fileFormat<%s>, fileEndFormat<%s>, position<%s>",
+                "getRemoteFileName", remotePath, fileFormat, fileEndFormat, position));
         List<String> fileNameList = new ArrayList<>();
         try {
             connect();
@@ -122,8 +124,7 @@ public class SFTPUtil {
             }
             sortFileName(fileNameList);
         } catch (SftpException e) {
-            LOG.error(String.format("[%s]: remotePath<%s>, fileFormat<%s>, fileEndFormat<%s>, position<%s>, " +
-                    "message<%s>", "getRemoteFileName", remotePath, fileFormat, fileEndFormat, position, e.getMessage()));
+            LOG.error(String.format("[%s]: message<%s>", "getRemoteFileName", e.getMessage()));
         } finally {
             disconnect();
         }
@@ -160,8 +161,8 @@ public class SFTPUtil {
     private void sortFileName(List<String> list) {
         if (list.size() > 0) {
             list.sort((a, b) -> {
-                int num1 = Integer.parseInt(a.substring(a.lastIndexOf("_") + 1, a.indexOf(".")));
-                int num2 = Integer.parseInt(a.substring(b.lastIndexOf("_") + 1, b.indexOf(".")));
+                int num1 = FileUtil.getPositionByFileName(a);
+                int num2 = FileUtil.getPositionByFileName(b);
                 if (num1 == num2)
                     return 0;
                 if (num1 > num2)
@@ -178,7 +179,7 @@ public class SFTPUtil {
      * @return
      */
     private boolean filterFileName(String fileName, int position) {
-        int num = Integer.parseInt(fileName.substring(fileName.lastIndexOf("_") + 1, fileName.indexOf(".")));
+        int num = FileUtil.getPositionByFileName(fileName);
         return num > position;
     }
 
@@ -193,7 +194,12 @@ public class SFTPUtil {
      */
     public List<String> batchDownLoadFile(String remotePath, String localPath,
                                           String fileFormat, String fileEndFormat, boolean del) {
+        LOG.info(String.format("[%s]: remotePath<%s>, localPath<%s>, fileFormat<%s>, fileEndFormat<%s>, del<%s>",
+                "batchDownLoadFile", remotePath, localPath, fileFormat, fileEndFormat, del));
         List<String> filenames = new ArrayList<>();
+        if (!remotePath.endsWith("/")) {
+            remotePath += "/";
+        }
         try {
             File localDir = new File(localPath);
             if (!localDir.exists()) {
@@ -213,38 +219,7 @@ public class SFTPUtil {
                         String localFileName = localPath + filename;
                         fileFormat = StringUtil.trim(fileFormat);
                         fileEndFormat = StringUtil.trim(fileEndFormat);
-                        // 三种情况
-                        if (fileFormat.length() > 0 && fileEndFormat.length() > 0) {
-                            if (filename.startsWith(fileFormat) && filename.endsWith(fileEndFormat)) {
-                                flag = downloadFile(remotePath, filename,localPath, filename);
-                                if (flag) {
-                                    filenames.add(localFileName);
-                                    if (del) {
-                                        deleteSFTP(remotePath, filename);
-                                    }
-                                }
-                            }
-                        } else if (fileFormat.length() > 0 && "".equals(fileEndFormat)) {
-                            if (filename.startsWith(fileFormat)) {
-                                flag = downloadFile(remotePath, filename, localPath, filename);
-                                if (flag) {
-                                    filenames.add(localFileName);
-                                    if (del) {
-                                        deleteSFTP(remotePath, filename);
-                                    }
-                                }
-                            }
-                        } else if (fileEndFormat.length() > 0 && "".equals(fileFormat)) {
-                            if (filename.endsWith(fileEndFormat)) {
-                                flag = downloadFile(remotePath, filename,localPath, filename);
-                                if (flag) {
-                                    filenames.add(localFileName);
-                                    if (del) {
-                                        deleteSFTP(remotePath, filename);
-                                    }
-                                }
-                            }
-                        } else {
+                        if (checkFileName(filename, fileFormat, fileEndFormat)) {
                             flag = downloadFile(remotePath, filename,localPath, filename);
                             if (flag) {
                                 filenames.add(localFileName);
@@ -256,14 +231,14 @@ public class SFTPUtil {
                     }
                 }
             }
-        }
-        catch (SftpException e) {
-            LOG.error(e.getMessage(), e);
+        } catch (Exception e) {
+            LOG.error(String.format("[%s]: message<%s>", "batchDownLoadFile", e.getMessage()));
         } finally {
             disconnect();
         }
         return filenames;
     }
+
     /**
      * 下载单个文件
      * @param remotePath: 远程下载目录(以路径符号结束,可以为相对路径eg:/assess/sftp/jiesuan_2/2014/)
@@ -276,38 +251,16 @@ public class SFTPUtil {
      */
     public boolean downLoadOneFile(String remotePath, String remoteFileName, String localPath,
                                           String fileFormat, String fileEndFormat, boolean del) {
+        LOG.info(String.format("[%s]: remotePath<%s>, remoteFileName<%s>, localPath<%s>, fileFormat<%s>, " +
+                        "fileEndFormat<%s>, del<%s>", "downLoadOneFile", remotePath, remoteFileName, localPath,
+                fileFormat, fileEndFormat, del));
         boolean flag = false;
+        if (!remotePath.endsWith("/")) {
+            remotePath += "/";
+        }
         try {
-            File localDir = new File(localPath);
-            if (!localDir.exists()) {
-                localDir.mkdirs();
-            }
             connect();
-            fileFormat = StringUtil.trim(fileFormat);
-            fileEndFormat = StringUtil.trim(fileEndFormat);
-            // 三种情况
-            if (fileFormat.length() > 0 && fileEndFormat.length() > 0) {
-                if (remoteFileName.startsWith(fileFormat) && remoteFileName.endsWith(fileEndFormat)) {
-                    flag = downloadFile(remotePath, remoteFileName,localPath, remoteFileName);
-                    if (flag && del) {
-                        deleteSFTP(remotePath, remoteFileName);
-                    }
-                }
-            } else if (fileFormat.length() > 0 && "".equals(fileEndFormat)) {
-                if (remoteFileName.startsWith(fileFormat)) {
-                    flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
-                    if (flag && del) {
-                        deleteSFTP(remotePath, remoteFileName);
-                    }
-                }
-            } else if (fileEndFormat.length() > 0 && "".equals(fileFormat)) {
-                if (remoteFileName.endsWith(fileEndFormat)) {
-                    flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
-                    if (flag && del) {
-                        deleteSFTP(remotePath, remoteFileName);
-                    }
-                }
-            } else {
+            if (checkFileName(remoteFileName, fileFormat, fileEndFormat)) {
                 flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
                 if (flag && del) {
                     deleteSFTP(remotePath, remoteFileName);
@@ -315,13 +268,12 @@ public class SFTPUtil {
             }
         }
         catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+            LOG.error(String.format("[%s]: message<%s>", "downLoadOneFile", e.getMessage()));
         } finally {
             disconnect();
         }
         return flag;
     }
-    
 
     /**
      * 下载单个文件
@@ -331,27 +283,17 @@ public class SFTPUtil {
      * @param localFileName: 保存文件名
      * @return
      */
-    public boolean downloadFile(String remotePath, String remoteFileName,String localPath, String localFileName) {
-        FileOutputStream fieloutput = null;
-        try {
-            File file = new File(localPath + localFileName);
-            fieloutput = new FileOutputStream(file);
-            sftp.get(remotePath + remoteFileName, fieloutput);
-            LOG.info(String.format("[%s]: remoteFileName<%s>, message<%s>", "downloadFile", remoteFileName,
-                    "Download success from sftp."));
-            return true;
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
-        } finally {
-            if (null != fieloutput) {
-                try {
-                    fieloutput.close();
-                } catch (IOException e) {
-                    LOG.error(e.getMessage(), e);
-                }
-            }
-        }
-        return false;
+    public boolean downloadFile(String remotePath, String remoteFileName,String localPath, String localFileName)
+            throws Exception {
+        FileOutputStream output;
+        File file = new File(localPath + localFileName);
+        output = new FileOutputStream(file);
+        sftp.get(remotePath + remoteFileName, output);
+        output.close();
+        LOG.info(String.format("[%s]: remotePath<%s>, remoteFileName<%s>, localPath<%s>, localFileName<%s>, " +
+                        "message<%s>", "downloadFile", remotePath, remoteFileName, localPath, localFileName,
+                "Download success from sftp."));
+        return true;
     }
 
     /**

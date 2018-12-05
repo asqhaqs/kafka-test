@@ -2,10 +2,7 @@ package cn.situation;
 
 import cn.situation.cons.SystemConstant;
 import cn.situation.file.Worker;
-import cn.situation.util.JsonUtil;
-import cn.situation.util.LogUtil;
-import cn.situation.util.SFTPUtil;
-import cn.situation.util.SqliteUtil;
+import cn.situation.util.*;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
 
@@ -21,11 +18,10 @@ public class Main {
     private static Map<String, Integer> metaFileNamePosition = new HashMap<>();
     private static int assertFileNamePosition = 0;
 
-    private static SFTPUtil sftpUtil = new SFTPUtil();
     private static SqliteUtil sqliteUtil = new SqliteUtil();
 
     static {
-        Map<String, Integer> positionMap = sqliteUtil.executeQuery("SELECT * FROM t_position;");
+        Map<String, Integer> positionMap = sqliteUtil.executeQuery(sqliteUtil.getQuerySql());
         LOG.info(String.format("[%s]: positionMap<%s>", "Main", positionMap));
         if (null != positionMap && positionMap.size() > 0) {
             eventFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_EVENT, 0);
@@ -35,12 +31,12 @@ public class Main {
                 metaFileNamePosition.put(type, positionMap.getOrDefault(type, 0));
             }
         }
+        FileUtil.createDir(SystemConstant.LOCAL_FILE_DIR);
     }
 
     public static void main(String[] args) {
 
         ZMQ.Context context = ZMQ.context(0);
-
         ZMQ.Socket sender = context.socket(ZMQ.PUSH);
         sender.bind("inproc://workers");
         sender.setHWM(Integer.valueOf(SystemConstant.ZMQ_SNDHWM));
@@ -52,7 +48,7 @@ public class Main {
         }
 
         LOG.error(String.format("[%s]: message<%s>", "main", "start work..."));
-
+        SFTPUtil sftpUtil = new SFTPUtil();
         while (!Thread.currentThread ().isInterrupted ()) {
             try {
                 if ("1".equals(SystemConstant.IF_DOWNLOAD_EVENT)) {
@@ -61,7 +57,7 @@ public class Main {
                     for (String fileName : fileNameList) {
                         sender.send(JsonUtil.pack2Json(SystemConstant.EVENT_DIR, fileName, SystemConstant.KIND_EVENT,
                                 SystemConstant.TYPE_EVENT), 0);
-                        eventFileNamePosition++;
+                        eventFileNamePosition = FileUtil.getPositionByFileName(fileName);
                     }
                 }
                 if ("1".equals(SystemConstant.IF_DOWNLOAD_METADATA)) {
@@ -74,7 +70,7 @@ public class Main {
                         for (String fileName : fileNameList) {
                             sender.send(JsonUtil.pack2Json(metaDris[i], fileName, SystemConstant.KIND_METADATA,
                                     metaTypes[i]), 0);
-                            metaFileNamePosition.put(metaTypes[i], metaFileNamePosition.get(metaTypes[i]) + 1);
+                            metaFileNamePosition.put(metaTypes[i], FileUtil.getPositionByFileName(fileName));
                         }
                     }
                 }
@@ -84,7 +80,7 @@ public class Main {
                     for (String fileName : fileNameList) {
                         sender.send(JsonUtil.pack2Json(SystemConstant.ASSERT_DIR, fileName, SystemConstant.KIND_ASSERT,
                                 SystemConstant.TYPE_ASSERT), 0);
-                        assertFileNamePosition++;
+                        assertFileNamePosition = FileUtil.getPositionByFileName(fileName);
                     }
                 }
                 try {

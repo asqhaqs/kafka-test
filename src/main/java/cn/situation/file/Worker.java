@@ -8,7 +8,6 @@ import cn.situation.util.SqliteUtil;
 import net.sf.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -20,7 +19,7 @@ public class Worker implements Runnable {
 
     private static SqliteUtil sqliteUtil = SqliteUtil.getInstance();
 
-    private static SFTPUtil sftpUtil = new SFTPUtil();
+    private SFTPUtil sftpUtil = new SFTPUtil();
 
     static {
 
@@ -56,7 +55,7 @@ public class Worker implements Runnable {
         socket.close();
     }
 
-    private void action(byte[] data) throws Exception {
+    private void action(byte[] data) {
         try {
             JSONObject json = JSONObject.fromObject(new String(data));
             String kind = json.getString("kind");
@@ -70,15 +69,26 @@ public class Worker implements Runnable {
             }
             if (SystemConstant.KIND_METADATA.equals(kind)) {
                 //TODO 流量处理逻辑
+                handleMetadata(type, filePath, fileName);
             }
             if (SystemConstant.KIND_ASSERT.equals(kind)) {
                 //TODO 资产处理逻辑
             }
-            String sql = "UPDATE t_position SET file_name='" + fileName + "' WHERE kind='" + kind + "' AND type='" + type + "'";
-            sqliteUtil.executeUpdate(sql);
+            sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-            throw e;
+        }
+    }
+
+    private void handleMetadata(String type, String remotePath, String fileName) {
+        try {
+            boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
+                    type, SystemConstant.PACKAGE_SUFFIX, false);
+            LOG.error(String.format("[%s]: type<%s>, remotePath<%s>, fileName<%s>, rsult<%s>", "handleMetadata",
+                    type, remotePath, fileName, result));
+            // TODO
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
         }
     }
 
