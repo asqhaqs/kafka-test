@@ -66,6 +66,7 @@ public class Worker implements Runnable {
                     kind, type, filePath, fileName));
             if (SystemConstant.KIND_EVENT.equals(kind)) {
                 //TODO 告警处理逻辑
+                handleEvent(filePath, fileName);
             }
             if (SystemConstant.KIND_METADATA.equals(kind)) {
                 //TODO 流量处理逻辑
