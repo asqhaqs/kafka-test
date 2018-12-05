@@ -16,6 +16,7 @@ import cn.situation.util.JsonUtil;
 import cn.situation.util.LogUtil;
 
 
+
 public class EventTrans {
 	private static final Logger LOG = LogUtil.getInstance(EventTrans.class);
 	

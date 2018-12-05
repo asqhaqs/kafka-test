@@ -1,6 +1,7 @@
 package cn.situation.file;
 
 import cn.situation.cons.SystemConstant;
+import cn.situation.data.EventTrans;
 import cn.situation.util.FileUtil;
 import cn.situation.util.LogUtil;
 import cn.situation.util.SFTPUtil;
@@ -66,6 +67,7 @@ public class Worker implements Runnable {
                     kind, type, filePath, fileName));
             if (SystemConstant.KIND_EVENT.equals(kind)) {
                 //TODO 告警处理逻辑
+            	alertEvent(filePath, fileName);
             }
             if (SystemConstant.KIND_METADATA.equals(kind)) {
                 //TODO 流量处理逻辑
@@ -104,6 +106,7 @@ public class Worker implements Runnable {
                 if(fileList != null && fileList.size() > 0) {
                     File eventFile = fileList.get(0);
                     List<String> eventList = FileUtil.getFileContentByLine(eventFile.getPath());
+                    EventTrans.do_trans(eventList);
 //				System.out.println(eventList.toString());
                 }
             }
