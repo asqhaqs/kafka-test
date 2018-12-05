@@ -59,6 +59,7 @@ public class SystemConstant {
     public static final String REDIS_POOL_MIN_IDLE = getProperty("redis.poolMinIdle", "30");
     public static final String REDIS_POOL_MAX_WAIT = getProperty("redis.poolMaxWait", "5000");
     public static final String REDIS_KEY_PREFIX = getProperty("redis_key_prefix", "logcenter");
+    public static final String REDIS_ALERT_KEY = getProperty("alert_redis_key", "situation-ids");
 
     //sftp 配置  SFTP01默认为天堤SFTP服务器
     public static final String SFTP_HOST = getProperty("sftp.host", "");
