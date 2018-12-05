@@ -1,3 +1,5 @@
+-- sqlite3 /data/post.db
+
 CREATE TABLE IF NOT EXISTS t_position(kind text, type text PRIMARY KEY NOT NULL, file_name text, position integer);
 
 INSERT INTO t_position(kind, type, file_name, position) VALUES('event', 'event', '', 0);

@@ -1,5 +1,6 @@
 package cn.situation.util;
 
+import cn.situation.cons.SystemConstant;
 import org.apache.tools.tar.TarEntry;
 import org.apache.tools.tar.TarInputStream;
 import org.slf4j.Logger;
@@ -37,9 +38,9 @@ public class FileUtil {
         return content.toString();
     }
 
-    public static List<String> getFileContentByLine(String filePath) {
+    public static List<String> getFileContentByLine(String filePath, boolean ifDelFileDir) {
         File file = new File(filePath);
-        if (!file.exists() || !file.isFile()) {
+        if (!file.exists() || !file.isFile() || file.length() == 0) {
             return null;
         }
         List<String> content = new ArrayList<String>();
@@ -47,16 +48,18 @@ public class FileUtil {
             FileInputStream fileInputStream = new FileInputStream(file);
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
             BufferedReader reader = new BufferedReader(inputStreamReader);
-            String lineContent = "";
+            String lineContent;
             while ((lineContent = reader.readLine()) != null) {
                 content.add(lineContent);
                 if (lineContent.contains("$"))
                     System.out.println(lineContent);
             }
-
             fileInputStream.close();
             inputStreamReader.close();
             reader.close();
+            if (ifDelFileDir) {
+                delDir(file.getParent());
+            }
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
         }
@@ -81,7 +84,8 @@ public class FileUtil {
     }
 
     public static void delFile(String path, String fileName) {
-        File file=new File(path + "/" + fileName);
+        String filePath = path.endsWith("/") ? (path + fileName) : (path + "/" + fileName);
+        File file = new File(filePath);
         if (file.exists() && file.isFile()) {
             file.delete();
         }
@@ -114,53 +118,49 @@ public class FileUtil {
     
     /** 
 	     * 解压tar.gz 文件 
-	     * @param file 要解压的tar.gz文件对象 
+	     * @param oriFilePath 要解压的tar.gz文件路径
 	     * @param outputDir 要解压到某个指定的目录下 
 	     * @throws IOException 
 	     */  
-    public static List<File> unTarGz(File file,String outputDir) throws IOException {
-        TarInputStream tarIn = null;  
+    public static List<File> unTarGz(String oriFilePath, String outputDir) throws IOException {
         List<File> fileList = new ArrayList<>();
-        try{  
-            tarIn = new TarInputStream(new GZIPInputStream(  
-                    new BufferedInputStream(new FileInputStream(file))),  
-                    1024 * 2);
-            createDirectory(outputDir,null);//创建输出目录
-            TarEntry entry = null;  
-            while ((entry = tarIn.getNextEntry()) != null) {
-                if (entry.isDirectory()) {//是目录
-                    entry.getName();
-                    createDirectory(outputDir,entry.getName());//创建空目录  
-                } else { //是文件
-                    File tmpFile = new File(outputDir + "/" + entry.getName());  
-                    OutputStream out = null;
-                    try {
-                        out = new FileOutputStream(tmpFile);  
-                        int length;
-                        byte[] b = new byte[2048];
-                        while ((length = tarIn.read(b)) != -1) {
-                            out.write(b, 0, length);  
-                        }  
-                        fileList.add(tmpFile);
-                    } catch(IOException ex) {
-                        throw ex;  
-                    } finally {
-                        if(out != null) {
-                            out.close();
-                        }
-                    }  
+        TarInputStream tarIn = new TarInputStream(new GZIPInputStream(
+                new BufferedInputStream(new FileInputStream(oriFilePath))),
+                1024 * 2);
+        createDirectory(outputDir,null); //创建输出目录
+        TarEntry entry;
+        while ((entry = tarIn.getNextEntry()) != null) {
+            if (entry.isDirectory()) {//是目录
+                entry.getName();
+                createDirectory(outputDir, entry.getName());//创建空目录
+            } else { //是文件
+                File tmpFile = new File(outputDir + "/" + entry.getName());
+                OutputStream out = new FileOutputStream(tmpFile);
+                int length;
+                byte[] b = new byte[2048];
+                while ((length = tarIn.read(b)) != -1) {
+                    out.write(b, 0, length);
                 }
+                fileList.add(tmpFile);
+                out.close();
             }
-        } catch(IOException ex) {
-            throw new IOException("解压归档文件出现异常", ex);
-        } finally {
-            try{  
-                if (tarIn != null) {
-                    tarIn.close();  
-                }  
-            } catch(IOException ex) {
-                throw new IOException("关闭tarFile出现异常",ex);  
-            }  
+        }
+        tarIn.close();
+        return fileList;
+    }
+
+    /**
+     * unTarGz包装器
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    public static List<File> unTarGzWrapper(String fileName, boolean ifDelOriFile) throws IOException {
+        String outputDir = SystemConstant.LOCAL_FILE_DIR + fileName.substring(0, fileName.indexOf("."));
+        String oriFilePath =  SystemConstant.LOCAL_FILE_DIR + fileName;
+        List<File> fileList = unTarGz(oriFilePath, outputDir);
+        if (ifDelOriFile) {
+            delFile(SystemConstant.LOCAL_FILE_DIR, fileName);
         }
         return fileList;
     }
@@ -192,17 +192,6 @@ public class FileUtil {
     }
     
     public static void main(String[] args) {
-    	File file = new File("E:\\Event_detection\\event_detection_1.tar.gz");
-		try {
-			List<File> fileList = unTarGz(file, "E:\\\\Event_detection\\event_detection_1");
-			if(fileList != null && fileList.size() > 0) {
-				File eventFile = fileList.get(0);
-				List<String> eventList = getFileContentByLine(eventFile.getPath());
-				System.out.println(eventList.toString());
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 }
