@@ -1,6 +1,7 @@
 package cn.situation.file;
 
 import cn.situation.cons.SystemConstant;
+import cn.situation.data.EventTrans;
 import cn.situation.util.FileUtil;
 import cn.situation.util.LogUtil;
 import cn.situation.util.SFTPUtil;
@@ -110,6 +111,9 @@ public class Worker implements Runnable {
                 List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
                 for (File file : fileList) {
                     List<String> eventList = FileUtil.getFileContentByLine(file.getAbsolutePath(), true);
+                    LOG.info(String.format("[%s]: eventList<%s>",
+                            "handleEvent", eventList));
+                    EventTrans.do_trans(eventList);
                 }
             }
         } catch (Exception e) {

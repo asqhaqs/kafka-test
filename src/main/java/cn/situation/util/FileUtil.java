@@ -158,6 +158,8 @@ public class FileUtil {
     public static List<File> unTarGzWrapper(String fileName, boolean ifDelOriFile) throws IOException {
         String outputDir = SystemConstant.LOCAL_FILE_DIR + fileName.substring(0, fileName.indexOf("."));
         String oriFilePath =  SystemConstant.LOCAL_FILE_DIR + fileName;
+        LOG.info(String.format("[%s]: outputDir<%s>, oriFilePath<%s>",
+                "unTarGzWrapper", outputDir, oriFilePath));
         List<File> fileList = unTarGz(oriFilePath, outputDir);
         if (ifDelOriFile) {
             delFile(SystemConstant.LOCAL_FILE_DIR, fileName);
@@ -192,6 +194,11 @@ public class FileUtil {
     }
     
     public static void main(String[] args) {
-
+    	try {
+			unTarGzWrapper("event_detection_1.tar.gz",true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
