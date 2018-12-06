@@ -44,12 +44,12 @@ public class SystemConstant {
         init("app.properties");
     }
 
-    public static final String GEO_DATA_PATH = getProperty("geo_data_path", "geoipdata");
+    public static final String GEO_DATA_PATH = getProperty("geo.data.path", "geoipdata");
 
-    public static final String ZMQ_SNDHWM = getProperty("zmq_sndhwm", "100");
-    public static final String ZMQ_RCVHWM = getProperty("zmq_rcvhwm", "100");
+    public static final String ZMQ_SNDHWM = getProperty("zmq.sndhwm", "100");
+    public static final String ZMQ_RCVHWM = getProperty("zmq.rcvhwm", "100");
 
-    public static final String WORKER_THREAD_NUM = getProperty("worker_thread_num", "10");
+    public static final String WORKER_THREAD_NUM = getProperty("worker.thread.num", "10");
 
     public static final String EXCEPT_INTERVAL_MS = getProperty("except.interval.ms", "");
 
@@ -72,7 +72,7 @@ public class SystemConstant {
     public static final String REDIS_POOL_MIN_IDLE = getProperty("redis.poolMinIdle", "30");
     public static final String REDIS_POOL_MAX_WAIT = getProperty("redis.poolMaxWait", "5000");
     public static final String REDIS_KEY_PREFIX = getProperty("redis.key.prefix", "logcenter");
-    public static final String REDIS_ALERT_KEY = getProperty("alert_redis_key", "situation-ids");
+    public static final String REDIS_ALERT_KEY = getProperty("alert.redis.key", "situation-ids");
 
     //sftp 配置  SFTP01默认为天堤SFTP服务器
     public static final String SFTP_HOST = getProperty("sftp.host", "");

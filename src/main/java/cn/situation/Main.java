@@ -47,7 +47,7 @@ public class Main {
             new Thread(worker).start();
         }
 
-        LOG.error(String.format("[%s]: message<%s>", "main", "start work..."));
+        LOG.info(String.format("[%s]: message<%s>", "main", "start work..."));
         SFTPUtil sftpUtil = new SFTPUtil();
         while (!Thread.currentThread ().isInterrupted ()) {
             try {

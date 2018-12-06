@@ -7,6 +7,7 @@ import cn.situation.util.LogUtil;
 import cn.situation.util.StringUtil;
 import org.slf4j.Logger;
 
+import javax.jws.soap.SOAPBinding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -170,6 +171,9 @@ public class MessageService {
                 case "long":
                     object = Long.valueOf(value);
                     break;
+                default:
+                    object = value;
+                    break;
             }
         }
         return object;
@@ -190,7 +194,7 @@ public class MessageService {
 
     public static void main(String[] args) {
         MessageService service = new MessageService();
-        String log = "0x01|0x01|0x0201|305441741|1544084907|228|172.24.201.141|360|101.102.103.13|123.183.221.19|61632|80||||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C08DDAB0021C903|1|HTTP 1.1||cl.vd.f.360.cn|/VirusDetection.phpͫͫͫ4^R| |Post_Multipart| | | | | | | |200||Tue, 05 Dec 2017 06:48:04 GMT| |chunkedͫͫͫ4^RJ^B| |no-cache|close|| | | |4294967295|application/octet-stream|����| || | | |VirusDetection.php||";
+        String log = "0x01|0x01|0x020C|305441741|1544095234|9|172.24.201.141|360|192.168.74.30|192.168.74.31|1051|502||||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C09060200035403|1|0|100|";
         service.parseMetadata(log);
     }
 }

@@ -64,7 +64,6 @@ public class Worker implements Runnable {
             LOG.info(String.format("[%s]: kind<%s>, type<%s>, filePath<%s>, fileName<%s>", "action",
                     kind, type, filePath, fileName));
             if (SystemConstant.KIND_EVENT.equals(kind)) {
-                //TODO 告警处理逻辑
                 handleEvent(filePath, fileName);
             }
             if (SystemConstant.KIND_METADATA.equals(kind)) {
