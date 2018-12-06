@@ -114,8 +114,8 @@ public class MessageService {
                 if (!StringUtil.isBlank(redisKey)) {
                     DicUtil.rpush(redisKey, JsonUtil.mapToJson(map), SystemConstant.KIND_METADATA);
                 }
-                LOG.info(String.format("[%s]: jsonData<%s>, size<%s>, redisKey<%s>", "parseMetadata",
-                        JsonUtil.mapToJson(map), map.size(), redisKey));
+                LOG.info(String.format("[%s]: jsonData<%s>, size<%s>, redisKey<%s>, metadataType<%s>", "parseMetadata",
+                        JsonUtil.mapToJson(map), map.size(), redisKey, metadataType));
             } else {
                 LOG.error(String.format("[%s]: map<%s>, size<%s>, message<%s>", "parseMetadata", map,
                         map.size(), "消息映射为空."));
@@ -147,6 +147,7 @@ public class MessageService {
     private Object typpeConvert(String value, String type) {
         Object object = null;
         if (!StringUtil.isBlank(value)) {
+            value = value.replaceAll("%%%", "|");
             switch (type) {
                 case "String":
                     object = value;
