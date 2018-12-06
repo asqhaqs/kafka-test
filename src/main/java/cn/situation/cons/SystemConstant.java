@@ -1,10 +1,14 @@
 package cn.situation.cons;
 
 import cn.situation.util.LogUtil;
+import cn.situation.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class SystemConstant {
@@ -50,15 +54,24 @@ public class SystemConstant {
     public static final String EXCEPT_INTERVAL_MS = getProperty("except.interval.ms", "");
 
     // redis 配置
-    public static final String REDIS_HOST = getProperty("redis.host", "127.0.0.1");
-    public static final String REDIS_PORT = getProperty("redis.port", "6379");
+    public static final String METADATA_REDIS_HOST = getProperty("metadata.redis.host", "127.0.0.1");
+    public static final String METADATA_REDIS_PORT = getProperty("metadata.redis.port", "6379");
+    public static final String METADATA_REDIS_PASSWORD = getProperty("metadata.redis.password", "123456");
+
+    public static final String EVENT_REDIS_HOST = getProperty("event.redis.host", "127.0.0.1");
+    public static final String EVENT_REDIS_PORT = getProperty("event.redis.port", "6379");
+    public static final String EVENT_REDIS_PASSWORD = getProperty("event.redis.password", "123456");
+
+    public static final String ASSERT_REDIS_HOST = getProperty("assert.redis.host", "127.0.0.1");
+    public static final String ASSERT_REDIS_PORT = getProperty("assert.redis.port", "6379");
+    public static final String ASSERT_REDIS_PASSWORD = getProperty("assert.redis.password", "123456");
+
     public static final String REDIS_TIMEOUT = getProperty("redis.timeout", "3");
-    public static final String REDIS_PASSWORD = getProperty("redis.password", "123456");
     public static final String REDIS_POOL_MAX_TOTAL = getProperty("redis.poolMaxTotal", "300");
     public static final String REDIS_POOL_MAX_IDLE = getProperty("redis.poolMaxIdle", "60");
     public static final String REDIS_POOL_MIN_IDLE = getProperty("redis.poolMinIdle", "30");
     public static final String REDIS_POOL_MAX_WAIT = getProperty("redis.poolMaxWait", "5000");
-    public static final String REDIS_KEY_PREFIX = getProperty("redis_key_prefix", "logcenter");
+    public static final String REDIS_KEY_PREFIX = getProperty("redis.key.prefix", "logcenter");
     public static final String REDIS_ALERT_KEY = getProperty("alert_redis_key", "situation-ids");
 
     //sftp 配置  SFTP01默认为天堤SFTP服务器
@@ -95,5 +108,75 @@ public class SystemConstant {
 
     public static final String EVENT_PREFIX = getProperty("event.prefix", "");
     public static final String ASSERT_PREFIX = getProperty("assert.prefix", "");
+
+    public static final String MESSAGE_TYPE = getProperty("message.type", "");
+
+    public static final String MESSAGE_HEAD_FIELD = getProperty("message.head.field", "");
+
+    public static final String METADATA_REDIS_KEY = getProperty("metadata.redis.key", "");
+
+    public static Map<String, Map<String, String>> getMetadataFieldMap() {
+        Map<String, Map<String, String>> messageFieldMap = new HashMap<>();
+        String[] metadataTypes = TYPE_METADATA.split(",");
+        for (String metadataType : metadataTypes) {
+            Map<String, String> fieldTypeMap = new LinkedHashMap<>();
+            String[] fieldTypes = getProperty("metadata." + metadataType, "").split(",");
+            for (String fieldType : fieldTypes) {
+                if (!StringUtil.isBlank(fieldType)) {
+                    fieldTypeMap.put(fieldType.split(":")[0], fieldType.split(":")[1]);
+                }
+            }
+            messageFieldMap.put(metadataType, fieldTypeMap);
+        }
+        return messageFieldMap;
+    }
+
+    public static Map<String, Map<String, String>> getMetadataUnMappedFieldMap() {
+        Map<String, Map<String, String>> metadataUnMappedFieldMap = new HashMap<>();
+        String[] metadataTypes = TYPE_METADATA.split(",");
+        for (String metadataType : metadataTypes) {
+            Map<String, String> fieldTypeMap = new HashMap<>();
+            String[] fieldTypes = getProperty("metadata." + metadataType + ".unmapped", "").split(",");
+            for (String fieldType : fieldTypes) {
+                if (!StringUtil.isBlank(fieldType)) {
+                    fieldTypeMap.put(fieldType.split(":")[0], fieldType.split(":")[1]);
+                }
+            }
+            metadataUnMappedFieldMap.put(metadataType, fieldTypeMap);
+        }
+        return metadataUnMappedFieldMap;
+    }
+
+    public static Map<String, Map<String, String>> getMetadataMappedFieldMap() {
+        Map<String, Map<String, String>> metadataMappedFieldMap = new HashMap<>();
+        String[] metadataTypes = TYPE_METADATA.split(",");
+        for (String metadataType : metadataTypes) {
+            Map<String, String> fieldMap = new HashMap<>();
+            String[] fieldTypes = getProperty("metadata." + metadataType + ".mapped", "").split(",");
+            for (String fieldType : fieldTypes) {
+                if (!StringUtil.isBlank(fieldType)) {
+                    fieldMap.put(fieldType.split(":")[0], fieldType.split(":")[1]);
+                }
+            }
+            metadataMappedFieldMap.put(metadataType, fieldMap);
+        }
+        return metadataMappedFieldMap;
+    }
+
+    public static Map<String, Map<String, String>> getMetadataMappedTypeMap() {
+        Map<String, Map<String, String>> metadataMappedTypeMap = new HashMap<>();
+        String[] metadataTypes = TYPE_METADATA.split(",");
+        for (String metadataType : metadataTypes) {
+            Map<String, String> fieldTypeMap = new HashMap<>();
+            String[] fieldTypes = getProperty("metadata." + metadataType + ".mapped", "").split(",");
+            for (String fieldType : fieldTypes) {
+                if (!StringUtil.isBlank(fieldType)) {
+                    fieldTypeMap.put(fieldType.split(":")[1], fieldType.split(":")[2]);
+                }
+            }
+            metadataMappedTypeMap.put(metadataType, fieldTypeMap);
+        }
+        return metadataMappedTypeMap;
+    }
 
 }

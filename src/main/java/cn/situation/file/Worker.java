@@ -1,6 +1,7 @@
 package cn.situation.file;
 
 import cn.situation.cons.SystemConstant;
+import cn.situation.support.service.MessageService;
 import cn.situation.util.FileUtil;
 import cn.situation.util.LogUtil;
 import cn.situation.util.SFTPUtil;
@@ -20,10 +21,7 @@ public class Worker implements Runnable {
     private static SqliteUtil sqliteUtil = SqliteUtil.getInstance();
 
     private SFTPUtil sftpUtil = new SFTPUtil();
-
-    static {
-
-    }
+    private MessageService messageService = new MessageService();
 
     private ZMQ.Context context;
 
@@ -69,7 +67,6 @@ public class Worker implements Runnable {
                 handleEvent(filePath, fileName);
             }
             if (SystemConstant.KIND_METADATA.equals(kind)) {
-                //TODO 流量处理逻辑
                 handleMetadata(type, filePath, fileName);
             }
             if (SystemConstant.KIND_ASSERT.equals(kind)) {
@@ -91,10 +88,16 @@ public class Worker implements Runnable {
                 List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
                 for (File file : fileList) {
                     List<String> lines = FileUtil.getFileContentByLine(file.getAbsolutePath(), true);
-                    LOG.info(String.format("[%s]: lines<%s>", "handleMetadata", lines));
+                    if (null != lines && !lines.isEmpty()) {
+                        for (String line : lines) {
+                            messageService.parseMetadata(line);
+                        }
+                    } else {
+                        LOG.error(String.format("[%s]: lines<%s>, fileName<%s>, message<%s>", "handleMetadata",
+                                lines, file.getName(), "文件内容为空."));
+                    }
                 }
             }
-            // TODO
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }
