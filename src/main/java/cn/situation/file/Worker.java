@@ -73,7 +73,7 @@ public class Worker implements Runnable {
             if (SystemConstant.KIND_ASSERT.equals(kind)) {
                 //TODO 资产处理逻辑
             }
-            sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
+            //sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }

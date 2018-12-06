@@ -30,8 +30,6 @@ public class MessageService {
     private static Map<String, Map<String, String>> metadataMappedTypeMap = SystemConstant.getMetadataMappedTypeMap();
     private static Map<String, Map<String, String>> metadataUnMappedFieldMap = SystemConstant.getMetadataUnMappedFieldMap();
     private static Map<String, String> metadataRedisKeyMap = new HashMap<>();
-    private static String METADATA_REDIS_HOST = SystemConstant.METADATA_REDIS_HOST;
-    private static int METADATA_REDIS_PORT = Integer.parseInt(SystemConstant.METADATA_REDIS_PORT);
 
     static {
         String[] headFields = SystemConstant.MESSAGE_HEAD_FIELD.split(",");
@@ -114,7 +112,7 @@ public class MessageService {
             if (!map.isEmpty()) {
                 String redisKey = getOutRedisKey(metadataType);
                 if (!StringUtil.isBlank(redisKey)) {
-                    DicUtil.rpush(METADATA_REDIS_HOST, METADATA_REDIS_PORT, redisKey, JsonUtil.mapToJson(map));
+                    DicUtil.rpush(redisKey, JsonUtil.mapToJson(map), SystemConstant.KIND_METADATA);
                 }
                 LOG.info(String.format("[%s]: jsonData<%s>, size<%s>, redisKey<%s>", "parseMetadata",
                         JsonUtil.mapToJson(map), map.size(), redisKey));

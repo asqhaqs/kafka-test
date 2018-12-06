@@ -21,8 +21,6 @@ public class EventTrans {
 	private static final Logger LOG = LogUtil.getInstance(EventTrans.class);
 	
 	private static final String redisAlertKey = SystemConstant.REDIS_KEY_PREFIX + ":" + SystemConstant.REDIS_ALERT_KEY;
-	private static String EVENT_REDIS_HOST = SystemConstant.EVENT_REDIS_HOST;
-	private static int EVENT_REDIS_PORT = Integer.parseInt(SystemConstant.EVENT_REDIS_PORT);
 
 	/**
 	 * situation—ids转换
@@ -68,7 +66,7 @@ public class EventTrans {
 			//入redis库
 			String resultJson = JsonUtil.mapToJson(syslogMap);
 			System.out.println(resultJson);
-			DicUtil.rpush(EVENT_REDIS_HOST, EVENT_REDIS_PORT, redisAlertKey, resultJson);
+			DicUtil.rpush(redisAlertKey, resultJson, SystemConstant.KIND_ASSERT);
 			LOG.info(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
 		}
 	}
