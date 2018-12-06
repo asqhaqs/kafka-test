@@ -112,7 +112,7 @@ public class EventTrans {
 	private static Map<String, Object> fillToMap(Map<String, Object> map, String[] fields)
 			throws NullPointerException, ArrayIndexOutOfBoundsException {
 		Map<String, Object> map_tmp = new HashMap<String, Object>();
-		if(fields.length<28) {
+		if(fields.length<29) {
 			return null;
 		}
 		//厂商字段梳理
