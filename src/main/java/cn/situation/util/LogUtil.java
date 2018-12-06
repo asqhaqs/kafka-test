@@ -19,7 +19,6 @@ public class LogUtil {
     }
 
     public static void main(String[] args) {
-        String str = "aa|bb|dd|1233|ss%%%aa|333|111====";
-        System.out.println(str.replaceAll("%%%", "|"));
+
     }
 }

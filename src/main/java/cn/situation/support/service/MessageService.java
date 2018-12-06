@@ -62,6 +62,11 @@ public class MessageService {
      */
     public void parseMetadata(String line) {
         String[] values = line.split("\\|", -1);
+        if (values.length <= messageHeadFieldSize) {
+            LOG.error(String.format("[%s]: line<%s>, size<%s>, headSize<%s>, message<%s>", "parseMetadata",
+                    line, values.length, messageHeadFieldSize, "消息总长度应大于消息头长度."));
+            return;
+        }
         String msgType = values[2];
         String metadataType = messageTypeMap.get(msgType);
         LOG.info(String.format("[%s]: line<%s>, msgType<%s>, metadataType<%s>, size<%s>", "parseMetadata",
@@ -71,14 +76,19 @@ public class MessageService {
         Map<String, String> mappedTypeMap = metadataMappedTypeMap.get(metadataType);
         Map<String, String> messageFieldMap = metadataFieldMap.get(metadataType);
         List<String> messageFieldList = new ArrayList<>();
-        for (Map.Entry<String, String> en : messageFieldMap.entrySet()) {
-            messageFieldList.add(en.getKey());
+        if (null != messageFieldMap && !messageFieldMap.isEmpty()) {
+            for (Map.Entry<String, String> en : messageFieldMap.entrySet()) {
+                messageFieldList.add(en.getKey());
+            }
         }
         Map<String, String> fieldMap = new HashMap<>();
         Map<String, String> typeMap = new HashMap<>();
         Map<String, Object> map = new HashMap<>();
         try {
             if (values.length != (messageHeadFieldSize + messageFieldList.size())) {
+                LOG.error(String.format("[%s]: line<%s>, metadataType<%s>, size<%s>, msgSize<%s>, message<%s>",
+                        "parseMetadata", line, metadataType, values.length,
+                        (messageHeadFieldSize + messageFieldList.size()), "消息总长度与定义长度不一致."));
                 return;
             }
             for (int i = 0; i < messageHeadFieldSize; i++) {
@@ -89,9 +99,10 @@ public class MessageService {
             for (int j = 0; j < values.length - messageHeadFieldSize; j++) {
                 String fieldName = messageFieldList.get(j);
                 typeMap.put(fieldName, messageFieldMap.get(fieldName));
-                fieldMap.put(fieldName, values[j]);
+                fieldMap.put(fieldName, values[messageHeadFieldSize + j]);
             }
-            LOG.info(String.format("[%s]: oriFieldMap<%s>, metadataType<%s>", "parseMetadata", fieldMap, metadataType));
+            LOG.info(String.format("[%s]: oriFieldMap<%s>, metadataType<%s>, size<%s>", "parseMetadata",
+                    fieldMap, metadataType, fieldMap.size()));
             if (null != mappedMap && !mappedMap.isEmpty()) {
                 for (Map.Entry<String, String> en : mappedMap.entrySet()) {
                     String k1 = en.getKey();
@@ -179,7 +190,7 @@ public class MessageService {
 
     public static void main(String[] args) {
         MessageService service = new MessageService();
-        String log = "0x01|0x01|0x0201|33445566|1542261974|47|192.168.1.1|360|1.1.1.2|2.1.1.2|49183|80|3091|||501fabad96ee8f2b20888977e49e92a08bf698b6|0x5BED0CD6000C3D01|1|1.1|0x01|www.baidu.com|/index.html|https://developer.mozilla.org/en-US/docs/Web/JavaScript|Mozilla/5.0 (X11; Linux x86_64)|Basic YWxhZGRpbjpvcGVuc2VzYW1l|Basic YWxhZGRpbjpvcGVuc2VzYW1l|PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;|/index.html|Apache/2.4.1 (Unix)|33a64df551425fcc55e4d42a148795d9f25f89d4|203.0.113.195|200|gzip|test data|Expires|deflate|HTTP/1.1 GWA|no-cache|keep-alive|gzip|de, en|/my-first-blog-post|bytes 200-1000/67589|1024|application/json; charset=utf-8|utf-8|x_flash_version|1024|bytes=200-1000|Wed, 21 Oct 2015 07:28:00 GMT|keep-alive|abc.json|gzip|application/json";
+        String log = "0x01|0x01|0x0201|305441741|1544084907|228|172.24.201.141|360|101.102.103.13|123.183.221.19|61632|80||||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C08DDAB0021C903|1|HTTP 1.1||cl.vd.f.360.cn|/VirusDetection.phpͫͫͫ4^R| |Post_Multipart| | | | | | | |200||Tue, 05 Dec 2017 06:48:04 GMT| |chunkedͫͫͫ4^RJ^B| |no-cache|close|| | | |4294967295|application/octet-stream|����| || | | |VirusDetection.php||";
         service.parseMetadata(log);
     }
 }
