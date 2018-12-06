@@ -129,40 +129,42 @@ public class EventTrans {
 		map_tmp.put("sport", fields[10]);
 		map_tmp.put("dport", fields[11]);
 		map_tmp.put("protocol_id", fields[12]);
-		map_tmp.put("app_version", fields[13]);
-		map_tmp.put("dev_id", fields[14]);
-		map_tmp.put("sid", fields[15]);
-		map_tmp.put("direct", fields[16]);
-		map_tmp.put("attack_ip", fields[17]);
-		map_tmp.put("attack_ipv6", fields[18]);
-		map_tmp.put("victim_ip", fields[19]);
-		map_tmp.put("victim_ipv6", fields[20]);
-		map_tmp.put("eventcode", fields[21]);
-		map_tmp.put("ruleid", fields[22]);
-		map_tmp.put("vid", fields[23]);
-		map_tmp.put("last_times", fields[24]);
-		map_tmp.put("event_id", fields[25]);
-		map_tmp.put("event_info", fields[26]);
-		map_tmp.put("proof", fields[27]);
-
+		map_tmp.put("app_id", fields[13]);
+		map_tmp.put("app_version", fields[14]);
+		map_tmp.put("dev_id", fields[15]);
+		map_tmp.put("sid", fields[16]);
+		map_tmp.put("direct", fields[17]);
+		map_tmp.put("attack_ip", fields[18]);
+		map_tmp.put("attack_ipv6", fields[19]);
+		map_tmp.put("victim_ip", fields[20]);
+		map_tmp.put("victim_ipv6", fields[21]);
+		map_tmp.put("eventcode", fields[22]);
+		map_tmp.put("ruleid", fields[23]);
+		map_tmp.put("vid", fields[24]);
+		map_tmp.put("last_times", fields[25]);
+		map_tmp.put("event_id", fields[26]);
+		map_tmp.put("event_info", fields[27]);
+		map_tmp.put("proof", fields[28]);
+		
 		// 转换
 		//厂商字段
 		map.put("protocol_id", fields[12]);
-		map.put("app_version", fields[13]);
-		map.put("dev_id", fields[14]);
-		map.put("sid", fields[15]);
-		map.put("direct", fields[16]);
-		map.put("attack_ip", fields[17]);
-		map.put("attack_ipv6", fields[18]);
-		map.put("victim_ip", fields[19]);
-		map.put("victim_ipv6", fields[20]);
-		map.put("eventcode", fields[21]);
-		map.put("ruleid", fields[22]);
-		map.put("vid", fields[23]);
-		map.put("last_times", fields[24]);
-		map.put("event_id", fields[25]);
-		map.put("event_info", fields[26]);
-		map.put("proof", fields[27]);
+		map.put("app_id", fields[13]);
+		map.put("app_version", fields[14]);
+		map.put("dev_id", fields[15]);
+		map.put("sid", fields[16]);
+		map.put("direct", fields[17]);
+		map.put("attack_ip", fields[18]);
+		map.put("attack_ipv6", fields[19]);
+		map.put("victim_ip", fields[20]);
+		map.put("victim_ipv6", fields[21]);
+		map.put("eventcode", fields[22]);
+		map.put("ruleid", fields[23]);
+		map.put("vid", fields[24]);
+		map.put("last_times", fields[25]);
+		map.put("event_id", fields[26]);
+		map.put("event_info", fields[27]);
+		map.put("proof", fields[28]);
 		map.put("version", fields[0]);
 		map.put("ip_type", fields[1]);
 		map.put("msgtype", fields[2]);
@@ -204,24 +206,27 @@ public class EventTrans {
 	}
 	public static void main(String[] args) throws Exception {
 		List<String> s_list = new ArrayList<String>();
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-		s_list.add(
-				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		s_list.add(
+//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
+//		do_trans(s_list);
+		
+		s_list.add("0x01|0x01|0x0100|305441741|1544067360|1187||360|6.6.6.3|2.0.0.2|58102|80|6|4071||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C0899200001BE03||2.0.0.2||6.6.6.3|||92||1|||{\"log_proof_cp\": {\"download_file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"domain\": \"\", \"attack_tool\": \"\", \"tcp_keypayload\": [], \"account_info\": {\"username\": \"\", \"password\": \"\"}, \"udp_keypayload\": [], \"anom_traffic_statistics\": {\"durations\": 0, \"sessions\": 0}, \"mail_keypayload\": [], \"src_port\": 58102, \"ip_list\": [], \"application\": \"WGET\", \"http_keypayload\": [], \"file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"event_abstract\": \"\", \"src_ip\": \"6.6.6.3\", \"source\": \"2.0.0.2\\/026A1A95FC065249C7A974EB4E0520D1.6C14E3ED\", \"device_info\": {\"dev_type\": \"\", \"dev_name\": \"\", \"serial\": \"e179dd7caf1ce974e9a8985869b21d5fc1b30855\"}, \"dark_ip\": \"\", \"scan_tool\": \"\", \"icmp_keypayload\": [], \"third_party\": \"\", \"cve_id\": \"\", \"catalog_info\": \"\", \"cnvd_id\": \"\", \"telnet_keypayload\": [], \"dns_keypayload\": [], \"dark_domain\": \"\", \"database_info\": {\"db_type\": \"\", \"db_name\": \"\"}, \"vulnerability_info\": \"\", \"sample_abstract\": {\"name\": \"026A1A95FC065249C7A974EB4E0520D1\", \"family\": \"Virus\\/Win32.Sality.q\", \"md5\": \"026A1A95FC065249C7A974EB4E0520D1\"}, \"dst_port\": 80, \"ftp_keypayload\": [], \"action\": \"Virus\", \"dst_ip\": \"2.0.0.2\", \"attack_signature\": \"\"}}\r\n");
 		do_trans(s_list);
 	}
 }
