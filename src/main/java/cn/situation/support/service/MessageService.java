@@ -113,7 +113,9 @@ public class MessageService {
             addUnMappedField(unMappedMap, map);
             if (!map.isEmpty()) {
                 String redisKey = getOutRedisKey(metadataType);
-                DicUtil.rpush(METADATA_REDIS_HOST, METADATA_REDIS_PORT, redisKey, JsonUtil.mapToJson(map));
+                if (!StringUtil.isBlank(redisKey)) {
+                    DicUtil.rpush(METADATA_REDIS_HOST, METADATA_REDIS_PORT, redisKey, JsonUtil.mapToJson(map));
+                }
                 LOG.info(String.format("[%s]: jsonData<%s>, size<%s>, redisKey<%s>", "parseMetadata",
                         JsonUtil.mapToJson(map), map.size(), redisKey));
             } else {
@@ -174,5 +176,11 @@ public class MessageService {
                 map.put(en.getKey(), null);
             }
         }
+    }
+
+    public static void main(String[] args) {
+        MessageService service = new MessageService();
+        String log = "0x01|0x01|0x0201|33445566|1542261974|47|192.168.1.1|360|1.1.1.2|2.1.1.2|49183|80|3091|||501fabad96ee8f2b20888977e49e92a08bf698b6|0x5BED0CD6000C3D01|1|1.1|0x01|www.baidu.com|/index.html|https://developer.mozilla.org/en-US/docs/Web/JavaScript|Mozilla/5.0 (X11; Linux x86_64)|Basic YWxhZGRpbjpvcGVuc2VzYW1l|Basic YWxhZGRpbjpvcGVuc2VzYW1l|PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;|/index.html|Apache/2.4.1 (Unix)|33a64df551425fcc55e4d42a148795d9f25f89d4|203.0.113.195|200|gzip|test data|Expires|deflate|HTTP/1.1 GWA|no-cache|keep-alive|gzip|de, en|/my-first-blog-post|bytes 200-1000/67589|1024|application/json; charset=utf-8|utf-8|x_flash_version|1024|bytes=200-1000|Wed, 21 Oct 2015 07:28:00 GMT|keep-alive|abc.json|gzip|application/json";
+        service.parseMetadata(log);
     }
 }

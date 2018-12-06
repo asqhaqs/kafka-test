@@ -21,12 +21,16 @@ public class EventTrans {
 	private static final Logger LOG = LogUtil.getInstance(EventTrans.class);
 	
 	private static final String redisAlertKey = SystemConstant.REDIS_KEY_PREFIX + ":" + SystemConstant.REDIS_ALERT_KEY;
+	private static String EVENT_REDIS_HOST = SystemConstant.EVENT_REDIS_HOST;
+	private static int EVENT_REDIS_PORT = Integer.parseInt(SystemConstant.EVENT_REDIS_PORT);
+
 	/**
 	 * situation—ids转换
 	 * @param e_list
 	 * @throws Exception
 	 */
 	public static void do_trans(List<String> e_list) throws Exception {
+		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
 		for (String row : e_list) {
 			String s_tmp = row.replace("|", "%");
 			String[] fileds = s_tmp.split("%");
@@ -39,35 +43,34 @@ public class EventTrans {
 	 * @throws Exception
 	 */
 	private static void do_map(String[] fileds) throws Exception {
-		LOG.info(String.format("[]:  message<%s>", "mapAndEnrichOperation"), "web-ids data start");
+		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
 
 		Map<String, Object> syslogMap = new HashMap<>();
 
 		// 导入map中
 		syslogMap=fillToMap(syslogMap, fileds);
-		System.out.println(syslogMap.get("timestamp"));
-		
-		// sip 和 dip 进行 ip 富化
-		enrichmentIp(syslogMap, true);
-		
-		// 添加公共头使得该条告警通过规则引擎
-		syslogMap.put("event_id", UUID.randomUUID().toString());
-		syslogMap.put("found_time",
-				DateUtil.timestampToDate(syslogMap.get("timestamp").toString(), "yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
-		syslogMap.put("event_type", "005");
-		syslogMap.put("event_subtype", "005100");
-		syslogMap.put("industry_id", 0);
-		syslogMap.put("vendor", syslogMap.get("vendor"));
-		syslogMap.put("system_id", 0);
-		syslogMap.put("sip", syslogMap.get("sip").toString());
-		syslogMap.put("dip", syslogMap.get("dip").toString());
-		syslogMap.put("organization_id", 0);
-		
-		//入redis库
-		String resultJson = JsonUtil.mapToJson(syslogMap);
-		System.out.println(resultJson);
-		//DicUtil.rpush(redisAlertKey, resultJson);
-		LOG.info(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
+		if(syslogMap!=null) {
+			// sip 和 dip 进行 ip 富化
+//			enrichmentIp(syslogMap, true);
+			// 添加公共头使得该条告警通过规则引擎
+			syslogMap.put("event_id", UUID.randomUUID().toString());
+			syslogMap.put("found_time",
+					DateUtil.timestampToDate(syslogMap.get("timestamp").toString()+"000", "yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+			syslogMap.put("event_type", "005");
+			syslogMap.put("event_subtype", "005100");
+			syslogMap.put("industry_id", 0);
+			syslogMap.put("vendor", syslogMap.get("vendor"));
+			syslogMap.put("system_id", 0);
+			syslogMap.put("sip", syslogMap.get("sip").toString());
+			syslogMap.put("dip", syslogMap.get("dip").toString());
+			syslogMap.put("organization_id", 0);
+			
+			//入redis库
+			String resultJson = JsonUtil.mapToJson(syslogMap);
+			System.out.println(resultJson);
+			DicUtil.rpush(EVENT_REDIS_HOST, EVENT_REDIS_PORT, redisAlertKey, resultJson);
+			LOG.info(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
+		}
 	}
 	/**
 	 * 富化ip
@@ -111,6 +114,9 @@ public class EventTrans {
 	private static Map<String, Object> fillToMap(Map<String, Object> map, String[] fields)
 			throws NullPointerException, ArrayIndexOutOfBoundsException {
 		Map<String, Object> map_tmp = new HashMap<String, Object>();
+		if(fields.length<28) {
+			return null;
+		}
 		//厂商字段梳理
 		map_tmp.put("version", fields[0]);
 		map_tmp.put("ip_type", fields[1]);
