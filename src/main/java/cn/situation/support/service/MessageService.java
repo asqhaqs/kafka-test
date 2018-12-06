@@ -91,7 +91,7 @@ public class MessageService {
                 typeMap.put(fieldName, messageFieldMap.get(fieldName));
                 fieldMap.put(fieldName, values[j]);
             }
-            LOG.info(String.format("[%s]: oriFieldMap<%s>", "parseMetadata", fieldMap));
+            LOG.info(String.format("[%s]: oriFieldMap<%s>, metadataType<%s>", "parseMetadata", fieldMap, metadataType));
             if (null != mappedMap && !mappedMap.isEmpty()) {
                 for (Map.Entry<String, String> en : mappedMap.entrySet()) {
                     String k1 = en.getKey();
