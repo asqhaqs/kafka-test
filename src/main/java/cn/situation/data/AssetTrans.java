@@ -55,6 +55,7 @@ public class AssetTrans {
 		List<String[]> assetList = new ArrayList<String[]>();
 		for(String assetStr : assetStrList) {
 			if(StringUtils.isNotBlank(assetStr)) {
+//				logger.debug(arrayToJon(assetStr));
 				boolean null_flag = false;
 				//防止出现数据为"222||"类似结构情况下,字符串猜分将末尾空字符串舍弃的情况
 				if(assetStr.endsWith("|")) {
@@ -301,6 +302,42 @@ public class AssetTrans {
 			assetType = "29000";
 		}
 		return assetType;
+	}
+	
+	/**
+	 * 测试方法, 将解析的数组生成json串打印
+	 * @param strArray: 解析后的字符串数组
+	 */
+	private static String arrayToJon(String[] strArray) {
+		Map<String, Object> strMap = new HashMap<String, Object>();
+		strMap.put("domain", strArray[17]);
+		strMap.put("asset_device_type", strArray[18]);
+		strMap.put("asset_device_id", strArray[19]);
+		strMap.put("asset_device_model", strArray[20]);
+		strMap.put("serial_number", strArray[21]);
+		strMap.put("Imei", strArray[22]);
+		strMap.put("net_device_vendor", strArray[23]);
+		strMap.put("location", strArray[24]);
+		strMap.put("os", strArray[25]);
+		strMap.put("os_version", strArray[26]);
+		strMap.put("os_vender", strArray[27]);
+		strMap.put("software", strArray[28]);
+		strMap.put("software_version", strArray[29]);
+		strMap.put("middleware", strArray[30]);
+		strMap.put("plug-in", strArray[31]);
+		strMap.put("container", strArray[32]);
+		strMap.put("container_version", strArray[33]);
+		strMap.put("framework", strArray[34]);
+		strMap.put("framework_version", strArray[35]);
+		strMap.put("component", strArray[36]);
+		strMap.put("component_version", strArray[37]);
+		strMap.put("agent", strArray[38]);
+		strMap.put("vpn", strArray[39]);
+		strMap.put("imulator", strArray[40]);
+		strMap.put("device_ip", strArray[41]);
+		strMap.put("device_mac", strArray[42]);
+		
+		return JsonUtil.mapToJson(strMap);
 	}
 	
     public static void main(String[] args) {
