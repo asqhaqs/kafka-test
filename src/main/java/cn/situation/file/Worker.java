@@ -90,7 +90,7 @@ public class Worker implements Runnable {
                     List<String> lines = FileUtil.getFileContentByLine(file.getAbsolutePath(), true);
                     if (null != lines && !lines.isEmpty()) {
                         for (String line : lines) {
-                            messageService.parseMetadata(line);
+                            messageService.parseMetadata(line, fileName);
                         }
                     } else {
                         LOG.error(String.format("[%s]: lines<%s>, fileName<%s>, message<%s>", "handleMetadata",

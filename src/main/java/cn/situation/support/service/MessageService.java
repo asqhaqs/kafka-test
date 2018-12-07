@@ -7,7 +7,6 @@ import cn.situation.util.LogUtil;
 import cn.situation.util.StringUtil;
 import org.slf4j.Logger;
 
-import javax.jws.soap.SOAPBinding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +60,7 @@ public class MessageService {
      * 解析流量元数据
      * @param line
      */
-    public void parseMetadata(String line) {
+    public void parseMetadata(String line, String fileName) {
         String[] values = line.split("\\|", -1);
         if (values.length <= messageHeadFieldSize) {
             LOG.error(String.format("[%s]: line<%s>, size<%s>, headSize<%s>, message<%s>", "parseMetadata",
@@ -70,8 +69,12 @@ public class MessageService {
         }
         String msgType = values[2];
         String metadataType = messageTypeMap.get(msgType);
-        LOG.info(String.format("[%s]: line<%s>, msgType<%s>, metadataType<%s>, size<%s>", "parseMetadata",
-                line, msgType, metadataType, values.length));
+        if ("tcp".equals(metadataType)) {
+            // TCP/UDP特殊处理
+            metadataType = fileName.substring(0 ,3).toLowerCase();
+        }
+        LOG.info(String.format("[%s]: line<%s>, msgType<%s>, metadataType<%s>, size<%s>, fileName<%s>", "parseMetadata",
+                line, msgType, metadataType, values.length, fileName));
         Map<String, String> unMappedMap = metadataUnMappedFieldMap.get(metadataType);
         Map<String, String> mappedMap = metadataMappedFieldMap.get(metadataType);
         Map<String, String> mappedTypeMap = metadataMappedTypeMap.get(metadataType);
@@ -194,7 +197,7 @@ public class MessageService {
 
     public static void main(String[] args) {
         MessageService service = new MessageService();
-        String log = "0x01|0x01|0x020C|305441741|1544095234|9|172.24.201.141|360|192.168.74.30|192.168.74.31|1051|502||||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C09060200035403|1|0|100|";
-        service.parseMetadata(log);
+        String log = "0x01|0x01|0x020A|305441741|1544095238|55|172.24.201.141|360|101.102.103.13|201.202.203.13|60173|445||||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C0906060003DF03|Administrator|success|d4541f7a7f54bd62253dc1fc9881d7f1";
+        service.parseMetadata(log, "udp_5.tar.gz");
     }
 }
