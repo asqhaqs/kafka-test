@@ -31,6 +31,7 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
 		int minidle = Integer.parseInt(SystemConstant.DB_MINIDLE);
 		int maxidle = Integer.parseInt(SystemConstant.DB_MAXIDLE);
 		int maxSeconds = Integer.parseInt(SystemConstant.DB_MAXWAIT_SECONDS);
+		int maxTotal = Integer.parseInt(SystemConstant.DB_MAXWAIT_SECONDS);
 		
 		dbSource = new BasicDataSource();
 		dbSource.setDriverClassName("org.postgresql.Driver");
@@ -40,6 +41,7 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
        
 		dbSource.setMinIdle(minidle);
 		dbSource.setMaxIdle(maxidle);
+		dbSource.setMaxTotal(maxTotal);
 		dbSource.setDefaultAutoCommit(true);
 		dbSource.setMaxWaitMillis(maxSeconds * 1000);
 	}
