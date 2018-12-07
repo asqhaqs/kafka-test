@@ -2,6 +2,7 @@ package cn.situation.file;
 
 import cn.situation.cons.SystemConstant;
 import cn.situation.support.service.MessageService;
+import cn.situation.data.AssetTrans;
 import cn.situation.data.EventTrans;
 import cn.situation.util.FileUtil;
 import cn.situation.util.LogUtil;
@@ -22,6 +23,7 @@ public class Worker implements Runnable {
     private static SqliteUtil sqliteUtil = SqliteUtil.getInstance();
 
     private SFTPUtil sftpUtil = new SFTPUtil();
+
     private MessageService messageService = new MessageService();
 
     private ZMQ.Context context;
@@ -70,7 +72,7 @@ public class Worker implements Runnable {
                 handleMetadata(type, filePath, fileName);
             }
             if (SystemConstant.KIND_ASSERT.equals(kind)) {
-                //TODO 资产处理逻辑
+            	handleDevAssets(filePath, fileName);
             }
             //sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
         } catch (Exception e) {
@@ -123,7 +125,29 @@ public class Worker implements Runnable {
         }
     }
     
+    private void handleDevAssets(String remotePath, String fileName) {
+    	try {
+    		boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
+                    SystemConstant.ASSERT_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
+            LOG.info(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
+                    "handleDevAssets", remotePath, fileName, result));
+            if (result) {
+                List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
+                for (File file : fileList) {
+                    List<String> assetsList = FileUtil.getFileContentByLine(file.getAbsolutePath(), true);
+                    LOG.info(String.format("[%s]: assetsList<%s>", "handleDevAssets", assetsList));
+                    if(assetsList != null) {
+                    	AssetTrans.do_trans(assetsList);
+                    }
+                }
+            }
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
+		}
+    }
+    
     private long getId() {
         return Thread.currentThread().getId();
     }
+    
 }

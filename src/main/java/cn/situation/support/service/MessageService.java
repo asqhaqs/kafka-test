@@ -197,7 +197,7 @@ public class MessageService {
 
     public static void main(String[] args) {
         MessageService service = new MessageService();
-        String log = "0x01|0x01|0x020A|305441741|1544095238|55|172.24.201.141|360|101.102.103.13|201.202.203.13|60173|445||||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C0906060003DF03|Administrator|success|d4541f7a7f54bd62253dc1fc9881d7f1";
+        String log = "0x01|0x01|0x020F|305441741|1544103415|104||360|4.4.4.5|3.3.3.5|49165|21||||afbda52e3196d915e3ce43eddeeaa1b82ff21b27|0x5C0925F700017A01|0x01a0f4082f77|0x00a0f4082f77|0x0001|0x0091||F650_GOOSE1|GEDeviceF650/LLN0$GOOSE1|0x386ebbf34217280a|||";
         service.parseMetadata(log, "udp_5.tar.gz");
     }
 }

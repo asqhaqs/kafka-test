@@ -1,15 +1,17 @@
 package cn.situation.cons;
 
-import cn.situation.util.LogUtil;
-import cn.situation.util.StringUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import org.slf4j.Logger;
+
+import cn.situation.util.LogUtil;
+import cn.situation.util.StringUtil;
 
 public class SystemConstant {
 
@@ -115,6 +117,10 @@ public class SystemConstant {
 
     public static final String METADATA_REDIS_KEY = getProperty("metadata.redis.key", "");
 
+    public static final String POSTGRESQL_URL = getProperty("postgresql.url", "");
+    public static final String POSTGRESQL_USERNAME = getProperty("postgresql.username", "");
+    public static final String POSTGRESQL_PASSWORD = getProperty("postgresql.password", "");
+    
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();
         String[] metadataTypes = TYPE_METADATA.split(",");
