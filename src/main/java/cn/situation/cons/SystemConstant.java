@@ -124,6 +124,8 @@ public class SystemConstant {
     public static final String DB_MAXIDLE = getProperty("db.maxidle", "16");
     public static final String DB_MAXTOTAL = getProperty("db.maxtotal", "64");
     public static final String DB_MAXWAIT_SECONDS = getProperty("db.maxwaitseconds", "180");
+
+    public static final String MONITOR_STATISTIC_ENABLED = getProperty("monitor.statistic.enabled", "0");
     
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();
