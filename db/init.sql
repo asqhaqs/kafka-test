@@ -22,3 +22,4 @@ INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'opc'
 INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'goose', '', -1);
 INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'mqtt', '', -1);
 INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'coap', '', -1);
+INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'sample', '', -1);
