@@ -120,6 +120,9 @@ public class SystemConstant {
     public static final String POSTGRESQL_URL = getProperty("postgresql.url", "");
     public static final String POSTGRESQL_USERNAME = getProperty("postgresql.username", "");
     public static final String POSTGRESQL_PASSWORD = getProperty("postgresql.password", "");
+    public static final String DB_MINIDLE = getProperty("db.minidle", "10");
+    public static final String DB_MAXIDLE = getProperty("db.maxidle", "50");
+    public static final String DB_MAXWAIT_SECONDS = getProperty("db.maxwaitseconds", "180");
     
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();
