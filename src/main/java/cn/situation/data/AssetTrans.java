@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -304,8 +303,7 @@ public class AssetTrans {
 		return assetType;
 	}
 	
-    @Test
-    public void test() {
+    public static void main(String[] args) {
     	File[] files = new File("C:\\Users\\quanli\\Desktop\\asset").listFiles();
     	for(File file : files) {
     		List<String> assetsList = FileUtil.getFileContentByLine(file.getAbsolutePath(), false);
@@ -314,6 +312,5 @@ public class AssetTrans {
             	AssetTrans.do_trans(assetsList);
             }
     	}
-    }
-
+	}
 }
