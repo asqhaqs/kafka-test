@@ -7,12 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.spi.LoggerRemoteView;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Serializable;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -255,8 +250,9 @@ public class Geoip implements Serializable {
 	public void loadLocations(String filename) throws Exception {
 		try {
 			logger.error("filename:"+filename);
-			InputStream in = ClassLoader.getSystemResourceAsStream("GeoLite2-City-Locations-en.csv");
-			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+			File file = new File(filename);
+			//InputStream in = ClassLoader.getSystemResourceAsStream("GeoLite2-City-Locations-en.csv");
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				char[] w = line.toCharArray();
@@ -337,8 +333,9 @@ public class Geoip implements Serializable {
 		if (data.isEmpty()) {
 			throw new Exception("invaild locations info");
 		}
-		InputStream in = ClassLoader.getSystemResourceAsStream("GeoLite2-City-Locations-en.csv");
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		File file = new File(filename);
+		// InputStream in = ClassLoader.getSystemResourceAsStream("GeoLite2-City-Locations-en.csv");
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 		String line = null;
 		while ((line = reader.readLine()) != null) {
 			char[] w = line.toCharArray();
@@ -507,7 +504,7 @@ public class Geoip implements Serializable {
 			Geoip geo = new Geoip();
 			System.out.println("load start");
 			long begin = System.currentTimeMillis();
-			geo.loadData("/data", "GeoLite2-City-Locations-en.csv", "GeoLite2-City-Blocks-IPv4.csv");
+			geo.loadData("D:\\work", "GeoLite2-City-Locations-en.csv", "GeoLite2-City-Blocks-IPv4.csv");
 			long end = System.currentTimeMillis();
 			System.out.println("load done, use time: " + (end - begin) + "ms");
 
