@@ -4,10 +4,21 @@ BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
 
-SERVER_NAME=collector-log
+# SERVER_NAME=collector-log
 
-PIDS=`ps -f | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
-if [ -n "$PIDS" ]; then
+SERVER_NAME=`sed '/application.name/!d;s/.*=//' classes/app.properties | tr -d '\r'`
+
+LOGS_DIR=$DEPLOY_DIR/logs
+
+if [ ! -d $LOGS_DIR ]; then
+    mkdir $LOGS_DIR
+fi
+
+PID_FILE=$LOGS_DIR/${SERVER_NAME}.pid
+
+# PIDS=`ps -f | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
+if [ -f "$PID_FILE" ]; then
+    PIDS=`cat $PID_FILE`
     echo "ERROR: The $SERVER_NAME already started!"
     echo "PID: $PIDS"
     exit 1
@@ -21,7 +32,7 @@ if [ -n "$SERVER_PORT" ]; then
     fi
 fi
 
-STDOUT_FILE=/var/situation/collector-log.log
+STDOUT_FILE=/var/situation/${SERVER_NAME}.log
 
 LIB_DIR=$DEPLOY_DIR/lib
 LIB_JARS=`ls $LIB_DIR|grep .jar|awk '{print "'$LIB_DIR'/"$0}'|tr "\n" ":"`
@@ -72,3 +83,4 @@ echo "OK!"
 PIDS=`ps -ef | grep java | grep "$DEPLOY_DIR" | awk '{print $2}'`
 echo "PID: $PIDS"
 echo "STDOUT: $STDOUT_FILE"
+echo $PIDS > $PID_FILE
