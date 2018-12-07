@@ -55,7 +55,6 @@ public class AssetTrans {
 		List<String[]> assetList = new ArrayList<String[]>();
 		for(String assetStr : assetStrList) {
 			if(StringUtils.isNotBlank(assetStr)) {
-//				logger.debug(arrayToJon(assetStr));
 				boolean null_flag = false;
 				//防止出现数据为"222||"类似结构情况下,字符串猜分将末尾空字符串舍弃的情况
 				if(assetStr.endsWith("|")) {
@@ -63,6 +62,7 @@ public class AssetTrans {
 					null_flag = true;
 				}
 				String[] assetArray = assetStr.split("\\|");
+//				logger.info(arrayToJon(assetArray));
 				if(assetArray.length != ELEMENT_NUM) {
 					logger.error(String.format("msg：【[%s]】字段个数不对", assetStr));
 					continue;
