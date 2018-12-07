@@ -213,6 +213,7 @@ public class EventTrans {
 		map.put("dip", map_tmp.get("dip"));
 		map.put("rule_num", map_tmp.get("ruleid"));
 		map.put("description", map_tmp.get("event_info"));
+		map.put("sess_id", map_tmp.get("sid"));
 		return map;
 	}
 	public static void main(String[] args) throws Exception {
