@@ -30,9 +30,12 @@ public class EventTrans {
 	public static void do_trans(List<String> e_list) throws Exception {
 		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
 		for (String row : e_list) {
-			String s_tmp = row.replace("|", "@");
-			String[] fileds = s_tmp.split("@");
-			do_map(fileds);
+			try {
+				String s_tmp = row.replace("|", "@");
+				String[] fileds = s_tmp.split("@");
+				do_map(fileds);
+			} catch (Exception e) {
+			}
 		}
 	}
 	/**
