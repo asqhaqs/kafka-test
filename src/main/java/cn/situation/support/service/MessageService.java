@@ -1,10 +1,7 @@
 package cn.situation.support.service;
 
 import cn.situation.cons.SystemConstant;
-import cn.situation.util.DicUtil;
-import cn.situation.util.JsonUtil;
-import cn.situation.util.LogUtil;
-import cn.situation.util.StringUtil;
+import cn.situation.util.*;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -63,8 +60,8 @@ public class MessageService {
     public void parseMetadata(String line, String fileName) {
         String[] values = line.split("\\|", -1);
         if (values.length <= messageHeadFieldSize) {
-            LOG.error(String.format("[%s]: line<%s>, size<%s>, headSize<%s>, message<%s>", "parseMetadata",
-                    line, values.length, messageHeadFieldSize, "消息总长度应大于消息头长度."));
+            LOG.error(String.format("[%s]: line<%s>, size<%s>, headSize<%s>, fileName<%s>, message<%s>", "parseMetadata",
+                    line, values.length, messageHeadFieldSize, fileName, "消息总长度应大于消息头长度."));
             return;
         }
         String msgType = values[2];
@@ -90,9 +87,9 @@ public class MessageService {
         Map<String, Object> map = new HashMap<>();
         try {
             if (values.length != (messageHeadFieldSize + messageFieldList.size())) {
-                LOG.error(String.format("[%s]: line<%s>, metadataType<%s>, size<%s>, msgSize<%s>, message<%s>",
+                LOG.error(String.format("[%s]: line<%s>, metadataType<%s>, size<%s>, msgSize<%s>, fileName<%s>, message<%s>",
                         "parseMetadata", line, metadataType, values.length,
-                        (messageHeadFieldSize + messageFieldList.size()), "消息总长度与定义长度不一致."));
+                        (messageHeadFieldSize + messageFieldList.size()), fileName, "消息总长度与定义长度不一致."));
                 return;
             }
             for (int i = 0; i < messageHeadFieldSize; i++) {
@@ -105,8 +102,8 @@ public class MessageService {
                 typeMap.put(fieldName, messageFieldMap.get(fieldName));
                 fieldMap.put(fieldName, values[messageHeadFieldSize + j]);
             }
-            LOG.info(String.format("[%s]: oriFieldMap<%s>, metadataType<%s>, size<%s>", "parseMetadata",
-                    fieldMap, metadataType, fieldMap.size()));
+            LOG.info(String.format("[%s]: oriFieldMap<%s>, metadataType<%s>, size<%s>, fileName<%s>", "parseMetadata",
+                    fieldMap, metadataType, fieldMap.size(), fileName));
             if (null != mappedMap && !mappedMap.isEmpty()) {
                 for (Map.Entry<String, String> en : mappedMap.entrySet()) {
                     String k1 = en.getKey();
@@ -124,6 +121,8 @@ public class MessageService {
                 }
             }
             addUnMappedField(unMappedMap, map);
+            // GEO 富化
+            // GeoUtil.enrichmentIp(map);
             if (!map.isEmpty()) {
                 String redisKey = getOutRedisKey(metadataType);
                 if (!StringUtil.isBlank(redisKey)) {

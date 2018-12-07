@@ -6,15 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import cn.situation.util.*;
 import org.slf4j.Logger;
 
 import cn.situation.cons.SystemConstant;
-import cn.situation.util.DateUtil;
-import cn.situation.util.DicUtil;
-import cn.situation.util.Geoip;
-import cn.situation.util.JsonUtil;
-import cn.situation.util.LogUtil;
-
 
 
 public class EventTrans {
@@ -52,7 +47,7 @@ public class EventTrans {
 		syslogMap=fillToMap(syslogMap, fileds);
 		if(syslogMap!=null) {
 			// sip 和 dip 进行 ip 富化
-			enrichmentIp(syslogMap, true);
+			GeoUtil.enrichmentIp(syslogMap);
 			// 添加公共头使得该条告警通过规则引擎
 			syslogMap.put("event_id", UUID.randomUUID().toString());
 			syslogMap.put("found_time",
@@ -73,37 +68,7 @@ public class EventTrans {
 			LOG.info(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
 		}
 	}
-	/**
-	 * 富化ip
-	 * @param syslogMap
-	 * @param isAleart
-	 * @throws Exception
-	 */
-	private static void enrichmentIp(Map<String, Object> syslogMap, Boolean isAleart) throws Exception {
-		String sipStr;
-		String dipStr;
 
-		sipStr = (null == syslogMap.get("sip")) ? null : (String) syslogMap.get("sip");
-		dipStr = (null == syslogMap.get("dip")) ? null : (String) syslogMap.get("dip");
-
-		Geoip.Result sipResult = Geoip.getInstance().query(sipStr);
-		Geoip.Result dipResult = Geoip.getInstance().query(dipStr);
-
-		Map<String, String> sipMap = Geoip.convertResultToMap(sipResult);
-		Map<String, String> dipMap = Geoip.convertResultToMap(dipResult);
-
-		// 转换为json格式
-		if (sipMap != null) {
-			syslogMap.put("geo_sip", sipMap);
-		} else {
-			syslogMap.put("geo_sip", null);
-		}
-		if (dipMap != null) {
-			syslogMap.put("geo_dip", dipMap);
-		} else {
-			syslogMap.put("geo_dip", null);
-		}
-	}
 	/**
 	 * 厂商数据转换
 	 * @param map
