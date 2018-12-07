@@ -52,7 +52,7 @@ public class EventTrans {
 		syslogMap=fillToMap(syslogMap, fileds);
 		if(syslogMap!=null) {
 			// sip 和 dip 进行 ip 富化
-//			enrichmentIp(syslogMap, true);
+			enrichmentIp(syslogMap, true);
 			// 添加公共头使得该条告警通过规则引擎
 			syslogMap.put("event_id", UUID.randomUUID().toString());
 			syslogMap.put("found_time",
