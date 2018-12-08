@@ -2,6 +2,7 @@ package cn.situation.support.service;
 
 import cn.situation.cons.SystemConstant;
 import cn.situation.util.*;
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -124,6 +125,18 @@ public class MessageService {
             // GEO 富化
             // GeoUtil.enrichmentIp(map);
             if (!map.isEmpty()) {
+                if ("http".equals(metadataType)) {
+                    Object data = map.getOrDefault("data", "");
+                    Object resBody = map.getOrDefault("res_body", "");
+                    String dataStr = (String) data;
+                    if (!StringUtil.isBlank(dataStr)) {
+                        map.put("data", Base64.decodeBase64(dataStr.getBytes()));
+                    }
+                    String resBodyStr = (String) resBody;
+                    if (!StringUtil.isBlank(resBodyStr)) {
+                        map.put("res_body", Base64.decodeBase64(resBodyStr.getBytes()));
+                    }
+                }
                 String redisKey = getOutRedisKey(metadataType);
                 if (!StringUtil.isBlank(redisKey)) {
                     DicUtil.rpush(redisKey, JsonUtil.mapToJson(map), SystemConstant.KIND_METADATA);
