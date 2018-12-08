@@ -63,7 +63,6 @@ public class EventTrans {
 			
 			//入redis库
 			String resultJson = JsonUtil.mapToJson(syslogMap);
-			System.out.println(resultJson);
 			DicUtil.rpush(redisAlertKey, resultJson, SystemConstant.KIND_ASSERT);
 			LOG.info(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
 		}

@@ -109,7 +109,7 @@ public class DicUtil {
             }
             LOG.info(String.format("[%s]: dicName<%s>, value<%s>, kind<%s>", "rpush", dicName, value, kind));
         } catch (Exception e) {
-            LOG.error(String.format("[%s]: message<%s>", "rpush", e.getMessage()));
+            LOG.error(String.format("[%s]: kind<%s>, message<%s>", "rpush", kind, e.getMessage()));
         } finally {
             if (null != jedis) {
                 jedis.close();
