@@ -11,6 +11,11 @@
             <fileMode>0755</fileMode>
         </fileSet>
         <fileSet>
+            <directory>db</directory>
+            <outputDirectory>db</outputDirectory>
+            <fileMode>0644</fileMode>
+        </fileSet>
+        <fileSet>
             <directory>${project.build.directory}/classes</directory>
             <outputDirectory>classes</outputDirectory>
             <fileMode>0644</fileMode>
