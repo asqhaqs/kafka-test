@@ -38,32 +38,27 @@ public class FileUtil {
         return content.toString();
     }
 
-    public static List<String> getFileContentByLine(String filePath, boolean ifDelFileDir) {
+    public static List<String> getFileContentByLine(String filePath, boolean ifDelFileDir) throws Exception {
         File file = new File(filePath);
         if (!file.exists() || !file.isFile() || file.length() == 0) {
             return null;
         }
         List<String> content = new ArrayList<String>();
-        try {
-            FileInputStream fileInputStream = new FileInputStream(file);
-            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
-            BufferedReader reader = new BufferedReader(inputStreamReader);
-            String lineContent;
-            while ((lineContent = reader.readLine()) != null) {
-                content.add(lineContent);
-                if (lineContent.contains("$"))
-                    System.out.println(lineContent);
-            }
-            fileInputStream.close();
-            inputStreamReader.close();
-            reader.close();
-            if (ifDelFileDir) {
-                delDir(file.getParent());
-            }
-        } catch (IOException e) {
-            LOG.error(e.getMessage(), e);
+        FileInputStream fileInputStream = new FileInputStream(file);
+        InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
+        BufferedReader reader = new BufferedReader(inputStreamReader);
+        String lineContent;
+        while ((lineContent = reader.readLine()) != null) {
+            content.add(lineContent);
+            if (lineContent.contains("$"))
+                System.out.println(lineContent);
         }
-
+        fileInputStream.close();
+        inputStreamReader.close();
+        reader.close();
+        if (ifDelFileDir) {
+            delDir(file.getParent());
+        }
         return content;
     }
 
@@ -158,8 +153,8 @@ public class FileUtil {
     public static List<File> unTarGzWrapper(String fileName, boolean ifDelOriFile) throws IOException {
         String outputDir = SystemConstant.LOCAL_FILE_DIR + fileName.substring(0, fileName.indexOf("."));
         String oriFilePath =  SystemConstant.LOCAL_FILE_DIR + fileName;
-        LOG.info(String.format("[%s]: outputDir<%s>, oriFilePath<%s>",
-                "unTarGzWrapper", outputDir, oriFilePath));
+        LOG.info(String.format("[%s]: outputDir<%s>, oriFilePath<%s>, fileName<%s>", "unTarGzWrapper",
+                outputDir, oriFilePath, fileName));
         List<File> fileList = unTarGz(oriFilePath, outputDir);
         if (ifDelOriFile) {
             delFile(SystemConstant.LOCAL_FILE_DIR, fileName);
