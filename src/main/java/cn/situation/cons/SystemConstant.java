@@ -126,7 +126,9 @@ public class SystemConstant {
     public static final String DB_MAXWAIT_SECONDS = getProperty("db.maxwaitseconds", "180");
 
     public static final String MONITOR_STATISTIC_ENABLED = getProperty("monitor.statistic.enabled", "0");
-    
+
+    public static final String SQLITE_UPDATE_ENABLED = getProperty("sqlite.update.enabled", "0");
+
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();
         String[] metadataTypes = TYPE_METADATA.split(",");

@@ -74,7 +74,9 @@ public class Worker implements Runnable {
             if (SystemConstant.KIND_ASSERT.equals(kind)) {
             	handleDevAssets(filePath, fileName);
             }
-            //sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
+            if ("1".equals(SystemConstant.SQLITE_UPDATE_ENABLED)) {
+                sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
+            }
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }

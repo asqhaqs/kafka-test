@@ -68,18 +68,18 @@ public class SFTPUtil {
             JSch jsch = new JSch();
             jsch.getSession(username, host, port);
             sshSession = jsch.getSession(username, host, port);
-            LOG.info(String.format("[%s]: message<%s>", "connect", "Session created."));
+            LOG.debug(String.format("[%s]: message<%s>", "connect", "Session created."));
             sshSession.setPassword(password);
             Properties sshConfig = new Properties();
             sshConfig.put("StrictHostKeyChecking", "no");
             sshSession.setConfig(sshConfig);
             sshSession.connect();
-            LOG.info(String.format("[%s]: message<%s>", "connect", "Session connected."));
+            LOG.debug(String.format("[%s]: message<%s>", "connect", "Session connected."));
             channel = sshSession.openChannel("sftp");
             channel.connect();
-            LOG.info(String.format("[%s]: message<%s>", "connect", "Opening Channel."));
+            LOG.debug(String.format("[%s]: message<%s>", "connect", "Opening Channel."));
             sftp = (ChannelSftp) channel;
-            LOG.info(String.format("[%s]: message<%s>", "connect", "Connected to " + host + "."));
+            LOG.debug(String.format("[%s]: message<%s>", "connect", "Connected to " + host + "."));
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }
@@ -98,7 +98,7 @@ public class SFTPUtil {
         if (null != sshSession && sshSession.isConnected()) {
             sshSession.disconnect();
         }
-        LOG.info(String.format("[%s]: message<%s>", "disconnect", "session closed."));
+        LOG.debug(String.format("[%s]: message<%s>", "disconnect", "session closed."));
     }
 
     public List<String> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat, int position) {
@@ -109,7 +109,7 @@ public class SFTPUtil {
             connect();
             Vector v = listFiles(remotePath);
             if (v.size() > 0) {
-                LOG.info(String.format("[%s]: fileSize<%s>", "getRemoteFileName", v.size()));
+                LOG.debug(String.format("[%s]: fileSize<%s>", "getRemoteFileName", v.size()));
                 Iterator it = v.iterator();
                 while (it.hasNext()) {
                     LsEntry entry = (LsEntry) it.next();
