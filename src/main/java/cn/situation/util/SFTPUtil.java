@@ -250,7 +250,7 @@ public class SFTPUtil {
      * @return
      */
     public boolean downLoadOneFile(String remotePath, String remoteFileName, String localPath,
-                                          String fileFormat, String fileEndFormat, boolean del) {
+                                          String fileFormat, String fileEndFormat, boolean del) throws Exception {
         LOG.info(String.format("[%s]: remotePath<%s>, remoteFileName<%s>, localPath<%s>, fileFormat<%s>, " +
                         "fileEndFormat<%s>, del<%s>", "downLoadOneFile", remotePath, remoteFileName, localPath,
                 fileFormat, fileEndFormat, del));
@@ -258,20 +258,14 @@ public class SFTPUtil {
         if (!remotePath.endsWith("/")) {
             remotePath += "/";
         }
-        try {
-            connect();
-            if (checkFileName(remoteFileName, fileFormat, fileEndFormat)) {
-                flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
-                if (flag && del) {
-                    deleteSFTP(remotePath, remoteFileName);
-                }
+        connect();
+        if (checkFileName(remoteFileName, fileFormat, fileEndFormat)) {
+            flag = downloadFile(remotePath, remoteFileName, localPath, remoteFileName);
+            if (flag && del) {
+                deleteSFTP(remotePath, remoteFileName);
             }
         }
-        catch (Exception e) {
-            LOG.error(String.format("[%s]: message<%s>", "downLoadOneFile", e.getMessage()));
-        } finally {
-            disconnect();
-        }
+        disconnect();
         return flag;
     }
 
