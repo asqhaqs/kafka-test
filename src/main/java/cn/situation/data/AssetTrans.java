@@ -95,6 +95,8 @@ public class AssetTrans {
 		if(insertAssetList.size() > 0) saveAssets(insertAssetList);
 		//更新资产
 		if(updateAssetList.size() > 0) updateAssets(updateAssetList);
+		logger.info(String.format("[%s]: insertAssetSize<%s>, updateAssetSize<%s>", "do_trans",
+				insertAssetList.size(), updateAssetList.size()));
 	}
 	
 	/**
@@ -186,6 +188,7 @@ public class AssetTrans {
 				}
 			}
 			if(batch_num_temp > 1) pre.executeBatch();
+			logger.info(String.format("[%s]: updateAssets<%s>", "saveAssets", batch_num_temp));
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}finally {
@@ -257,6 +260,7 @@ public class AssetTrans {
 				}
 			}
 			if(batch_num_temp > 1) pre.executeBatch();
+			logger.info(String.format("[%s]: batch_num_temp<%s>", "saveAssets", batch_num_temp));
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}finally {
@@ -269,7 +273,7 @@ public class AssetTrans {
 	 * @param assetArray： 资产发现数组
 	 * @return
 	 */
-	private static PGobject coverToJson(String[] assetArray) throws Exception{
+	private static PGobject coverToJson(String[] assetArray) throws Exception {
 		PGobject jsonObject = new PGobject();
 		Map<String, Object> assetMap = new HashMap<String, Object>();
 		assetMap.put("imei", assetArray[22]);

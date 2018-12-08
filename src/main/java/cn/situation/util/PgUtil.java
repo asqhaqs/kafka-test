@@ -67,6 +67,7 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
 //			conn = DriverManager.getConnection(url, userName, password);
 //			conn.setAutoCommit(true);
 			conn = this.dbSource.getConnection();
+			logger.info(String.format("[%s]: conn<%s>", "getConnection", conn));
 		} catch (Exception e) {
 			logger.error(String.format("postgresql连接信息获取失败, 错误信息[%s]", e.getMessage()));
 		}
