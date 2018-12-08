@@ -340,7 +340,7 @@ public class AssetTrans {
 		return JsonUtil.mapToJson(strMap);
 	}
 	
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
     	File[] files = new File("C:\\Users\\quanli\\Desktop\\asset").listFiles();
     	for(File file : files) {
     		List<String> assetsList = FileUtil.getFileContentByLine(file.getAbsolutePath(), false);
