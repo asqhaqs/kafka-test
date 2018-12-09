@@ -123,6 +123,7 @@ public class Worker implements Runnable {
         BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE));
         String line;
         while ((line = reader.readLine()) != null) {
+            LOG.debug(String.format("[%s]: line<%s>, kind<%s>, fileName<%s>", "execByLine", line, kind, fileName));
             if (SystemConstant.KIND_METADATA.equals(kind)) {
                 MessageService.parseMetadata(line, fileName);
             } else if (SystemConstant.KIND_EVENT.equals(kind)) {

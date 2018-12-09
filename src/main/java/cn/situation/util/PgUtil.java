@@ -1,7 +1,6 @@
 package cn.situation.util;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
@@ -22,7 +21,7 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
 	private Connection conn = null;
 	private PreparedStatement pre = null;
 	private ResultSet res = null;
-	private static BasicDataSource dbSource = null;
+	private static BasicDataSource dbSource;
 	
 	static {
 		String url = SystemConstant.POSTGRESQL_URL;
@@ -59,17 +58,10 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
 			return conn;
 		}
 		try {
-//			String url = SystemConstant.POSTGRESQL_URL;
-//			String userName = SystemConstant.POSTGRESQL_USERNAME;
-//			String password = SystemConstant.POSTGRESQL_PASSWORD;
-//			
-//			Class.forName("org.postgresql.Driver");
-//			conn = DriverManager.getConnection(url, userName, password);
-//			conn.setAutoCommit(true);
-			conn = this.dbSource.getConnection();
-			logger.info(String.format("[%s]: conn<%s>", "getConnection", conn));
+			conn = dbSource.getConnection();
+			logger.debug(String.format("[%s]: conn<%s>", "getConnection", conn));
 		} catch (Exception e) {
-			logger.error(String.format("postgresql连接信息获取失败, 错误信息[%s]", e.getMessage()));
+			logger.error(e.getMessage(), e);
 		}
 		return conn;
 	}
@@ -96,7 +88,7 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
 				conn = null;
 			}
 		} catch (Exception e) {
-			logger.error(String.format("连接信息关闭失败, 错误信息为:[%s]", e.getMessage()));
+			logger.error(e.getMessage(), e);
 		}
 	}
 	

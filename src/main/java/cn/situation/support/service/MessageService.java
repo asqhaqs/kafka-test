@@ -141,8 +141,8 @@ public class MessageService {
                 if (!StringUtil.isBlank(redisKey)) {
                     DicUtil.rpush(redisKey, JsonUtil.mapToJson(map), SystemConstant.KIND_METADATA);
                 }
-                LOG.info(String.format("[%s]: jsonData<%s>, size<%s>, redisKey<%s>, metadataType<%s>", "parseMetadata",
-                        JsonUtil.mapToJson(map), map.size(), redisKey, metadataType));
+                LOG.info(String.format("[%s]: jsonData<%s>, size<%s>, fileName<%s>, redisKey<%s>, metadataType<%s>", "parseMetadata",
+                        JsonUtil.mapToJson(map), map.size(), fileName, redisKey, metadataType));
             } else {
                 LOG.error(String.format("[%s]: map<%s>, size<%s>, message<%s>", "parseMetadata", map,
                         map.size(), "消息映射为空."));

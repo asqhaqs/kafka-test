@@ -37,7 +37,7 @@ public class EventTrans {
 
 		// 导入map中
 		syslogMap=fillToMap(syslogMap, fileds);
-		if(syslogMap!=null) {
+		if (syslogMap!=null) {
 			// sip 和 dip 进行 ip 富化
 			//GeoUtil.enrichmentIp(syslogMap);
 			// 添加公共头使得该条告警通过规则引擎

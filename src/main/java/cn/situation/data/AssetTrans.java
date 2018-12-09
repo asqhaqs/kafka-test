@@ -71,7 +71,7 @@ public class AssetTrans {
 				return;
 			}
 			//将末尾字符串替换
-			if(null_flag) {
+			if (null_flag) {
 				assetArray[assetArray.length - 1] = "";
 			}
 			assetList.add(assetArray);

@@ -96,33 +96,28 @@ public class DicUtil {
         closeAssetPool();
     }
 
-    public static void rpush(String dicName,String value, String kind) {
+    public static void rpush(String dicName,String value, String kind) throws Exception {
         Jedis jedis = null;
-        try {
-            if (SystemConstant.KIND_METADATA.equals(kind)) {
-                initMetadataPool();
-                jedis = metadataPool.getResource();
-            }
-            if (SystemConstant.KIND_EVENT.equals(kind)) {
-                initEventPool();
-                jedis = eventPool.getResource();
-            }
-            if (SystemConstant.KIND_ASSET.equals(kind)) {
-                initAssetPool();
-                jedis = assetPool.getResource();
-            }
-            if (null != jedis) {
-                dicName = StringUtils.trim(dicName);
-                value = StringUtils.trim(value);
-                jedis.rpush(dicName, value);
-            }
-            LOG.debug(String.format("[%s]: dicName<%s>, value<%s>, kind<%s>", "rpush", dicName, value, kind));
-        } catch (Exception e) {
-            LOG.error(String.format("[%s]: kind<%s>, message<%s>", "rpush", kind, e.getMessage()));
-        } finally {
-            if (null != jedis) {
-                jedis.close();
-            }
+        if (SystemConstant.KIND_METADATA.equals(kind)) {
+            initMetadataPool();
+            jedis = metadataPool.getResource();
+        }
+        if (SystemConstant.KIND_EVENT.equals(kind)) {
+            initEventPool();
+            jedis = eventPool.getResource();
+        }
+        if (SystemConstant.KIND_ASSET.equals(kind)) {
+            initAssetPool();
+            jedis = assetPool.getResource();
+        }
+        if (null != jedis) {
+            dicName = StringUtils.trim(dicName);
+            value = StringUtils.trim(value);
+            jedis.rpush(dicName, value);
+        }
+        LOG.debug(String.format("[%s]: dicName<%s>, value<%s>, kind<%s>", "rpush", dicName, value, kind));
+        if (null != jedis) {
+            jedis.close();
         }
     }
 
