@@ -124,6 +124,9 @@ public class Worker implements Runnable {
         String line;
         while ((line = reader.readLine()) != null) {
             LOG.debug(String.format("[%s]: line<%s>, kind<%s>, fileName<%s>", "execByLine", line, kind, fileName));
+            if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
+                SystemConstant.MONITOR_STATISTIC.put(kind, (SystemConstant.MONITOR_STATISTIC.get(kind)+1));
+            }
             if (SystemConstant.KIND_METADATA.equals(kind)) {
                 MessageService.parseMetadata(line, fileName);
             } else if (SystemConstant.KIND_EVENT.equals(kind)) {

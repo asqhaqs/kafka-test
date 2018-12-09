@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 
@@ -131,6 +132,12 @@ public class SystemConstant {
     public static final String SQLITE_UPDATE_ENABLED = getProperty("sqlite.update.enabled", "0");
 
     public static final String INPUT_BUFFER_SIZE = getProperty("input.buffer.size", "");
+
+    public static final Map<String, Integer> MONITOR_STATISTIC = new ConcurrentHashMap<>();
+
+    public static final String SCHEDULE_CORE_POOL_SIZE = getProperty("schedule.core.pool.size", "1");
+
+    public static final String MONITOR_PERIOD_SECONDS = getProperty("monitor.period.seconds", "300");
 
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();

@@ -2,6 +2,7 @@ package cn.situation;
 
 import cn.situation.cons.SystemConstant;
 import cn.situation.file.Worker;
+import cn.situation.schedule.MonitorTask;
 import cn.situation.util.*;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
@@ -9,6 +10,9 @@ import org.zeromq.ZMQ;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -31,6 +35,15 @@ public class Main {
                 metaFileNamePosition.put(type, positionMap.getOrDefault(type, 0));
             }
         }
+        if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_EVENT, 0);
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_ASSET, 0);
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_METADATA, 0);
+            String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
+            for (String metaType : metaTypes) {
+                SystemConstant.MONITOR_STATISTIC.put(metaType, 0);
+            }
+        }
         FileUtil.createDir(SystemConstant.LOCAL_FILE_DIR);
     }
 
@@ -45,6 +58,13 @@ public class Main {
         for(int num = 0; num < threadNum; num++) {
             Worker worker = new Worker(context);
             new Thread(worker).start();
+        }
+
+        if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
+            ScheduledExecutorService executorService = Executors.
+                    newScheduledThreadPool(Integer.parseInt(SystemConstant.SCHEDULE_CORE_POOL_SIZE));
+            executorService.scheduleWithFixedDelay(new MonitorTask(), 0,
+                    Integer.parseInt(SystemConstant.MONITOR_PERIOD_SECONDS), TimeUnit.SECONDS);
         }
 
         LOG.info(String.format("[%s]: message<%s>", "main", "start work..."));

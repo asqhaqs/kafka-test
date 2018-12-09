@@ -67,11 +67,14 @@ public class MessageService {
         }
         String msgType = values[2];
         String metadataType = messageTypeMap.get(msgType);
+        if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED) && !StringUtil.isBlank(metadataType)) {
+            SystemConstant.MONITOR_STATISTIC.put(metadataType, (SystemConstant.MONITOR_STATISTIC.get(metadataType)+1));
+        }
         if ("tcp".equals(metadataType)) {
             // TCP/UDP特殊处理
             metadataType = fileName.substring(0 ,3).toLowerCase();
         }
-        LOG.info(String.format("[%s]: line<%s>, msgType<%s>, metadataType<%s>, size<%s>, fileName<%s>", "parseMetadata",
+        LOG.debug(String.format("[%s]: line<%s>, msgType<%s>, metadataType<%s>, size<%s>, fileName<%s>", "parseMetadata",
                 line, msgType, metadataType, values.length, fileName));
         Map<String, String> unMappedMap = metadataUnMappedFieldMap.get(metadataType);
         Map<String, String> mappedMap = metadataMappedFieldMap.get(metadataType);
@@ -103,7 +106,7 @@ public class MessageService {
                 typeMap.put(fieldName, messageFieldMap.get(fieldName));
                 fieldMap.put(fieldName, values[messageHeadFieldSize + j]);
             }
-            LOG.info(String.format("[%s]: oriFieldMap<%s>, metadataType<%s>, size<%s>, fileName<%s>", "parseMetadata",
+            LOG.debug(String.format("[%s]: oriFieldMap<%s>, metadataType<%s>, size<%s>, fileName<%s>", "parseMetadata",
                     fieldMap, metadataType, fieldMap.size(), fileName));
             if (null != mappedMap && !mappedMap.isEmpty()) {
                 for (Map.Entry<String, String> en : mappedMap.entrySet()) {
@@ -141,7 +144,7 @@ public class MessageService {
                 if (!StringUtil.isBlank(redisKey)) {
                     DicUtil.rpush(redisKey, JsonUtil.mapToJson(map), SystemConstant.KIND_METADATA);
                 }
-                LOG.info(String.format("[%s]: jsonData<%s>, size<%s>, fileName<%s>, redisKey<%s>, metadataType<%s>", "parseMetadata",
+                LOG.debug(String.format("[%s]: jsonData<%s>, size<%s>, fileName<%s>, redisKey<%s>, metadataType<%s>", "parseMetadata",
                         JsonUtil.mapToJson(map), map.size(), fileName, redisKey, metadataType));
             } else {
                 LOG.error(String.format("[%s]: map<%s>, size<%s>, message<%s>", "parseMetadata", map,
