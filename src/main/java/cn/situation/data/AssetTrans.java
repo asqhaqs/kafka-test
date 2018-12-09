@@ -49,39 +49,36 @@ public class AssetTrans {
 	
 	/**
 	 * 资产字段每行正常情况下为43个字段
-	 * @param assetsList
+	 * @param assetStr
 	 */
-	public static void do_trans(List<String> assetStrList) {
-		List<String[]> assetList = new ArrayList<String[]>();
-		for(String assetStr : assetStrList) {
-			if(StringUtils.isNotBlank(assetStr)) {
-				boolean null_flag = false;
-				//防止出现数据为"222||"类似结构情况下,字符串猜分将末尾空字符串舍弃的情况
-				if(assetStr.endsWith("|")) {
-					assetStr += ";";
-					null_flag = true;
-				}
-				String[] assetArray = assetStr.split("\\|");
-//				logger.info(arrayToJon(assetArray));
-				if(assetArray.length != ELEMENT_NUM) {
-					logger.error(String.format("msg：【[%s]】字段个数不对", assetStr));
-					continue;
-				}
-				
-				if(!ASSET_TYPE.equals(assetArray[2])) {
-					logger.error(String.format("msg：【[%s]】类型非内网资产发现消息", assetStr));
-					continue;
-				}
-				//将末尾字符串替换
-				if(null_flag) {
-					assetArray[assetArray.length - 1] = "";
-				}
-				assetList.add(assetArray);
+	public static void do_trans(String assetStr) {
+		List<String[]> assetList = new ArrayList<>();
+		if(StringUtils.isNotBlank(assetStr)) {
+			boolean null_flag = false;
+			//防止出现数据为"222||"类似结构情况下,字符串猜分将末尾空字符串舍弃的情况
+			if(assetStr.endsWith("|")) {
+				assetStr += ";";
+				null_flag = true;
 			}
+			String[] assetArray = assetStr.split("\\|");
+			if(assetArray.length != ELEMENT_NUM) {
+				logger.error(String.format("msg：【[%s]】字段个数不对", assetStr));
+				return;
+			}
+
+			if(!ASSET_TYPE.equals(assetArray[2])) {
+				logger.error(String.format("msg：【[%s]】类型非内网资产发现消息", assetStr));
+				return;
+			}
+			//将末尾字符串替换
+			if(null_flag) {
+				assetArray[assetArray.length - 1] = "";
+			}
+			assetList.add(assetArray);
 		}
-		
-		List<String[]> updateAssetList = new ArrayList<String[]>();
-		List<String[]> insertAssetList = new ArrayList<String[]>();
+
+		List<String[]> updateAssetList = new ArrayList<>();
+		List<String[]> insertAssetList = new ArrayList<>();
 		//按照设备IP将资产信息去重
 		for(String[] arrTemp : assetList) {
 			if(StringUtils.isNotBlank(arrTemp[41]) && isExist(arrTemp[41])) {
@@ -345,13 +342,13 @@ public class AssetTrans {
 	}
 	
     public static void main(String[] args) throws Exception {
-    	File[] files = new File("C:\\Users\\quanli\\Desktop\\asset").listFiles();
+    	/*File[] files = new File("C:\\Users\\quanli\\Desktop\\asset").listFiles();
     	for(File file : files) {
     		List<String> assetsList = FileUtil.getFileContentByLine(file.getAbsolutePath(), false);
             logger.info(String.format("[%s]: assetsList<%s>", "handleDevAssets", assetsList));
             if(assetsList != null) {
             	AssetTrans.do_trans(assetsList);
             }
-    	}
+    	}*/
 	}
 }

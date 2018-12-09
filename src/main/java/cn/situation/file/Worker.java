@@ -10,7 +10,10 @@ import cn.situation.util.SFTPUtil;
 import cn.situation.util.SqliteUtil;
 import net.sf.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -23,8 +26,6 @@ public class Worker implements Runnable {
     private static SqliteUtil sqliteUtil = SqliteUtil.getInstance();
 
     private SFTPUtil sftpUtil = new SFTPUtil();
-
-    private MessageService messageService = new MessageService();
 
     private ZMQ.Context context;
 
@@ -65,7 +66,7 @@ public class Worker implements Runnable {
         if (SystemConstant.KIND_METADATA.equals(kind)) {
             handleMetadata(type, filePath, fileName);
         }
-        if (SystemConstant.KIND_ASSERT.equals(kind)) {
+        if (SystemConstant.KIND_ASSET.equals(kind)) {
             handleDevAssets(filePath, fileName);
         }
         if ("1".equals(SystemConstant.SQLITE_UPDATE_ENABLED)) {
@@ -81,15 +82,7 @@ public class Worker implements Runnable {
         if (result) {
             List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
             for (File file : fileList) {
-                List<String> lines = FileUtil.getFileContentByLine(file.getAbsolutePath(), true);
-                if (null != lines && !lines.isEmpty()) {
-                    for (String line : lines) {
-                        messageService.parseMetadata(line, fileName);
-                    }
-                } else {
-                    LOG.error(String.format("[%s]: lines<%s>, fileName<%s>, message<%s>", "handleMetadata",
-                            lines, file.getName(), "文件内容为空."));
-                }
+                execByLine(file.getAbsolutePath(), fileName, SystemConstant.KIND_METADATA);
             }
         }
     }
@@ -102,29 +95,46 @@ public class Worker implements Runnable {
         if (result) {
             List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
             for (File file : fileList) {
-                List<String> eventList = FileUtil.getFileContentByLine(file.getAbsolutePath(), true);
-                LOG.info(String.format("[%s]: eventList<%s>",
-                        "handleEvent", eventList));
-                EventTrans.do_trans(eventList);
+                execByLine(file.getAbsolutePath(), fileName, SystemConstant.KIND_EVENT);
             }
         }
     }
     
     private void handleDevAssets(String remotePath, String fileName) throws Exception {
         boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
-                SystemConstant.ASSERT_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
+                SystemConstant.ASSET_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
         LOG.info(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
                 "handleDevAssets", remotePath, fileName, result));
         if (result) {
             List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
             for (File file : fileList) {
-                List<String> assetsList = FileUtil.getFileContentByLine(file.getAbsolutePath(), true);
-                LOG.info(String.format("[%s]: assetsList<%s>", "handleDevAssets", assetsList));
-                if(assetsList != null) {
-                    AssetTrans.do_trans(assetsList);
-                }
+                execByLine(file.getAbsolutePath(), fileName, SystemConstant.KIND_ASSET);
             }
         }
+    }
+
+    private void execByLine(String filePath, String fileName, String kind) throws Exception {
+        File file = new File(filePath);
+        if (!file.exists() || !file.isFile() || file.length() == 0) {
+            return;
+        }
+        FileInputStream fileInputStream = new FileInputStream(file);
+        InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
+        BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (SystemConstant.KIND_METADATA.equals(kind)) {
+                MessageService.parseMetadata(line, fileName);
+            } else if (SystemConstant.KIND_EVENT.equals(kind)) {
+                EventTrans.do_trans(line);
+            } else if (SystemConstant.KIND_ASSET.equals(kind)) {
+                AssetTrans.do_trans(line);
+            }
+        }
+        fileInputStream.close();
+        inputStreamReader.close();
+        reader.close();
+        FileUtil.delDir(file.getParent());
     }
     
     private long getId() {

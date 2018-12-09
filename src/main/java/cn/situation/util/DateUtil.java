@@ -63,4 +63,10 @@ public class DateUtil {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
         return simpleDateFormat.format(new Date(Long.valueOf(timestamp)));
     }
+
+    public static long getSftpFileMtime(String mtime) throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.US);
+        Date date = sdf.parse(mtime);
+        return date.getTime();
+    }
 }

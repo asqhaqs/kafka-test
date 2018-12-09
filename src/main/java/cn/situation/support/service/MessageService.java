@@ -58,7 +58,7 @@ public class MessageService {
      * 解析流量元数据
      * @param line
      */
-    public void parseMetadata(String line, String fileName) {
+    public static void parseMetadata(String line, String fileName) {
         String[] values = line.split("\\|", -1);
         if (values.length <= messageHeadFieldSize) {
             LOG.error(String.format("[%s]: line<%s>, size<%s>, headSize<%s>, fileName<%s>, message<%s>", "parseMetadata",
@@ -157,7 +157,7 @@ public class MessageService {
      * @param msgType
      * @return
      */
-    private String getOutRedisKey(String msgType) {
+    private static String getOutRedisKey(String msgType) {
         String redisKey = metadataRedisKeyMap.get(msgType);
         if (!StringUtil.isBlank(redisKey) && !StringUtil.isBlank(SystemConstant.REDIS_KEY_PREFIX)) {
             redisKey = SystemConstant.REDIS_KEY_PREFIX + ":" + redisKey;
@@ -171,7 +171,7 @@ public class MessageService {
      * @param type
      * @return
      */
-    private Object typpeConvert(String value, String type) {
+    private static Object typpeConvert(String value, String type) {
         Object object = null;
         if (!StringUtil.isBlank(value)) {
             value = value.replaceAll("%%%", "|");
@@ -199,7 +199,7 @@ public class MessageService {
      * @param unMappedFieldMap
      * @param map
      */
-    private void addUnMappedField(Map<String, String> unMappedFieldMap, Map<String, Object> map) {
+    private static void addUnMappedField(Map<String, String> unMappedFieldMap, Map<String, Object> map) {
         if (null != unMappedFieldMap && !unMappedFieldMap.isEmpty()) {
             for (Map.Entry<String, String> en : unMappedFieldMap.entrySet()) {
                 map.put(en.getKey(), null);
@@ -208,8 +208,7 @@ public class MessageService {
     }
 
     public static void main(String[] args) {
-        MessageService service = new MessageService();
         String log = "0x01|0x01|0x0300|33445566|1542261979|9000|192.168.1.1|360|1.1.1.2|2.1.1.2|49181|23|smtp|16|smtp 1.0|501fabad96ee8f2b20888977e49e92a08bf698b6|0x5BED0CD6000A3D01|01.zip|8342|application/zip|95b15399e13e8358741f397d0bcf863fe8fdbc4c|22dabb612eb69ec4a74ae7b8df4bc08c|1|01.vir|4d0020026c8e49aaa20026fa898892ec|1|1|/Output_msg/Sample_reduction_file/0x5BED0CD6000A3D01_22dabb612eb69ec4a74ae7b8df4bc08c";
-        service.parseMetadata(log, "udp_5.tar.gz");
+        parseMetadata(log, "udp_5.tar.gz");
     }
 }

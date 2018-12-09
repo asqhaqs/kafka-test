@@ -1,11 +1,8 @@
 package cn.situation.data;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import cn.situation.util.*;
 import org.slf4j.Logger;
 
@@ -19,19 +16,14 @@ public class EventTrans {
 
 	/**
 	 * situation—ids转换
-	 * @param e_list
+	 * @param line
 	 * @throws Exception
 	 */
-	public static void do_trans(List<String> e_list) throws Exception {
-		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
-		for (String row : e_list) {
-			try {
-				String s_tmp = row.replace("|", "@");
-				String[] fileds = s_tmp.split("@");
-				do_map(fileds);
-			} catch (Exception e) {
-			}
-		}
+	public static void do_trans(String line) throws Exception {
+		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
+		String s_tmp = line.replace("|", "@");
+		String[] fileds = s_tmp.split("@");
+		do_map(fileds);
 	}
 	/**
 	 * 数据映射入库（redis）
@@ -39,7 +31,7 @@ public class EventTrans {
 	 * @throws Exception
 	 */
 	private static void do_map(String[] fileds) throws Exception {
-		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
+		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
 
 		Map<String, Object> syslogMap = new HashMap<>();
 
@@ -64,7 +56,7 @@ public class EventTrans {
 			//入redis库
 			String resultJson = JsonUtil.mapToJson(syslogMap);
 			DicUtil.rpush(redisAlertKey, resultJson, SystemConstant.KIND_EVENT);
-			LOG.info(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
+			LOG.debug(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
 		}
 	}
 
@@ -76,20 +68,16 @@ public class EventTrans {
 	 * @throws NullPointerException
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	private static Map<String, Object> fillToMap(Map<String, Object> map, String[] fields)
-			throws NullPointerException, ArrayIndexOutOfBoundsException {
+	private static Map<String, Object> fillToMap(Map<String, Object> map, String[] fields) throws Exception {
 		Map<String, Object> map_tmp = new HashMap<String, Object>();
-		if(fields.length<29) {
+		if (fields.length < 29) {
 			return null;
 		}
 		//字段内的%%%转换为|
 		//字段内的^^^转换\n
-		try {
-			for (int i = 0; i < fields.length; i++) {
-				fields[i] = fields[i].replace("%%%","|");
-				fields[i] = fields[i].replace("^^^","\n");
-			}
-		} catch (Exception e) {
+		for (int i = 0; i < fields.length; i++) {
+			fields[i] = fields[i].replace("%%%","|");
+			fields[i] = fields[i].replace("^^^","\n");
 		}
 		//厂商字段梳理
 		map_tmp.put("version", fields[0]);
@@ -221,28 +209,6 @@ public class EventTrans {
 		return map;
 	}
 	public static void main(String[] args) throws Exception {
-		List<String> s_list = new ArrayList<String>();
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		do_trans(s_list);
-		
-		s_list.add("0x^^^01|0x01|0x0100|305441741|1544067360|1187||360|6.6.6.3|2.0.0.2|58102|80|6|4071||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C0899200001BE03||2.0.0.2||6.6.6.3|||92||1|||{\"log_proof_cp\": {\"download_file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"domain\": \"\", \"attack_tool\": \"\", \"tcp_keypayload\": [], \"account_info\": {\"username\": \"\", \"password\": \"\"}, \"udp_keypayload\": [], \"anom_traffic_statistics\": {\"durations\": 0, \"sessions\": 0}, \"mail_keypayload\": [], \"src_port\": 58102, \"ip_list\": [], \"application\": \"WGET\", \"http_keypayload\": [], \"file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"event_abstract\": \"\", \"src_ip\": \"6.6.6.3\", \"source\": \"2.0.0.2\\/026A1A95FC065249C7A974EB4E0520D1.6C14E3ED\", \"device_info\": {\"dev_type\": \"\", \"dev_name\": \"\", \"serial\": \"e179dd7caf1ce974e9a8985869b21d5fc1b30855\"}, \"dark_ip\": \"\", \"scan_tool\": \"\", \"icmp_keypayload\": [], \"third_party\": \"\", \"cve_id\": \"\", \"catalog_info\": \"\", \"cnvd_id\": \"\", \"telnet_keypayload\": [], \"dns_keypayload\": [], \"dark_domain\": \"\", \"database_info\": {\"db_type\": \"\", \"db_name\": \"\"}, \"vulnerability_info\": \"\", \"sample_abstract\": {\"name\": \"026A1A95FC065249C7A974EB4E0520D1\", \"family\": \"Virus\\/Win32.Sality.q\", \"md5\": \"026A1A95FC065249C7A974EB4E0520D1\"}, \"dst_port\": 80, \"ftp_keypayload\": [], \"action\": \"Virus\", \"dst_ip\": \"2.0.0.2\", \"attack_signature\": \"\"}}\r\n");
-		do_trans(s_list);
+
 	}
 }

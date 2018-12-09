@@ -16,7 +16,7 @@ public class Main {
 
     private static int eventFileNamePosition = 0;
     private static Map<String, Integer> metaFileNamePosition = new HashMap<>();
-    private static int assertFileNamePosition = 0;
+    private static int assetFileNamePosition = 0;
 
     private static SqliteUtil sqliteUtil = new SqliteUtil();
 
@@ -25,7 +25,7 @@ public class Main {
         LOG.info(String.format("[%s]: positionMap<%s>", "Main", positionMap));
         if (null != positionMap && positionMap.size() > 0) {
             eventFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_EVENT, 0);
-            assertFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_ASSERT, 0);
+            assetFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_ASSET, 0);
             String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
             for (String type : metaTypes) {
                 metaFileNamePosition.put(type, positionMap.getOrDefault(type, 0));
@@ -74,13 +74,13 @@ public class Main {
                         }
                     }
                 }
-                if ("1".equals(SystemConstant.IF_DOWNLOAD_ASSERT)) {
-                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.ASSERT_DIR,
-                            SystemConstant.ASSERT_PREFIX, SystemConstant.PACKAGE_SUFFIX, assertFileNamePosition);
+                if ("1".equals(SystemConstant.IF_DOWNLOAD_ASSET)) {
+                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.ASSET_DIR,
+                            SystemConstant.ASSET_PREFIX, SystemConstant.PACKAGE_SUFFIX, assetFileNamePosition);
                     for (String fileName : fileNameList) {
-                        sender.send(JsonUtil.pack2Json(SystemConstant.ASSERT_DIR, fileName, SystemConstant.KIND_ASSERT,
-                                SystemConstant.TYPE_ASSERT), 0);
-                        assertFileNamePosition = FileUtil.getPositionByFileName(fileName);
+                        sender.send(JsonUtil.pack2Json(SystemConstant.ASSET_DIR, fileName, SystemConstant.KIND_ASSET,
+                                SystemConstant.TYPE_ASSET), 0);
+                        assetFileNamePosition = FileUtil.getPositionByFileName(fileName);
                     }
                 }
                 try {
@@ -97,6 +97,7 @@ public class Main {
                 }
             }
         }
+        DicUtil.closePool();
         sender.close();
         context.term();
     }
