@@ -70,7 +70,7 @@ public class EventTrans {
 			syslogMap.put("organization_id", 0);
 			if(null!=syslogMap.get("proof") && StringUtils.isNotBlank(syslogMap.get("proof").toString())){
 				Map<String, Object> proof = JsonUtil.jsonToMap(syslogMap.get("proof").toString());
-				if(null!=proof.get("catalog_info") && StringUtils.isNotBlank(proof.get("catalog_info").toString())) {
+				if(null != proof && null!=proof.get("catalog_info") && StringUtils.isNotBlank(proof.get("catalog_info").toString())) {
 					syslogMap.put("attack_result", proof.get("catalog_info").toString());
 				}
 			}
@@ -124,7 +124,20 @@ public class EventTrans {
 					if(ips.contains(",")){
 						String[] all_ip = ips.split(",");
 						for(String ip : all_ip) {
-							long ip_num = ipToLong(ip);
+							if (ipCheck(ip)) {
+								long ip_num = ipToLong(ip);
+								if(dataMap.containsKey(ip_num)) {
+									Map<String, Integer> detail = dataMap.get(ip_num);
+									detail.put("system_id", res_sys.getInt(1));
+									dataMap.put(ip_num, detail);
+								}else {
+									dataMap.put(ip_num, detailMap);
+								}
+							}
+						}
+					}else {
+						if (ipCheck(ips)) {
+							long ip_num = ipToLong(ips);
 							if(dataMap.containsKey(ip_num)) {
 								Map<String, Integer> detail = dataMap.get(ip_num);
 								detail.put("system_id", res_sys.getInt(1));
@@ -132,16 +145,6 @@ public class EventTrans {
 							}else {
 								dataMap.put(ip_num, detailMap);
 							}
-							
-						}
-					}else {
-						long ip_num = ipToLong(ips);
-						if(dataMap.containsKey(ip_num)) {
-							Map<String, Integer> detail = dataMap.get(ip_num);
-							detail.put("system_id", res_sys.getInt(1));
-							dataMap.put(ip_num, detail);
-						}else {
-							dataMap.put(ip_num, detailMap);
 						}
 					}
 				}
@@ -185,7 +188,7 @@ public class EventTrans {
      * return true，合法
      * */
     public static boolean ipCheck(String text) {
-        if (text != null && !text.isEmpty()) {
+        if (!StringUtil.isBlank(text)) {
             // 定义正则表达式
             String regex = "^(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|[1-9])\\."
                       + "(1\\d{2}|2[0-4]\\d|25[0-5]|[1-9]\\d|\\d)\\."
@@ -209,7 +212,8 @@ public class EventTrans {
         int position1 = strIp.indexOf(".");  
         int position2 = strIp.indexOf(".", position1 + 1);  
         int position3 = strIp.indexOf(".", position2 + 1);  
-        // 将每个.之间的字符串转换成整型  
+        // 将每个.之间的字符串转换成整型
+		LOG.debug(String.format("[%s]: strIp<%s>, position1<%s>", "ipToLong", strIp, position1));
         ip[0] = Long.parseLong(strIp.substring(0, position1));  
         ip[1] = Long.parseLong(strIp.substring(position1 + 1, position2));  
         ip[2] = Long.parseLong(strIp.substring(position2 + 1, position3));  
