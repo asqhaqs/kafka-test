@@ -23,7 +23,9 @@ public class EventTrans {
 	private static RedisCache<String, String> eventRedisCache = RedisUtil.getRedisCache(SystemConstant.EVENT_REDIS_CACHE);
 	
 	static {
+		LOG.info(String .format("[%s]: message<%s>", "EventTrans", "-----------------------"));
 		enrichmentAssetMap = getEnrichmentAsset();
+		LOG.info(String .format("[%s]: message<%s>", "EventTrans", "=========================="));
 	}
 
 	/**
@@ -38,7 +40,7 @@ public class EventTrans {
 			String[] fileds = s_tmp.split("@");
 			do_map(fileds);
 		} catch (Exception e) {
-			
+			LOG.error(e.getMessage(), e);
 		}
 	}
 	/**
@@ -84,6 +86,7 @@ public class EventTrans {
 	}
 
 	private static Map<Object,Map<String, Integer>> getEnrichmentAsset() {
+		LOG.info(String.format("[%s]: message<%s>", "getEnrichmentAsset", "+++++++++++++++++++++++++"));
 		Map<Object,Map<String, Integer>> dataMap = new HashMap<>();
 		int max_range_num = 1000;
 		PgUtil pu = PgUtil.getInstance();
@@ -94,7 +97,7 @@ public class EventTrans {
 		String sql_sys = "SELECT id,domain,ips FROM t_website WHERE sys_type = 1";
 		try {
 			pre = pu.getPreparedStatement(sql);
-			
+			LOG.info(String.format("[%s]: message<%s>", "getEnrichmentAsset", "ssssssssssssssssssssssssssssss"));
 			ResultSet res = pre.executeQuery();
 			while(res.next()) {
 				long start_num = res.getLong(1);
@@ -136,7 +139,7 @@ public class EventTrans {
 			}
 			res_sys.close();
 		} catch (Exception e) {
-			LOG.error("资产重复判断失败!<%s>", e.getMessage());
+			LOG.error(e.getMessage(), e);
 		}finally {
 			pu.destory();
 		}

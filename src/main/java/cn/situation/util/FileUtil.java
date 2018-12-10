@@ -119,9 +119,11 @@ public class FileUtil {
 	     */  
     private static List<File> unTarGz(String oriFilePath, String outputDir) throws IOException {
         List<File> fileList = new ArrayList<>();
-        try (TarInputStream tarIn = new TarInputStream(new GZIPInputStream(
-                new BufferedInputStream(new FileInputStream(oriFilePath))),
-        1024 * 2)) {
+        TarInputStream tarIn = null;
+        try {
+            tarIn = new TarInputStream(new GZIPInputStream(
+                    new BufferedInputStream(new FileInputStream(oriFilePath))),
+                    1024 * 2);
             createDirectory(outputDir,null); //创建输出目录
             TarEntry entry;
             while ((entry = tarIn.getNextEntry()) != null) {
@@ -129,16 +131,26 @@ public class FileUtil {
                     entry.getName();
                     createDirectory(outputDir, entry.getName());//创建空目录
                 } else { //是文件
-                    File tmpFile = new File(outputDir + "/" + entry.getName());
-                    OutputStream out = new FileOutputStream(tmpFile);
-                    int length;
-                    byte[] b = new byte[2048];
-                    while ((length = tarIn.read(b)) != -1) {
-                        out.write(b, 0, length);
+                    OutputStream out = null;
+                    try {
+                        File tmpFile = new File(outputDir + "/" + entry.getName());
+                        out = new FileOutputStream(tmpFile);
+                        int length;
+                        byte[] b = new byte[2048];
+                        while ((length = tarIn.read(b)) != -1) {
+                            out.write(b, 0, length);
+                        }
+                        fileList.add(tmpFile);
+                    } finally {
+                     if (null != out) {
+                         out.close();
+                     }
                     }
-                    fileList.add(tmpFile);
-                    out.close();
                 }
+            }
+        } finally {
+            if (null != tarIn) {
+                tarIn.close();
             }
         }
         return fileList;
@@ -150,15 +162,17 @@ public class FileUtil {
      * @return
      * @throws IOException
      */
-    public static List<File> unTarGzWrapper(String fileName, boolean ifDelOriFile) throws IOException {
-        List<File> fileList;
+    public static List<File> unTarGzWrapper(String fileName, boolean ifDelOriFile) {
+        List<File> fileList = new ArrayList<>();
         try {
             String outputDir = SystemConstant.LOCAL_FILE_DIR + fileName.substring(0, fileName.indexOf("."));
             String oriFilePath =  SystemConstant.LOCAL_FILE_DIR + fileName;
             LOG.info(String.format("[%s]: outputDir<%s>, oriFilePath<%s>, fileName<%s>", "unTarGzWrapper",
                     outputDir, oriFilePath, fileName));
             fileList = unTarGz(oriFilePath, outputDir);
-        } finally {
+        } catch (Exception e ){
+            LOG.error(e.getMessage(), e);
+        }finally {
             if (ifDelOriFile) {
                 delFile(SystemConstant.LOCAL_FILE_DIR, fileName);
             }
@@ -193,11 +207,6 @@ public class FileUtil {
     }
     
     public static void main(String[] args) {
-    	try {
-			unTarGzWrapper("event_detection_1.tar.gz",true);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 }

@@ -49,7 +49,7 @@ public class Worker implements Runnable {
         socket.close();
     }
 
-    private void action(byte[] data) throws Exception {
+    private void action(byte[] data) {
         JSONObject json = JSONObject.fromObject(new String(data));
         String kind = json.getString("kind");
         String type = json.getString("type");
@@ -57,21 +57,26 @@ public class Worker implements Runnable {
         String fileName = json.getString("fileName");
         LOG.info(String.format("[%s]: kind<%s>, type<%s>, filePath<%s>, fileName<%s>", "action",
                 kind, type, filePath, fileName));
-        if (SystemConstant.KIND_EVENT.equals(kind)) {
-            handleEvent(filePath, fileName);
-        }
-        if (SystemConstant.KIND_METADATA.equals(kind)) {
-            handleMetadata(type, filePath, fileName);
-        }
-        if (SystemConstant.KIND_ASSET.equals(kind)) {
-            handleDevAssets(filePath, fileName);
-        }
-        if ("1".equals(SystemConstant.SQLITE_UPDATE_ENABLED)) {
-            sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
+        try {
+            if (SystemConstant.KIND_EVENT.equals(kind)) {
+                handleEvent(filePath, fileName);
+            }
+            if (SystemConstant.KIND_METADATA.equals(kind)) {
+                handleMetadata(type, filePath, fileName);
+            }
+            if (SystemConstant.KIND_ASSET.equals(kind)) {
+                handleDevAssets(filePath, fileName);
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        } finally {
+            if ("1".equals(SystemConstant.SQLITE_UPDATE_ENABLED)) {
+                sqliteUtil.executeUpdate(sqliteUtil.getUpdateSql(kind, type, fileName));
+            }
         }
     }
 
-    private void handleMetadata(String type, String remotePath, String fileName) throws Exception {
+    private void handleMetadata(String type, String remotePath, String fileName) {
         boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                 type, SystemConstant.PACKAGE_SUFFIX, false);
         LOG.info(String.format("[%s]: type<%s>, remotePath<%s>, fileName<%s>, result<%s>", "handleMetadata",
@@ -84,7 +89,7 @@ public class Worker implements Runnable {
         }
     }
 
-    private void handleEvent(String remotePath, String fileName) throws Exception {
+    private void handleEvent(String remotePath, String fileName) {
         boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                 SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
         LOG.info(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
@@ -97,7 +102,7 @@ public class Worker implements Runnable {
         }
     }
     
-    private void handleDevAssets(String remotePath, String fileName) throws Exception {
+    private void handleDevAssets(String remotePath, String fileName) {
         boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                 SystemConstant.ASSET_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
         LOG.info(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
@@ -110,7 +115,7 @@ public class Worker implements Runnable {
         }
     }
 
-    private void execByLine(String filePath, String fileName, String kind) throws Exception {
+    private void execByLine(String filePath, String fileName, String kind) {
         File file = new File(filePath);
         if (!file.exists() || !file.isFile() || file.length() == 0) {
             return;
@@ -120,7 +125,7 @@ public class Worker implements Runnable {
              BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                LOG.debug(String.format("[%s]: line<%s>, kind<%s>, fileName<%s>", "execByLine", line, kind, fileName));
+                LOG.info(String.format("[%s]: line<%s>, kind<%s>, fileName<%s>", "execByLine", line, kind, fileName));
                 if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
                     SystemConstant.MONITOR_STATISTIC.put(kind, (SystemConstant.MONITOR_STATISTIC.get(kind)+1));
                 }
@@ -132,6 +137,8 @@ public class Worker implements Runnable {
                     AssetTrans.do_trans(line);
                 }
             }
+        } catch (Exception e) {
+          LOG.error(e.getMessage(), e);
         } finally {
             FileUtil.delDir(file.getParent());
         }

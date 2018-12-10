@@ -101,28 +101,33 @@ public class SFTPUtil {
         LOG.debug(String.format("[%s]: message<%s>", "disconnect", "session closed."));
     }
 
-    public List<String> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat, int position) throws Exception {
+    public List<String> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat, int position) {
         LOG.info(String.format("[%s]: remotePath<%s>, fileFormat<%s>, fileEndFormat<%s>, position<%s>",
                 "getRemoteFileName", remotePath, fileFormat, fileEndFormat, position));
         List<String> fileNameList = new ArrayList<>();
-        connect();
-        Vector v = listFiles(remotePath);
-        if (v.size() > 0) {
-            Iterator it = v.iterator();
-            while (it.hasNext()) {
-                LsEntry entry = (LsEntry) it.next();
-                String fileName = entry.getFilename();
-                SftpATTRS attrs = entry.getAttrs();
-                if (!attrs.isDir() && DateUtil.getSftpFileMtime(attrs.getMtimeString()) >=
-                        Integer.parseInt(SystemConstant.SFTP_FILE_NO_CHANGE_INTERVAL)) {
-                    if (checkFileName(fileName, fileFormat, fileEndFormat) && filterFileName(fileName, position)) {
-                        fileNameList.add(fileName);
+        try {
+            connect();
+            Vector v = listFiles(remotePath);
+            if (v.size() > 0) {
+                Iterator it = v.iterator();
+                while (it.hasNext()) {
+                    LsEntry entry = (LsEntry) it.next();
+                    String fileName = entry.getFilename();
+                    SftpATTRS attrs = entry.getAttrs();
+                    if (!attrs.isDir() && DateUtil.getSftpFileMtime(attrs.getMtimeString()) >=
+                            Integer.parseInt(SystemConstant.SFTP_FILE_NO_CHANGE_INTERVAL)) {
+                        if (checkFileName(fileName, fileFormat, fileEndFormat) && filterFileName(fileName, position)) {
+                            fileNameList.add(fileName);
+                        }
                     }
                 }
             }
+            sortFileName(fileNameList);
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        } finally {
+            disconnect();
         }
-        sortFileName(fileNameList);
-        disconnect();
         return fileNameList;
     }
 
@@ -245,7 +250,7 @@ public class SFTPUtil {
      * @return
      */
     public boolean downLoadOneFile(String remotePath, String remoteFileName, String localPath,
-                                          String fileFormat, String fileEndFormat, boolean del) throws Exception {
+                                          String fileFormat, String fileEndFormat, boolean del) {
         LOG.info(String.format("[%s]: remotePath<%s>, remoteFileName<%s>, localPath<%s>, fileFormat<%s>, " +
                         "fileEndFormat<%s>, del<%s>", "downLoadOneFile", remotePath, remoteFileName, localPath,
                 fileFormat, fileEndFormat, del));
@@ -261,6 +266,8 @@ public class SFTPUtil {
                     deleteSFTP(remotePath, remoteFileName);
                 }
             }
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
         } finally {
             disconnect();
         }
@@ -280,7 +287,7 @@ public class SFTPUtil {
         File file = new File(localPath + localFileName);
         try (FileOutputStream output = new FileOutputStream(file)) {
             sftp.get(remotePath + remoteFileName, output);
-            LOG.info(String.format("[%s]: remotePath<%s>, remoteFileName<%s>, localPath<%s>, localFileName<%s>, " +
+            LOG.debug(String.format("[%s]: remotePath<%s>, remoteFileName<%s>, localPath<%s>, localFileName<%s>, " +
                             "message<%s>", "downloadFile", remotePath, remoteFileName, localPath, localFileName,
                     "Download success from sftp."));
         }
