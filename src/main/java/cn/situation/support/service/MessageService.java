@@ -28,7 +28,7 @@ public class MessageService {
     private static Map<String, Map<String, String>> metadataMappedTypeMap = SystemConstant.getMetadataMappedTypeMap();
     private static Map<String, Map<String, String>> metadataUnMappedFieldMap = SystemConstant.getMetadataUnMappedFieldMap();
     private static Map<String, String> metadataRedisKeyMap = new HashMap<>();
-    private static RedisCache<String, String> metadataRedisCache = RedisUtil.getRedisCache("metadataRedisCache");
+    private static RedisCache<String, String> metadataRedisCache = RedisUtil.getRedisCache(SystemConstant.METADATA_REDIS_CACHE);
 
     static {
         String[] headFields = SystemConstant.MESSAGE_HEAD_FIELD.split(",");
