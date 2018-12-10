@@ -68,9 +68,9 @@ public class EventTrans {
 			syslogMap.put("sip", syslogMap.get("sip").toString());
 			syslogMap.put("dip", syslogMap.get("dip").toString());
 			syslogMap.put("organization_id", 0);
-			if(syslogMap.get("proof")!=null && StringUtils.isNotBlank(syslogMap.get("proof").toString())){
+			if(null!=syslogMap.get("proof") && StringUtils.isNotBlank(syslogMap.get("proof").toString())){
 				Map<String, Object> proof = JsonUtil.jsonToMap(syslogMap.get("proof").toString());
-				if(proof.get("catalog_info")!=null && StringUtils.isNotBlank(proof.get("catalog_info").toString())) {
+				if(null!=proof.get("catalog_info") && StringUtils.isNotBlank(proof.get("catalog_info").toString())) {
 					syslogMap.put("attack_result", proof.get("catalog_info").toString());
 				}
 			}
