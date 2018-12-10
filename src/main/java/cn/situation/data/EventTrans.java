@@ -148,6 +148,7 @@ public class EventTrans {
 		String ip = null;
 		if(StringUtils.isNotBlank(syslogMap.get("host").toString())) {
 			ip = syslogMap.get("host").toString();
+			syslogMap.put("host_md5", MD5Util.md5Encode(ip));
 		}else if(StringUtils.isNotBlank(syslogMap.get("dip").toString())) {
 			ip = syslogMap.get("dip").toString();
 		}

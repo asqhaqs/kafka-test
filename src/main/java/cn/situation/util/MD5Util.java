@@ -53,4 +53,8 @@ public class MD5Util {
         MD5 md5 = new MD5();
         return  md5.getMD5ofStr(inputStr);
     }
+    public static void main(String[] args) {
+    	System.out.println(md5Encode("asdf"));
+    	System.out.println(encodeToStr("asdf"));
+	}
 }
