@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:p="http://www.springframework.org/schema/p"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-3.1.xsd" >
+
+	<bean id="propertyConfigurer"
+		  class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations" >
+			<list>
+				<value>classpath:app.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxIdle" value="${redis.poolMaxIdle}" />
+		<property name="maxTotal" value="${redis.poolMaxTotal}" />
+		<property name="MaxWaitMillis" value="${redis.poolMaxWait}" />
+		<property name="testOnBorrow" value="true" />
+		<property name="testOnReturn" value="true" />
+	</bean>
+
+	<bean id="metadataConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
+		  p:host-name="${metadata.redis.host}" p:port="${metadata.redis.port}"
+		  p:pool-config-ref="poolConfig"  p:database="${metadata.redis.database}" p:timeout="0" />
+	<bean id="metadataRedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="metadataConnectionFactory" />
+		<property name="keySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+		</property>
+		<property name="valueSerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+		</property>
+	</bean>
+	<bean id="metadataRedisCache" class="cn.situation.util.RedisCache">
+		<property name="redisTemplate" ref="metadataRedisTemplate"/>
+	</bean>
+
+	<bean id="eventConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
+		  p:host-name="${event.redis.host}" p:port="${event.redis.port}"
+		  p:pool-config-ref="poolConfig"  p:database="${event.redis.database}" p:timeout="0" />
+	<bean id="eventRedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="eventConnectionFactory" />
+		<property name="keySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+		</property>
+		<property name="valueSerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+		</property>
+	</bean>
+	<bean id="eventRedisCache" class="cn.situation.util.RedisCache">
+		<property name="redisTemplate" ref="eventRedisTemplate"/>
+	</bean>
+</beans>

@@ -117,7 +117,6 @@ public class Main {
                 }
             }
         }
-        DicUtil.closePool();
         sender.close();
         context.term();
     }

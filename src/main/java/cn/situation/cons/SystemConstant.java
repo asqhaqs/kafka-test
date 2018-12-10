@@ -47,6 +47,10 @@ public class SystemConstant {
         init("app.properties");
     }
 
+    public static final String SPRING_APPLICATION_CONTEXT = "applicationContext.xml";
+    public static final String METADATA_REDIS_CACHE = "metadataRedisCache";
+    public static final String EVENT_REDIS_CACHE = "eventRedisCache";
+
     public static final String GEO_DATA_PATH = getProperty("geo.data.path", "geoipdata");
 
     public static final String ZMQ_SNDHWM = getProperty("zmq.sndhwm", "100");
@@ -56,24 +60,6 @@ public class SystemConstant {
 
     public static final String EXCEPT_INTERVAL_MS = getProperty("except.interval.ms", "");
 
-    // redis 配置
-    public static final String METADATA_REDIS_HOST = getProperty("metadata.redis.host", "127.0.0.1");
-    public static final String METADATA_REDIS_PORT = getProperty("metadata.redis.port", "6379");
-    public static final String METADATA_REDIS_PASSWORD = getProperty("metadata.redis.password", "123456");
-
-    public static final String EVENT_REDIS_HOST = getProperty("event.redis.host", "127.0.0.1");
-    public static final String EVENT_REDIS_PORT = getProperty("event.redis.port", "6379");
-    public static final String EVENT_REDIS_PASSWORD = getProperty("event.redis.password", "123456");
-
-    public static final String ASSET_REDIS_HOST = getProperty("asset.redis.host", "127.0.0.1");
-    public static final String ASSET_REDIS_PORT = getProperty("asset.redis.port", "6379");
-    public static final String ASSET_REDIS_PASSWORD = getProperty("asset.redis.password", "123456");
-
-    public static final String REDIS_TIMEOUT = getProperty("redis.timeout", "3");
-    public static final String REDIS_POOL_MAX_TOTAL = getProperty("redis.poolMaxTotal", "300");
-    public static final String REDIS_POOL_MAX_IDLE = getProperty("redis.poolMaxIdle", "60");
-    public static final String REDIS_POOL_MIN_IDLE = getProperty("redis.poolMinIdle", "30");
-    public static final String REDIS_POOL_MAX_WAIT = getProperty("redis.poolMaxWait", "5000");
     public static final String REDIS_KEY_PREFIX = getProperty("redis.key.prefix", "logcenter");
     public static final String REDIS_ALERT_KEY = getProperty("alert.redis.key", "situation-ids");
 
@@ -83,8 +69,6 @@ public class SystemConstant {
     public static final String SFTP_USERNAME = getProperty("sftp.username", "");
     public static final String SFTP_PASSWORD = getProperty("sftp.password", "");
     public static final String SFTP_FILE_NO_CHANGE_INTERVAL = getProperty("sftp.file.nochange.interval", "0");
-
-    public static final String LEVEL1_DIR = getProperty("level1.dir", "");
 
     public static final String IF_DOWNLOAD_METADATA = getProperty("if.download.metadata", "1");
     public static final String IF_DOWNLOAD_EVENT = getProperty("if.download.event", "1");
