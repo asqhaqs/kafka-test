@@ -32,7 +32,7 @@ public class EventTrans {
 	 * @throws Exception
 	 */
 	public static void do_trans(String row) throws Exception {
-		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
+		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
 		try {
 			String s_tmp = row.replace("|", "@");
 			String[] fileds = s_tmp.split("@");
@@ -47,7 +47,7 @@ public class EventTrans {
 	 * @throws Exception
 	 */
 	private static void do_map(String[] fileds) throws Exception {
-		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
+		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
 
 		Map<String, Object> syslogMap = new HashMap<>();
 
@@ -84,7 +84,6 @@ public class EventTrans {
 	}
 
 	private static Map<Object,Map<String, Integer>> getEnrichmentAsset() {
-		LOG.info(String.format("[%s]: message<%s>", "getEnrichmentAsset", "+++++++++++++++++++++++++"));
 		Map<Object,Map<String, Integer>> dataMap = new HashMap<>();
 		int max_range_num = 1000;
 		PgUtil pu = PgUtil.getInstance();
@@ -95,7 +94,6 @@ public class EventTrans {
 		String sql_sys = "SELECT id,domain,ips FROM t_website WHERE sys_type = 1";
 		try {
 			pre = pu.getPreparedStatement(sql);
-			LOG.info(String.format("[%s]: message<%s>", "getEnrichmentAsset", "ssssssssssssssssssssssssssssss"));
 			ResultSet res = pre.executeQuery();
 			while(res.next()) {
 				long start_num = res.getLong(1);
@@ -241,6 +239,7 @@ public class EventTrans {
 				fields[i] = fields[i].replace("^^^","\n");
 			}
 		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 		}
 		//厂商字段梳理
 		map_tmp.put("version", fields[0]);

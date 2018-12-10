@@ -79,7 +79,7 @@ public class Worker implements Runnable {
     private void handleMetadata(String type, String remotePath, String fileName) {
         boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                 type, SystemConstant.PACKAGE_SUFFIX, false);
-        LOG.info(String.format("[%s]: type<%s>, remotePath<%s>, fileName<%s>, result<%s>", "handleMetadata",
+        LOG.debug(String.format("[%s]: type<%s>, remotePath<%s>, fileName<%s>, result<%s>", "handleMetadata",
                 type, remotePath, fileName, result));
         if (result) {
             List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
@@ -92,7 +92,7 @@ public class Worker implements Runnable {
     private void handleEvent(String remotePath, String fileName) {
         boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                 SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
-        LOG.info(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
+        LOG.debug(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
                 "handleEvent", remotePath, fileName, result));
         if (result) {
             List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
@@ -105,7 +105,7 @@ public class Worker implements Runnable {
     private void handleDevAssets(String remotePath, String fileName) {
         boolean result = sftpUtil.downLoadOneFile(remotePath, fileName, SystemConstant.LOCAL_FILE_DIR,
                 SystemConstant.ASSET_PREFIX, SystemConstant.PACKAGE_SUFFIX, false);
-        LOG.info(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
+        LOG.debug(String.format("[%s]: remotePath<%s>, fileName<%s>, result<%s>",
                 "handleDevAssets", remotePath, fileName, result));
         if (result) {
             List<File> fileList = FileUtil.unTarGzWrapper(fileName, true);
