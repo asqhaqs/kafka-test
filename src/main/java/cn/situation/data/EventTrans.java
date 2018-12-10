@@ -347,8 +347,8 @@ public class EventTrans {
 		//共有字段
 		map.put("dport", map_tmp.get("dport"));
 		map.put("sport", map_tmp.get("sport"));
-		map.put("sip", map_tmp.get("sip"));
-		map.put("dip", map_tmp.get("dip"));
+		map.put("sip", map_tmp.get("attack_ip"));
+		map.put("dip", map_tmp.get("victim_ip"));
 		map.put("rule_num", map_tmp.get("ruleid"));
 		map.put("description", map_tmp.get("event_info"));
 		map.put("rule_name", map_tmp.get("event_info"));
