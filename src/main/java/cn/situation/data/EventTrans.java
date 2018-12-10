@@ -68,9 +68,9 @@ public class EventTrans {
 			syslogMap.put("sip", syslogMap.get("sip").toString());
 			syslogMap.put("dip", syslogMap.get("dip").toString());
 			syslogMap.put("organization_id", 0);
-			if(StringUtils.isNotBlank(syslogMap.get("proof").toString())){
+			if(syslogMap.get("proof")!=null && StringUtils.isNotBlank(syslogMap.get("proof").toString())){
 				Map<String, Object> proof = JsonUtil.jsonToMap(syslogMap.get("proof").toString());
-				if(StringUtils.isNotBlank(proof.get("catalog_info").toString())) {
+				if(proof.get("catalog_info")!=null && StringUtils.isNotBlank(proof.get("catalog_info").toString())) {
 					syslogMap.put("attack_result", proof.get("catalog_info").toString());
 				}
 			}
@@ -126,7 +126,7 @@ public class EventTrans {
 					if(ips.contains(",")){
 						String[] all_ip = ips.split(",");
 						for(String ip : all_ip) {
-							int ip_num = (int)ipToLong(ip);
+							long ip_num = ipToLong(ip);
 							if(dataMap.containsKey(ip_num)) {
 								Map<String, Integer> detail = dataMap.get(ip_num);
 								detail.put("system_id", res_sys.getInt(1));
@@ -137,7 +137,7 @@ public class EventTrans {
 							
 						}
 					}else {
-						int ip_num = (int)ipToLong(ips);
+						long ip_num = ipToLong(ips);
 						if(dataMap.containsKey(ip_num)) {
 							Map<String, Integer> detail = dataMap.get(ip_num);
 							detail.put("system_id", res_sys.getInt(1));
