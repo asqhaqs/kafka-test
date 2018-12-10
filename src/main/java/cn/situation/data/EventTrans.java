@@ -126,11 +126,24 @@ public class EventTrans {
 						String[] all_ip = ips.split(",");
 						for(String ip : all_ip) {
 							int ip_num = (int)ipToLong(ip);
-							dataMap.put(ip_num, detailMap);
+							if(dataMap.containsKey(ip_num)) {
+								Map<String, Integer> detail = dataMap.get(ip_num);
+								detail.put("system_id", res_sys.getInt(1));
+								dataMap.put(ip_num, detail);
+							}else {
+								dataMap.put(ip_num, detailMap);
+							}
+							
 						}
 					}else {
 						int ip_num = (int)ipToLong(ips);
-						dataMap.put(ip_num, detailMap);
+						if(dataMap.containsKey(ip_num)) {
+							Map<String, Integer> detail = dataMap.get(ip_num);
+							detail.put("system_id", res_sys.getInt(1));
+							dataMap.put(ip_num, detail);
+						}else {
+							dataMap.put(ip_num, detailMap);
+						}
 					}
 				}
 			}
