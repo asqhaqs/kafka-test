@@ -46,7 +46,7 @@ public class FileUtil {
         List<String> content = new ArrayList<String>();
         FileInputStream fileInputStream = new FileInputStream(file);
         InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
-        BufferedReader reader = new BufferedReader(inputStreamReader);
+        BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE));
         String lineContent;
         while ((lineContent = reader.readLine()) != null) {
             content.add(lineContent);
@@ -117,30 +117,30 @@ public class FileUtil {
 	     * @param outputDir 要解压到某个指定的目录下 
 	     * @throws IOException 
 	     */  
-    public static List<File> unTarGz(String oriFilePath, String outputDir) throws IOException {
+    private static List<File> unTarGz(String oriFilePath, String outputDir) throws IOException {
         List<File> fileList = new ArrayList<>();
-        TarInputStream tarIn = new TarInputStream(new GZIPInputStream(
+        try (TarInputStream tarIn = new TarInputStream(new GZIPInputStream(
                 new BufferedInputStream(new FileInputStream(oriFilePath))),
-                1024 * 2);
-        createDirectory(outputDir,null); //创建输出目录
-        TarEntry entry;
-        while ((entry = tarIn.getNextEntry()) != null) {
-            if (entry.isDirectory()) {//是目录
-                entry.getName();
-                createDirectory(outputDir, entry.getName());//创建空目录
-            } else { //是文件
-                File tmpFile = new File(outputDir + "/" + entry.getName());
-                OutputStream out = new FileOutputStream(tmpFile);
-                int length;
-                byte[] b = new byte[2048];
-                while ((length = tarIn.read(b)) != -1) {
-                    out.write(b, 0, length);
+        1024 * 2)) {
+            createDirectory(outputDir,null); //创建输出目录
+            TarEntry entry;
+            while ((entry = tarIn.getNextEntry()) != null) {
+                if (entry.isDirectory()) {//是目录
+                    entry.getName();
+                    createDirectory(outputDir, entry.getName());//创建空目录
+                } else { //是文件
+                    File tmpFile = new File(outputDir + "/" + entry.getName());
+                    OutputStream out = new FileOutputStream(tmpFile);
+                    int length;
+                    byte[] b = new byte[2048];
+                    while ((length = tarIn.read(b)) != -1) {
+                        out.write(b, 0, length);
+                    }
+                    fileList.add(tmpFile);
+                    out.close();
                 }
-                fileList.add(tmpFile);
-                out.close();
             }
         }
-        tarIn.close();
         return fileList;
     }
 
@@ -151,13 +151,17 @@ public class FileUtil {
      * @throws IOException
      */
     public static List<File> unTarGzWrapper(String fileName, boolean ifDelOriFile) throws IOException {
-        String outputDir = SystemConstant.LOCAL_FILE_DIR + fileName.substring(0, fileName.indexOf("."));
-        String oriFilePath =  SystemConstant.LOCAL_FILE_DIR + fileName;
-        LOG.info(String.format("[%s]: outputDir<%s>, oriFilePath<%s>, fileName<%s>", "unTarGzWrapper",
-                outputDir, oriFilePath, fileName));
-        List<File> fileList = unTarGz(oriFilePath, outputDir);
-        if (ifDelOriFile) {
-            delFile(SystemConstant.LOCAL_FILE_DIR, fileName);
+        List<File> fileList;
+        try {
+            String outputDir = SystemConstant.LOCAL_FILE_DIR + fileName.substring(0, fileName.indexOf("."));
+            String oriFilePath =  SystemConstant.LOCAL_FILE_DIR + fileName;
+            LOG.info(String.format("[%s]: outputDir<%s>, oriFilePath<%s>, fileName<%s>", "unTarGzWrapper",
+                    outputDir, oriFilePath, fileName));
+            fileList = unTarGz(oriFilePath, outputDir);
+        } finally {
+            if (ifDelOriFile) {
+                delFile(SystemConstant.LOCAL_FILE_DIR, fileName);
+            }
         }
         return fileList;
     }
@@ -167,7 +171,7 @@ public class FileUtil {
 	     * @param outputDir 
 	     * @param subDir 
 	     */  
-    public static void createDirectory(String outputDir,String subDir){     
+    private static void createDirectory(String outputDir,String subDir) {
         File file = new File(outputDir);  
         if(!(subDir == null || subDir.trim().equals(""))){//子目录不为空  
             file = new File(outputDir + "/" + subDir);  

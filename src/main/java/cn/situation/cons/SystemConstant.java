@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 
@@ -64,9 +65,9 @@ public class SystemConstant {
     public static final String EVENT_REDIS_PORT = getProperty("event.redis.port", "6379");
     public static final String EVENT_REDIS_PASSWORD = getProperty("event.redis.password", "123456");
 
-    public static final String ASSERT_REDIS_HOST = getProperty("assert.redis.host", "127.0.0.1");
-    public static final String ASSERT_REDIS_PORT = getProperty("assert.redis.port", "6379");
-    public static final String ASSERT_REDIS_PASSWORD = getProperty("assert.redis.password", "123456");
+    public static final String ASSET_REDIS_HOST = getProperty("asset.redis.host", "127.0.0.1");
+    public static final String ASSET_REDIS_PORT = getProperty("asset.redis.port", "6379");
+    public static final String ASSET_REDIS_PASSWORD = getProperty("asset.redis.password", "123456");
 
     public static final String REDIS_TIMEOUT = getProperty("redis.timeout", "3");
     public static final String REDIS_POOL_MAX_TOTAL = getProperty("redis.poolMaxTotal", "300");
@@ -81,16 +82,17 @@ public class SystemConstant {
     public static final String SFTP_PORT = getProperty("sftp.port", "22");
     public static final String SFTP_USERNAME = getProperty("sftp.username", "");
     public static final String SFTP_PASSWORD = getProperty("sftp.password", "");
+    public static final String SFTP_FILE_NO_CHANGE_INTERVAL = getProperty("sftp.file.nochange.interval", "0");
 
     public static final String LEVEL1_DIR = getProperty("level1.dir", "");
 
     public static final String IF_DOWNLOAD_METADATA = getProperty("if.download.metadata", "1");
     public static final String IF_DOWNLOAD_EVENT = getProperty("if.download.event", "1");
-    public static final String IF_DOWNLOAD_ASSERT = getProperty("if.download.assert", "1");
+    public static final String IF_DOWNLOAD_ASSET = getProperty("if.download.asset", "1");
 
     public static final String EVENT_DIR = getProperty("event.dir", "");
     public static final String METAdDATA_DIR = getProperty("metadata.dir", "");
-    public static final String ASSERT_DIR = getProperty("assert.dir", "");
+    public static final String ASSET_DIR = getProperty("asset.dir", "");
 
     public static final String PACKAGE_SUFFIX = getProperty("package.suffix", "");
 
@@ -102,14 +104,14 @@ public class SystemConstant {
 
     public static final String KIND_EVENT = getProperty("kind.event", "");
     public static final String KIND_METADATA = getProperty("kind.metadata", "");
-    public static final String KIND_ASSERT = getProperty("kind.assert", "");
+    public static final String KIND_ASSET = getProperty("kind.asset", "");
 
     public static final String TYPE_EVENT = getProperty("type.event", "");
     public static final String TYPE_METADATA = getProperty("type.metadata", "");
-    public static final String TYPE_ASSERT = getProperty("type.assert", "");
+    public static final String TYPE_ASSET = getProperty("type.asset", "");
 
     public static final String EVENT_PREFIX = getProperty("event.prefix", "");
-    public static final String ASSERT_PREFIX = getProperty("assert.prefix", "");
+    public static final String ASSET_PREFIX = getProperty("asset.prefix", "");
 
     public static final String MESSAGE_TYPE = getProperty("message.type", "");
 
@@ -128,6 +130,14 @@ public class SystemConstant {
     public static final String MONITOR_STATISTIC_ENABLED = getProperty("monitor.statistic.enabled", "0");
 
     public static final String SQLITE_UPDATE_ENABLED = getProperty("sqlite.update.enabled", "0");
+
+    public static final String INPUT_BUFFER_SIZE = getProperty("input.buffer.size", "");
+
+    public static final Map<String, Integer> MONITOR_STATISTIC = new ConcurrentHashMap<>();
+
+    public static final String SCHEDULE_CORE_POOL_SIZE = getProperty("schedule.core.pool.size", "1");
+
+    public static final String MONITOR_PERIOD_SECONDS = getProperty("monitor.period.seconds", "300");
 
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();

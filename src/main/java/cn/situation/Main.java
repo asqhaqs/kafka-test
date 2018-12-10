@@ -1,8 +1,8 @@
 package cn.situation;
 
 import cn.situation.cons.SystemConstant;
-import cn.situation.data.EventTrans;
 import cn.situation.file.Worker;
+import cn.situation.schedule.MonitorTask;
 import cn.situation.util.*;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
@@ -10,6 +10,9 @@ import org.zeromq.ZMQ;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -17,7 +20,7 @@ public class Main {
 
     private static int eventFileNamePosition = 0;
     private static Map<String, Integer> metaFileNamePosition = new HashMap<>();
-    private static int assertFileNamePosition = 0;
+    private static int assetFileNamePosition = 0;
 
     private static SqliteUtil sqliteUtil = new SqliteUtil();
 
@@ -26,14 +29,22 @@ public class Main {
         LOG.info(String.format("[%s]: positionMap<%s>", "Main", positionMap));
         if (null != positionMap && positionMap.size() > 0) {
             eventFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_EVENT, 0);
-            assertFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_ASSERT, 0);
+            assetFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_ASSET, 0);
             String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
             for (String type : metaTypes) {
                 metaFileNamePosition.put(type, positionMap.getOrDefault(type, 0));
             }
         }
+        if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_EVENT, 0);
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_ASSET, 0);
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_METADATA, 0);
+            String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
+            for (String metaType : metaTypes) {
+                SystemConstant.MONITOR_STATISTIC.put(metaType, 0);
+            }
+        }
         FileUtil.createDir(SystemConstant.LOCAL_FILE_DIR);
-//        EventTrans.initEnrichmentAsset();
     }
 
     public static void main(String[] args) {
@@ -47,6 +58,13 @@ public class Main {
         for(int num = 0; num < threadNum; num++) {
             Worker worker = new Worker(context);
             new Thread(worker).start();
+        }
+
+        if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
+            ScheduledExecutorService executorService = Executors.
+                    newScheduledThreadPool(Integer.parseInt(SystemConstant.SCHEDULE_CORE_POOL_SIZE));
+            executorService.scheduleWithFixedDelay(new MonitorTask(), 0,
+                    Integer.parseInt(SystemConstant.MONITOR_PERIOD_SECONDS), TimeUnit.SECONDS);
         }
 
         LOG.info(String.format("[%s]: message<%s>", "main", "start work..."));
@@ -76,13 +94,13 @@ public class Main {
                         }
                     }
                 }
-                if ("1".equals(SystemConstant.IF_DOWNLOAD_ASSERT)) {
-                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.ASSERT_DIR,
-                            SystemConstant.ASSERT_PREFIX, SystemConstant.PACKAGE_SUFFIX, assertFileNamePosition);
+                if ("1".equals(SystemConstant.IF_DOWNLOAD_ASSET)) {
+                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.ASSET_DIR,
+                            SystemConstant.ASSET_PREFIX, SystemConstant.PACKAGE_SUFFIX, assetFileNamePosition);
                     for (String fileName : fileNameList) {
-                        sender.send(JsonUtil.pack2Json(SystemConstant.ASSERT_DIR, fileName, SystemConstant.KIND_ASSERT,
-                                SystemConstant.TYPE_ASSERT), 0);
-                        assertFileNamePosition = FileUtil.getPositionByFileName(fileName);
+                        sender.send(JsonUtil.pack2Json(SystemConstant.ASSET_DIR, fileName, SystemConstant.KIND_ASSET,
+                                SystemConstant.TYPE_ASSET), 0);
+                        assetFileNamePosition = FileUtil.getPositionByFileName(fileName);
                     }
                 }
                 try {
@@ -99,6 +117,7 @@ public class Main {
                 }
             }
         }
+        DicUtil.closePool();
         sender.close();
         context.term();
     }

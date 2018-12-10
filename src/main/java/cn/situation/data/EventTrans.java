@@ -30,15 +30,14 @@ public class EventTrans {
 	 * @param e_list
 	 * @throws Exception
 	 */
-	public static void do_trans(List<String> e_list) throws Exception {
+	public static void do_trans(String row) throws Exception {
 		LOG.info(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
-		for (String row : e_list) {
-			try {
-				String s_tmp = row.replace("|", "@");
-				String[] fileds = s_tmp.split("@");
-				do_map(fileds);
-			} catch (Exception e) {
-			}
+		try {
+			String s_tmp = row.replace("|", "@");
+			String[] fileds = s_tmp.split("@");
+			do_map(fileds);
+		} catch (Exception e) {
+			
 		}
 	}
 	/**
@@ -79,7 +78,7 @@ public class EventTrans {
 			//入redis库
 			String resultJson = JsonUtil.mapToJson(syslogMap);
 			System.out.println(resultJson);
-			DicUtil.rpush(redisAlertKey, resultJson, SystemConstant.KIND_ASSERT);
+			DicUtil.rpush(redisAlertKey, resultJson, SystemConstant.KIND_ASSET);
 			LOG.info(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
 		}
 	}
@@ -382,7 +381,6 @@ public class EventTrans {
 //		do_trans(s_list);
 		Map<Object,Map<String, Integer>> map = getEnrichmentAsset();
 		System.out.println(map.size());
-		s_list.add("0x^^^01|0x01|0x0100|305441741|1544067360|1187||360|6.6.6.3|2.0.0.2|58102|80|6|4071||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C0899200001BE03||2.0.0.2||6.6.6.3|||92||1|||{\"log_proof_cp\": {\"download_file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"domain\": \"\", \"attack_tool\": \"\", \"tcp_keypayload\": [], \"account_info\": {\"username\": \"\", \"password\": \"\"}, \"udp_keypayload\": [], \"anom_traffic_statistics\": {\"durations\": 0, \"sessions\": 0}, \"mail_keypayload\": [], \"src_port\": 58102, \"ip_list\": [], \"application\": \"WGET\", \"http_keypayload\": [], \"file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"event_abstract\": \"\", \"src_ip\": \"6.6.6.3\", \"source\": \"2.0.0.2\\/026A1A95FC065249C7A974EB4E0520D1.6C14E3ED\", \"device_info\": {\"dev_type\": \"\", \"dev_name\": \"\", \"serial\": \"e179dd7caf1ce974e9a8985869b21d5fc1b30855\"}, \"dark_ip\": \"\", \"scan_tool\": \"\", \"icmp_keypayload\": [], \"third_party\": \"\", \"cve_id\": \"\", \"catalog_info\": \"\", \"cnvd_id\": \"\", \"telnet_keypayload\": [], \"dns_keypayload\": [], \"dark_domain\": \"\", \"database_info\": {\"db_type\": \"\", \"db_name\": \"\"}, \"vulnerability_info\": \"\", \"sample_abstract\": {\"name\": \"026A1A95FC065249C7A974EB4E0520D1\", \"family\": \"Virus\\/Win32.Sality.q\", \"md5\": \"026A1A95FC065249C7A974EB4E0520D1\"}, \"dst_port\": 80, \"ftp_keypayload\": [], \"action\": \"Virus\", \"dst_ip\": \"2.0.0.2\", \"attack_signature\": \"\"}}\r\n");
-		do_trans(s_list);
+		do_trans("0x^^^01|0x01|0x0100|305441741|1544067360|1187||360|6.6.6.3|2.0.0.2|58102|80|6|4071||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C0899200001BE03||2.0.0.2||6.6.6.3|||92||1|||{\"log_proof_cp\": {\"download_file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"domain\": \"\", \"attack_tool\": \"\", \"tcp_keypayload\": [], \"account_info\": {\"username\": \"\", \"password\": \"\"}, \"udp_keypayload\": [], \"anom_traffic_statistics\": {\"durations\": 0, \"sessions\": 0}, \"mail_keypayload\": [], \"src_port\": 58102, \"ip_list\": [], \"application\": \"WGET\", \"http_keypayload\": [], \"file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"event_abstract\": \"\", \"src_ip\": \"6.6.6.3\", \"source\": \"2.0.0.2\\/026A1A95FC065249C7A974EB4E0520D1.6C14E3ED\", \"device_info\": {\"dev_type\": \"\", \"dev_name\": \"\", \"serial\": \"e179dd7caf1ce974e9a8985869b21d5fc1b30855\"}, \"dark_ip\": \"\", \"scan_tool\": \"\", \"icmp_keypayload\": [], \"third_party\": \"\", \"cve_id\": \"\", \"catalog_info\": \"\", \"cnvd_id\": \"\", \"telnet_keypayload\": [], \"dns_keypayload\": [], \"dark_domain\": \"\", \"database_info\": {\"db_type\": \"\", \"db_name\": \"\"}, \"vulnerability_info\": \"\", \"sample_abstract\": {\"name\": \"026A1A95FC065249C7A974EB4E0520D1\", \"family\": \"Virus\\/Win32.Sality.q\", \"md5\": \"026A1A95FC065249C7A974EB4E0520D1\"}, \"dst_port\": 80, \"ftp_keypayload\": [], \"action\": \"Virus\", \"dst_ip\": \"2.0.0.2\", \"attack_signature\": \"\"}}\r\n");
 	}
 }
