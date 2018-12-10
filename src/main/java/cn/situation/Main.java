@@ -1,6 +1,7 @@
 package cn.situation;
 
 import cn.situation.cons.SystemConstant;
+import cn.situation.data.EventTrans;
 import cn.situation.file.Worker;
 import cn.situation.util.*;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class Main {
             }
         }
         FileUtil.createDir(SystemConstant.LOCAL_FILE_DIR);
+//        EventTrans.initEnrichmentAsset();
     }
 
     public static void main(String[] args) {
