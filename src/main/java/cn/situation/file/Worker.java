@@ -118,27 +118,26 @@ public class Worker implements Runnable {
         if (!file.exists() || !file.isFile() || file.length() == 0) {
             return;
         }
-        FileInputStream fileInputStream = new FileInputStream(file);
-        InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
-        BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            LOG.debug(String.format("[%s]: line<%s>, kind<%s>, fileName<%s>", "execByLine", line, kind, fileName));
-            if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
-                SystemConstant.MONITOR_STATISTIC.put(kind, (SystemConstant.MONITOR_STATISTIC.get(kind)+1));
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
+             BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                LOG.debug(String.format("[%s]: line<%s>, kind<%s>, fileName<%s>", "execByLine", line, kind, fileName));
+                if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
+                    SystemConstant.MONITOR_STATISTIC.put(kind, (SystemConstant.MONITOR_STATISTIC.get(kind)+1));
+                }
+                if (SystemConstant.KIND_METADATA.equals(kind)) {
+                    MessageService.parseMetadata(line, fileName);
+                } else if (SystemConstant.KIND_EVENT.equals(kind)) {
+                    EventTrans.do_trans(line);
+                } else if (SystemConstant.KIND_ASSET.equals(kind)) {
+                    AssetTrans.do_trans(line);
+                }
             }
-            if (SystemConstant.KIND_METADATA.equals(kind)) {
-                MessageService.parseMetadata(line, fileName);
-            } else if (SystemConstant.KIND_EVENT.equals(kind)) {
-                EventTrans.do_trans(line);
-            } else if (SystemConstant.KIND_ASSET.equals(kind)) {
-                AssetTrans.do_trans(line);
-            }
+        } finally {
+            FileUtil.delDir(file.getParent());
         }
-        fileInputStream.close();
-        inputStreamReader.close();
-        reader.close();
-        FileUtil.delDir(file.getParent());
     }
     
     private long getId() {

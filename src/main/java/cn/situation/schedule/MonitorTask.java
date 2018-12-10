@@ -1,7 +1,6 @@
 package cn.situation.schedule;
 
 import cn.situation.cons.SystemConstant;
-import cn.situation.util.JsonUtil;
 import cn.situation.util.LogUtil;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
