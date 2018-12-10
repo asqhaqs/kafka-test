@@ -59,6 +59,7 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
 		}
 		try {
 			conn = dbSource.getConnection();
+			System.out.println("111111111111111111");
 			logger.debug(String.format("[%s]: conn<%s>", "getConnection", conn));
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
