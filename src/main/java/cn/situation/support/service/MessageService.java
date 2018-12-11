@@ -161,7 +161,7 @@ public class MessageService {
         try {
             String redisKey = getOutRedisKey(metadataType);
             if (!StringUtil.isBlank(redisKey) && !dataList.isEmpty()) {
-                metadataRedisCache.rpushList(redisKey, dataList);
+                metadataRedisCache.pipRPush(redisKey, dataList);
             }
             LOG.debug(String.format("[%s]: dataList<%s>, size<%s>, fileName<%s>, redisKey<%s>, metadataType<%s>",
                     "parseMetadata", dataList, dataList.size(), fileName, redisKey, metadataType));

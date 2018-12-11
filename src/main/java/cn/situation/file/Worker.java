@@ -153,7 +153,7 @@ public class Worker implements Runnable {
     }
 
     private void parseMsg(List<String> dataList, String kind, String fileName) {
-        LOG.debug(String.format("[%s]: kind<%s>, queueSize<%s>", "parseMsg", kind, dataList.size()));
+        LOG.info(String.format("[%s]: kind<%s>, queueSize<%s>", "parseMsg", kind, dataList.size()));
         if (SystemConstant.KIND_METADATA.equals(kind)) {
             MessageService.parseMetadata(dataList, fileName);
         } else if (SystemConstant.KIND_EVENT.equals(kind)) {
