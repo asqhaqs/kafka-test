@@ -123,6 +123,10 @@ public class SystemConstant {
 
     public static final String MONITOR_PERIOD_SECONDS = getProperty("monitor.period.seconds", "300");
 
+    public static final String QUEUE_CHECK_INTERVAL_MS = getProperty("queue.check.interval.ms", "10000");
+    public static final String QUEUE_CHECK_INTERVAL_SIZE = getProperty("queue.check.interval.size", "1000");
+    public static final String QUEUE_CHECK_POLICY = getProperty("queue.check.policy", "0");
+
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();
         String[] metadataTypes = TYPE_METADATA.split(",");
