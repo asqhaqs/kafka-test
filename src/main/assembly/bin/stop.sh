@@ -18,12 +18,8 @@ if [ -z "$SERVER_NAME" ]; then
     SERVER_NAME=`hostname`
 fi
 
-PID_FILE=$LOGS_DIR/${SERVER_NAME}.pid
-
-# PIDS=`ps -ef | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
-
-if [ ! -f "$PID_FILE" ]; then
-    PIDS=`cat $PID_FILE`
+PIDS=`ps -ef | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
+if [ -z "$PIDS" ]; then
     echo "ERROR: The $SERVER_NAME does not started!"
     exit 1
 fi
@@ -55,4 +51,3 @@ done
 
 echo "OK!"
 echo "PID: $PIDS"
-rm -rf $PID_FILE

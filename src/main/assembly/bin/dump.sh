@@ -14,11 +14,8 @@ if [ ! -d $LOGS_DIR ]; then
     mkdir $LOGS_DIR
 fi
 
-PID_FILE=$LOGS_DIR/${SERVER_NAME}.pid
-
-
-# PIDS=`ps -f | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
-if [ ! -f "$PID_FILE" ]; then
+PIDS=`ps -f | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
+if [ -z "$PIDS" ]; then
     echo "ERROR: The $SERVER_NAME does not started!"
     exit 1
 fi

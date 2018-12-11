@@ -14,11 +14,8 @@ if [ ! -d $LOGS_DIR ]; then
     mkdir $LOGS_DIR
 fi
 
-PID_FILE=$LOGS_DIR/${SERVER_NAME}.pid
-
-# PIDS=`ps -f | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
-if [ -f "$PID_FILE" ]; then
-    PIDS=`cat $PID_FILE`
+PIDS=`ps -f | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
+if [ -n "$PIDS" ]; then
     echo "ERROR: The $SERVER_NAME already started!"
     echo "PID: $PIDS"
     exit 1
@@ -57,7 +54,7 @@ else
 fi
 
 echo -e "Starting the $SERVER_NAME ...\c"
-nohup java $JAVA_OPTS $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CLS_DIR:$LIB_JARS cn.situation.Main > /dev/null 2>&1 &
+nohup java $JAVA_OPTS -Dserver.name=$SERVER_NAME $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CLS_DIR:$LIB_JARS cn.situation.Main > /dev/null 2>&1 &
 
 COUNT=0
 COUNT_DOWN=10
@@ -83,4 +80,3 @@ echo "OK!"
 PIDS=`ps -ef | grep java | grep "$DEPLOY_DIR" | awk '{print $2}'`
 echo "PID: $PIDS"
 echo "STDOUT: $STDOUT_FILE"
-echo $PIDS > $PID_FILE
