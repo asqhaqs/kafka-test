@@ -381,22 +381,12 @@ public class EventTrans {
 		map.put("dport", map_tmp.get("dport"));
 		map.put("sport", map_tmp.get("sport"));
 
-		if ("01".equals(map_tmp.getOrDefault("direct", ""))) {
-			if ("0x01".equals(map_tmp.getOrDefault("ip_type", ""))) {
-				map.put("sip", map_tmp.get("victim_ip"));
-				map.put("dip", map_tmp.get("attack_ip"));
-			} else {
-				map.put("sip", map_tmp.get("victim_ipv6"));
-				map.put("dip", map_tmp.get("attack_ipv6"));
-			}
-		} else if ("02".equals(map_tmp.getOrDefault("direct", ""))) {
-			if ("0x01".equals(map_tmp.getOrDefault("ip_type", ""))) {
-				map.put("sip", map_tmp.get("attack_ip"));
-				map.put("dip", map_tmp.get("victim_ip"));
-			} else {
-				map.put("sip", map_tmp.get("attack_ipv6"));
-				map.put("dip", map_tmp.get("victim_ipv6"));
-			}
+		if ("0x01".equals(map_tmp.getOrDefault("ip_type", ""))) {
+			map.put("sip", map_tmp.get("victim_ip"));
+			map.put("dip", map_tmp.get("attack_ip"));
+		} else {
+			map.put("sip", map_tmp.get("victim_ipv6"));
+			map.put("dip", map_tmp.get("attack_ipv6"));
 		}
 		if ("".equals(map.getOrDefault("sip", ""))) {
 			map.put("sip", map_tmp.get("sip"));
