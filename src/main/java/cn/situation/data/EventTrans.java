@@ -244,7 +244,7 @@ public class EventTrans {
 	 */
 	private static Map<String, Object> fillToMap(Map<String, Object> map, String[] fields)
 			throws NullPointerException, ArrayIndexOutOfBoundsException {
-		Map<String, Object> map_tmp = new HashMap<String, Object>();
+		Map<String, Object> map_tmp = new HashMap<>();
 		if (fields.length < 29) {
 			LOG.error(String.format("[%s]: fieldSize<%s>, msgSize<%s>, message<%s>", "fillToMap",
 					fields.length, 29, "消息总长度与定义长度不一致."));
@@ -380,8 +380,30 @@ public class EventTrans {
 		//共有字段
 		map.put("dport", map_tmp.get("dport"));
 		map.put("sport", map_tmp.get("sport"));
-		map.put("sip", map_tmp.get("attack_ip"));
-		map.put("dip", map_tmp.get("victim_ip"));
+
+		if ("01".equals(map_tmp.getOrDefault("direct", ""))) {
+			if ("0x01".equals(map_tmp.getOrDefault("ip_type", ""))) {
+				map.put("sip", map_tmp.get("victim_ip"));
+				map.put("dip", map_tmp.get("attack_ip"));
+			} else {
+				map.put("sip", map_tmp.get("victim_ipv6"));
+				map.put("dip", map_tmp.get("attack_ipv6"));
+			}
+		} else if ("02".equals(map_tmp.getOrDefault("direct", ""))) {
+			if ("0x01".equals(map_tmp.getOrDefault("ip_type", ""))) {
+				map.put("sip", map_tmp.get("attack_ip"));
+				map.put("dip", map_tmp.get("victim_ip"));
+			} else {
+				map.put("sip", map_tmp.get("attack_ipv6"));
+				map.put("dip", map_tmp.get("victim_ipv6"));
+			}
+		}
+		if ("".equals(map.getOrDefault("sip", ""))) {
+			map.put("sip", map_tmp.get("sip"));
+		}
+		if ("".equals(map.getOrDefault("dip", ""))) {
+			map.put("dip", map_tmp.get("dip"));
+		}
 		map.put("rule_num", map_tmp.get("ruleid"));
 		map.put("description", map_tmp.get("event_info"));
 		map.put("rule_name", map_tmp.get("event_info"));
