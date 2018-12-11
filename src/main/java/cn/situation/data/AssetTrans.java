@@ -104,7 +104,7 @@ public class AssetTrans {
 		boolean flag = false;
 		PgUtil pu = PgUtil.getInstance();
 		PreparedStatement pre = null;
-		String sql = "SELECT COUNT(1) FROM T_ASSETS_DEV WHERE \"ip\" = ?";
+		String sql = "SELECT COUNT(1) FROM T_THIRD_ASSET_HARDWARE WHERE \"ip\" = ?";
 		try {
 			pre = pu.getPreparedStatement(sql);
 			pre.setString(1, ip);
@@ -128,9 +128,9 @@ public class AssetTrans {
 		PgUtil pu = PgUtil.getInstance();
 		PreparedStatement pre = null;
 		try {
-			String sql = "UPDATE T_ASSETS_DEV set \"res_name\"=?,\"res_type\"=?,\"res_code\"=?,"
-					+ "\"source_type\"=?,\"res_model\"=?,\"manufactures_name\"=?,\"phy_position\"=?,\"os_name\"=?,\"os_version\"=?,"
-					+ "\"source_info\"=?,\"is_virtual\"=?,\"ip\"=?,\"apps\"=?,\"extend_info\"=? WHERE \"ip\" = ?";
+			String sql = "UPDATE T_THIRD_ASSET_HARDWARE set \"res_name\"=?,\"res_type\"=?,\"res_code\"=?,"
+					+ "\"source_manufacturers_type\"=?,\"res_model\"=?,\"make_manufacturers_name\"=?,\"phy_position\"=?,\"os_name\"=?,\"os_version\"=?,"
+					+ "\"source_manufacturers_info\"=?,\"is_virtual\"=?,\"ip\"=?,\"apps\"=?,\"extend_info\"=? WHERE \"ip\" = ?";
 			pre = pu.getPreparedStatement(sql);
 			
 			int batch_num_temp = 1;
@@ -201,9 +201,9 @@ public class AssetTrans {
 		PgUtil pu = PgUtil.getInstance();
 		PreparedStatement pre = null;
 		try {
-			String sql = "INSERT INTO T_ASSETS_DEV(\"res_name\",\"res_type\",\"res_code\","
-					+ "\"source_type\",\"res_model\",\"manufactures_name\",\"phy_position\",\"os_name\",\"os_version\","
-					+ "\"source_info\",\"is_virtual\",\"ip\",\"apps\",\"extend_info\") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			String sql = "INSERT INTO T_THIRD_ASSET_HARDWARE(\"res_name\",\"res_type\",\"res_code\","
+					+ "\"source_manufacturers_type\",\"res_model\",\"make_manufacturers_name\",\"phy_position\",\"os_name\",\"os_version\","
+					+ "\"source_manufacturers_info\",\"is_virtual\",\"ip\",\"apps\",\"extend_info\", \"status\") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
 			pre = pu.getPreparedStatement(sql);
 			
 			int batch_num_temp = 1;
@@ -342,13 +342,15 @@ public class AssetTrans {
 	}
 	
     public static void main(String[] args) throws Exception {
-    	/*File[] files = new File("C:\\Users\\quanli\\Desktop\\asset").listFiles();
+    	File[] files = new File("C:\\Users\\quanli\\Desktop\\asset").listFiles();
     	for(File file : files) {
     		List<String> assetsList = FileUtil.getFileContentByLine(file.getAbsolutePath(), false);
             logger.info(String.format("[%s]: assetsList<%s>", "handleDevAssets", assetsList));
             if(assetsList != null) {
-            	AssetTrans.do_trans(assetsList);
+            	for(String str:assetsList) {
+            		AssetTrans.do_trans(str);
+            	}
             }
-    	}*/
+    	}
 	}
 }
