@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS t_position(kind text, type text PRIMARY KEY NOT NULL, file_name text, position integer);
 
 INSERT INTO t_position(kind, type, file_name, position) VALUES('event', 'event', '', -1);
-INSERT INTO t_position(kind, type, file_name, position) VALUES('assert', 'assert', '', -1);
+INSERT INTO t_position(kind, type, file_name, position) VALUES('asset', 'asset', '', -1);
 INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'http', '', -1);
 INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'mail', '', -1);
 INSERT INTO t_position(kind, type, file_name, position) VALUES('metadata', 'ftp', '', -1);
