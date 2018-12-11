@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.situation.util.LogUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
@@ -25,7 +26,7 @@ import cn.situation.util.PgUtil;
  */
 public class AssetTrans {
 	
-	private final static Logger logger = LoggerFactory.getLogger(AssetTrans.class);
+	private final static Logger logger = LogUtil.getInstance(AssetTrans.class);
 	//资产行数据字段个数
 	private final static int ELEMENT_NUM = 43;
 	//批量插入数据最大个数
@@ -46,51 +47,60 @@ public class AssetTrans {
 	
 	/**
 	 * 资产字段每行正常情况下为43个字段
-	 * @param assetStr
+	 * @param lines
 	 */
-	public static void do_trans(String assetStr) {
+	public static void do_trans(List<String> lines) {
 		List<String[]> assetList = new ArrayList<>();
-		if(StringUtils.isNotBlank(assetStr)) {
-			boolean null_flag = false;
-			//防止出现数据为"222||"类似结构情况下,字符串猜分将末尾空字符串舍弃的情况
-			if(assetStr.endsWith("|")) {
-				assetStr += ";";
-				null_flag = true;
-			}
-			String[] assetArray = assetStr.split("\\|");
-			if(assetArray.length != ELEMENT_NUM) {
-				logger.error(String.format("msg：【[%s]】字段个数不对", assetStr));
-				return;
-			}
-
-			if(!ASSET_TYPE.equals(assetArray[2])) {
-				logger.error(String.format("msg：【[%s]】类型非内网资产发现消息", assetStr));
-				return;
-			}
-			//将末尾字符串替换
-			if (null_flag) {
-				assetArray[assetArray.length - 1] = "";
-			}
-			assetList.add(assetArray);
-		}
-
-		List<String[]> updateAssetList = new ArrayList<>();
-		List<String[]> insertAssetList = new ArrayList<>();
-		//按照设备IP将资产信息去重
-		for(String[] arrTemp : assetList) {
-			if(StringUtils.isNotBlank(arrTemp[41]) && isExist(arrTemp[41])) {
-				updateAssetList.add(arrTemp);
-			}else if(StringUtils.isNotBlank(arrTemp[41])) {
-				insertAssetList.add(arrTemp);
+		for (String line : lines) {
+			try {
+				if(StringUtils.isNotBlank(line)) {
+					boolean null_flag = false;
+					//防止出现数据为"222||"类似结构情况下,字符串猜分将末尾空字符串舍弃的情况
+					if(line.endsWith("|")) {
+						line += ";";
+						null_flag = true;
+					}
+					String[] assetArray = line.split("\\|");
+					if(assetArray.length != ELEMENT_NUM) {
+						logger.error(String.format("msg：【[%s]】字段个数不对", line));
+						return;
+					}
+					if(!ASSET_TYPE.equals(assetArray[2])) {
+						logger.error(String.format("msg：【[%s]】类型非内网资产发现消息", line));
+						return;
+					}
+					//将末尾字符串替换
+					if (null_flag) {
+						assetArray[assetArray.length - 1] = "";
+					}
+					assetList.add(assetArray);
+				}
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
 			}
 		}
-		
-		//入库资产数据
-		if(insertAssetList.size() > 0) saveAssets(insertAssetList);
-		//更新资产
-		if(updateAssetList.size() > 0) updateAssets(updateAssetList);
-		logger.info(String.format("[%s]: insertAssetSize<%s>, updateAssetSize<%s>", "do_trans",
-				insertAssetList.size(), updateAssetList.size()));
+		try {
+			List<String[]> updateAssetList = new ArrayList<>();
+			List<String[]> insertAssetList = new ArrayList<>();
+			//按照设备IP将资产信息去重
+			for(String[] arrTemp : assetList) {
+				if(StringUtils.isNotBlank(arrTemp[41]) && isExist(arrTemp[41])) {
+					updateAssetList.add(arrTemp);
+				}else if(StringUtils.isNotBlank(arrTemp[41])) {
+					insertAssetList.add(arrTemp);
+				}
+			}
+
+			//入库资产数据
+			if(insertAssetList.size() > 0) saveAssets(insertAssetList);
+			//更新资产
+			if(updateAssetList.size() > 0) updateAssets(updateAssetList);
+			logger.info(String.format("[%s]: insertAssetSize<%s>, updateAssetSize<%s>", "do_trans",
+					insertAssetList.size(), updateAssetList.size()));
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+
 	}
 	
 	/**
@@ -344,9 +354,6 @@ public class AssetTrans {
     		List<String> assetsList = FileUtil.getFileContentByLine(file.getAbsolutePath(), false);
             logger.info(String.format("[%s]: assetsList<%s>", "handleDevAssets", assetsList));
             if(assetsList != null) {
-            	for(String str:assetsList) {
-            		AssetTrans.do_trans(str);
-            	}
             }
     	}
 	}

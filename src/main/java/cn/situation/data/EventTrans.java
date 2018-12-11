@@ -2,9 +2,7 @@ package cn.situation.data;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import cn.situation.util.*;
 
@@ -26,58 +24,75 @@ public class EventTrans {
 
 	/**
 	 * situation—ids转换
-	 * @param row
+	 * @param lines
 	 * @throws Exception
 	 */
-	public static void do_trans(String row) throws Exception {
+	public static void do_trans(List<String> lines) {
 		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "do_trans start");
-		try {
-			String s_tmp = row.replace("|", "@");
-			String[] fileds = s_tmp.split("@");
-			do_map(fileds);
-		} catch (Exception e) {
-			LOG.error(e.getMessage(), e);
+		List<String[]> dataList = new ArrayList<>();
+		for (String line : lines) {
+			try {
+				String s_tmp = line.replace("|", "@");
+				String[] fileds = s_tmp.split("@");
+				dataList.add(fileds);
+			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
+			}
+		}
+		if (!dataList.isEmpty()) {
+			do_map(dataList);
 		}
 	}
 	/**
 	 * 数据映射入库（redis）
-	 * @param fileds
+	 * @param dataList
 	 * @throws Exception
 	 */
-	private static void do_map(String[] fileds) throws Exception {
+	private static void do_map(List<String[]> dataList) {
 		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
-
-		Map<String, Object> syslogMap = new HashMap<>();
-
-		// 导入map中
-		syslogMap = fillToMap(syslogMap, fileds);
-		if (null != syslogMap && !syslogMap.isEmpty()) {
-			// sip 和 dip 进行 ip 富化
-			//GeoUtil.enrichmentIp(syslogMap);
-			// 添加公共头使得该条告警通过规则引擎
-			syslogMap.put("event_id", UUID.randomUUID().toString());
-			syslogMap.put("found_time",
-					DateUtil.timestampToDate(syslogMap.get("timestamp").toString()+"000", "yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
-			syslogMap.put("event_type", "005");
-			syslogMap.put("event_subtype", "005100");
-			syslogMap.put("industry_id", 0);
-			syslogMap.put("vendor", syslogMap.get("vendor"));
-			syslogMap.put("system_id", 0);
-			syslogMap.put("sip", syslogMap.get("sip").toString());
-			syslogMap.put("dip", syslogMap.get("dip").toString());
-			syslogMap.put("organization_id", 0);
-			if(syslogMap.containsKey("proof") && null != syslogMap.get("proof") && !"".equals(syslogMap.get("proof"))){
-				Map<String, Object> proof = JsonUtil.jsonToMap(syslogMap.get("proof").toString());
-				if(null != proof && null != proof.get("catalog_info") && !"".equals(proof.get("catalog_info"))) {
-					syslogMap.put("attack_result", proof.get("catalog_info"));
+		List<String> data = new ArrayList<>();
+		for (String[] fields : dataList) {
+			try {
+				Map<String, Object> syslogMap = new HashMap<>();
+				// 导入map中
+				syslogMap = fillToMap(syslogMap, fields);
+				if (null != syslogMap && !syslogMap.isEmpty()) {
+					// sip 和 dip 进行 ip 富化
+					//GeoUtil.enrichmentIp(syslogMap);
+					// 添加公共头使得该条告警通过规则引擎
+					syslogMap.put("event_id", UUID.randomUUID().toString());
+					syslogMap.put("found_time",
+							DateUtil.timestampToDate(syslogMap.get("timestamp").toString()+"000", "yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+					syslogMap.put("event_type", "005");
+					syslogMap.put("event_subtype", "005100");
+					syslogMap.put("industry_id", 0);
+					syslogMap.put("vendor", syslogMap.get("vendor"));
+					syslogMap.put("system_id", 0);
+					syslogMap.put("sip", syslogMap.get("sip").toString());
+					syslogMap.put("dip", syslogMap.get("dip").toString());
+					syslogMap.put("organization_id", 0);
+					if(syslogMap.containsKey("proof") && null != syslogMap.get("proof") && !"".equals(syslogMap.get("proof"))){
+						Map<String, Object> proof = JsonUtil.jsonToMap(syslogMap.get("proof").toString());
+						if(null != proof && null != proof.get("catalog_info") && !"".equals(proof.get("catalog_info"))) {
+							syslogMap.put("attack_result", proof.get("catalog_info"));
+						}
+					}
+					//单位、行业、系统、adcode孵化
+					enrichmentAsset(syslogMap);
+					String resultJson = JsonUtil.mapToJson(syslogMap);
+					data.add(resultJson);
 				}
+			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 			}
-			//单位、行业、系统、adcode孵化
-			enrichmentAsset(syslogMap);
-			//入redis库
-			String resultJson = JsonUtil.mapToJson(syslogMap);
-			eventRedisCache.rpush(redisAlertKey, resultJson);
-			LOG.debug(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, resultJson));
+		}
+		try {
+			if (!data.isEmpty()) {
+				eventRedisCache.rpushList(redisAlertKey, data);
+			}
+			LOG.debug(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, data));
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
 		}
 	}
 
@@ -374,28 +389,8 @@ public class EventTrans {
 		map.put("vendor_id", map_tmp.get("vendor_id"));
 		return map;
 	}
+
 	public static void main(String[] args) throws Exception {
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		s_list.add(
-//				"0x01|0x01|0x020B|0x01|1541560149|100|127.0.0.1|360|1.2.3.4|4.3.2.1|0|0| tcp|||12345678qwertyuiasdfghjkzxcvbnml123456|01|127.0.0.1||127.0.0.1||1||||5|ddos|{“http_keypayload”: “ab%%%cdef^^^111111”}\r\n");
-//		do_trans(s_list);
-		Map<Object,Map<String, Integer>> map = getEnrichmentAsset();
-		System.out.println(map.size());
-//		do_trans("0x^^^01|0x01|0x0100|305441741|1544067360|1187||360|6.6.6.3|2.0.0.2|58102|80|6|4071||e179dd7caf1ce974e9a8985869b21d5fc1b30855|0x5C0899200001BE03||2.0.0.2||6.6.6.3|||92||1|||{\"log_proof_cp\": {\"download_file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"domain\": \"\", \"attack_tool\": \"\", \"tcp_keypayload\": [], \"account_info\": {\"username\": \"\", \"password\": \"\"}, \"udp_keypayload\": [], \"anom_traffic_statistics\": {\"durations\": 0, \"sessions\": 0}, \"mail_keypayload\": [], \"src_port\": 58102, \"ip_list\": [], \"application\": \"WGET\", \"http_keypayload\": [], \"file_info\": {\"filemd5\": \"\", \"filesize\": 0, \"filename\": \"\"}, \"event_abstract\": \"\", \"src_ip\": \"6.6.6.3\", \"source\": \"2.0.0.2\\/026A1A95FC065249C7A974EB4E0520D1.6C14E3ED\", \"device_info\": {\"dev_type\": \"\", \"dev_name\": \"\", \"serial\": \"e179dd7caf1ce974e9a8985869b21d5fc1b30855\"}, \"dark_ip\": \"\", \"scan_tool\": \"\", \"icmp_keypayload\": [], \"third_party\": \"\", \"cve_id\": \"\", \"catalog_info\": \"\", \"cnvd_id\": \"\", \"telnet_keypayload\": [], \"dns_keypayload\": [], \"dark_domain\": \"\", \"database_info\": {\"db_type\": \"\", \"db_name\": \"\"}, \"vulnerability_info\": \"\", \"sample_abstract\": {\"name\": \"026A1A95FC065249C7A974EB4E0520D1\", \"family\": \"Virus\\/Win32.Sality.q\", \"md5\": \"026A1A95FC065249C7A974EB4E0520D1\"}, \"dst_port\": 80, \"ftp_keypayload\": [], \"action\": \"Virus\", \"dst_ip\": \"2.0.0.2\", \"attack_signature\": \"\"}}\r\n");
+
 	}
 }

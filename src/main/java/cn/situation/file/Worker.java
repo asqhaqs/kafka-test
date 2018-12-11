@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -124,23 +125,41 @@ public class Worker implements Runnable {
              InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
              BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE))) {
             String line;
+            List<String> queue = new ArrayList<>();
+            long startTime = System.currentTimeMillis();
             while ((line = reader.readLine()) != null) {
                 LOG.debug(String.format("[%s]: line<%s>, kind<%s>, fileName<%s>", "execByLine", line, kind, fileName));
                 if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
                     SystemConstant.MONITOR_STATISTIC.put(kind, (SystemConstant.MONITOR_STATISTIC.get(kind)+1));
                 }
-                if (SystemConstant.KIND_METADATA.equals(kind)) {
-                    MessageService.parseMetadata(line, fileName);
-                } else if (SystemConstant.KIND_EVENT.equals(kind)) {
-                    EventTrans.do_trans(line);
-                } else if (SystemConstant.KIND_ASSET.equals(kind)) {
-                    AssetTrans.do_trans(line);
+                queue.add(line);
+                if ("1".equals(SystemConstant.QUEUE_CHECK_POLICY) && queue.size() < Integer.parseInt(SystemConstant.QUEUE_CHECK_INTERVAL_SIZE) &&
+                        (System.currentTimeMillis() - startTime) < Integer.parseInt(SystemConstant.QUEUE_CHECK_INTERVAL_MS)) {
+                    continue;
                 }
+                parseMsg(queue, kind, fileName);
+                startTime = System.currentTimeMillis();
+                queue.clear();
+            }
+            if (!queue.isEmpty()) {
+                parseMsg(queue, kind, fileName);
+                queue.clear();
             }
         } catch (Exception e) {
           LOG.error(e.getMessage(), e);
         } finally {
             FileUtil.delDir(file.getParent());
+        }
+    }
+
+    private void parseMsg(List<String> dataList, String kind, String fileName) {
+        LOG.debug(String.format("[%s]: kind<%s>, queueSize<%s>", "parseMsg", kind, dataList.size()));
+        if (SystemConstant.KIND_METADATA.equals(kind)) {
+            MessageService.parseMetadata(dataList, fileName);
+        } else if (SystemConstant.KIND_EVENT.equals(kind)) {
+            EventTrans.do_trans(dataList);
+        } else if (SystemConstant.KIND_ASSET.equals(kind)) {
+            AssetTrans.do_trans(dataList);
         }
     }
     
