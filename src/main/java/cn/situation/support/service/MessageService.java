@@ -141,6 +141,11 @@ public class MessageService {
                         map.put("res_body", Base64.decodeBase64(resBodyStr.getBytes()));
                     }
                 }
+                if ("dns".equals(metadataType) || "http".equals(metadataType)) {
+                    if (map.containsKey("host") && null != map.get("host") && !"".equals(map.get("host"))) {
+                        map.put("host_md5", MD5Util.encodeToStr(map.get("host").toString()));
+                    }
+                }
                 String redisKey = getOutRedisKey(metadataType);
                 if (!StringUtil.isBlank(redisKey)) {
                     metadataRedisCache.rpush(redisKey, JsonUtil.mapToJson(map));
