@@ -35,16 +35,13 @@ public class AssetTrans {
 	private static Map<String, String> typeMap = null;
 	
 	static {
-		if(typeMap == null) {
-			typeMap = new HashMap<String, String>();
-			
-			typeMap.put("0x01", "23000");
-			typeMap.put("0x02", "27000");
-			typeMap.put("0x03", "27000");
-			typeMap.put("0x04", "28000");
-			typeMap.put("0x05", "29000");
-			typeMap.put(null, "29000");
-		}
+		typeMap = new HashMap<>();
+		typeMap.put("0x01", "23000");
+		typeMap.put("0x02", "27000");
+		typeMap.put("0x03", "27000");
+		typeMap.put("0x04", "28000");
+		typeMap.put("0x05", "29000");
+		typeMap.put(null, "29000");
 	}
 	
 	/**
@@ -102,7 +99,7 @@ public class AssetTrans {
 	 */
 	public static boolean isExist(String ip) {
 		boolean flag = false;
-		PgUtil pu = PgUtil.getInstance();
+		PgUtil pu = new PgUtil();
 		PreparedStatement pre = null;
 		String sql = "SELECT COUNT(1) FROM T_THIRD_ASSET_HARDWARE WHERE \"ip\" = ?";
 		try {
@@ -125,7 +122,7 @@ public class AssetTrans {
 	}
 
 	private static void updateAssets(List<String[]> assetList) {
-		PgUtil pu = PgUtil.getInstance();
+		PgUtil pu = new PgUtil();
 		PreparedStatement pre = null;
 		try {
 			String sql = "UPDATE T_THIRD_ASSET_HARDWARE set \"res_name\"=?,\"res_type\"=?,\"res_code\"=?,"
@@ -198,7 +195,7 @@ public class AssetTrans {
 	 * @param assetList
 	 */
 	private static void saveAssets(List<String[]> assetList) {
-		PgUtil pu = PgUtil.getInstance();
+		PgUtil pu = new PgUtil();
 		PreparedStatement pre = null;
 		try {
 			String sql = "INSERT INTO T_THIRD_ASSET_HARDWARE(\"res_name\",\"res_type\",\"res_code\","

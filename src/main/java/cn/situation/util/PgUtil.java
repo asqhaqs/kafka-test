@@ -6,8 +6,6 @@ import java.sql.ResultSet;
 
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cn.situation.cons.SystemConstant;
 
 /**
@@ -15,13 +13,12 @@ import cn.situation.cons.SystemConstant;
  * @author quanli
  */
 public class PgUtil {
-private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
+private final Logger logger = LogUtil.getInstance(PgUtil.class);
 	
-	private static PgUtil instance = new PgUtil();
 	private Connection conn = null;
 	private PreparedStatement pre = null;
 	private ResultSet res = null;
-	private static BasicDataSource dbSource;
+	private static volatile BasicDataSource dbSource;
 	
 	static {
 		String url = SystemConstant.POSTGRESQL_URL;
@@ -45,18 +42,11 @@ private final Logger logger = LoggerFactory.getLogger(PgUtil.class);
 		dbSource.setMaxWaitMillis(maxSeconds * 1000);
 	}
 	
-	public static PgUtil getInstance() {
-		return instance;
-	}
-	
 	/**
 	 * 初始化pg数据库连接
 	 * @return
 	 */
 	public Connection getConnection() {
-		if(conn != null) {
-			return conn;
-		}
 		try {
 			conn = dbSource.getConnection();
 			logger.debug(String.format("[%s]: conn<%s>", "getConnection", conn));

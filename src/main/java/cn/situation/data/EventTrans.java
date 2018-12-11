@@ -19,7 +19,7 @@ public class EventTrans {
 	private static Map<Object,Map<String, Integer>> enrichmentAssetMap;
 	private static final String redisAlertKey = SystemConstant.REDIS_KEY_PREFIX + ":" + SystemConstant.REDIS_ALERT_KEY;
 	private static RedisCache<String, String> eventRedisCache = RedisUtil.getRedisCache(SystemConstant.EVENT_REDIS_CACHE);
-	
+
 	static {
 		enrichmentAssetMap = getEnrichmentAsset();
 	}
@@ -46,6 +46,7 @@ public class EventTrans {
 	 */
 	private static void do_map(String[] fileds) throws Exception {
 		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
+
 		Map<String, Object> syslogMap = new HashMap<>();
 
 		// 导入map中
@@ -83,9 +84,9 @@ public class EventTrans {
 	private static Map<Object,Map<String, Integer>> getEnrichmentAsset() {
 		Map<Object,Map<String, Integer>> dataMap = new HashMap<>();
 		int max_range_num = 1000;
-		PgUtil pu = PgUtil.getInstance();
-		PreparedStatement pre = null;
-		PreparedStatement pre_sys = null;
+		PgUtil pu = new PgUtil();
+		PreparedStatement pre;
+		PreparedStatement pre_sys;
 		String sql = "SELECT distinct ips.start_ip_value,ips.end_ip_value,c.id,c.industry_id,c.canton_id FROM t_ips ips,"
 				+ "t_company c WHERE ips.company_id = c.id";
 		String sql_sys = "SELECT id,domain,ips FROM t_website WHERE sys_type = 1";
