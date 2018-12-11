@@ -2,9 +2,7 @@ package cn.situation.data;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,12 +46,11 @@ public class EventTrans {
 	 */
 	private static void do_map(String[] fileds) throws Exception {
 		LOG.debug(String.format("message<%s>", "mapAndEnrichOperation"), "web-ids data start");
-
 		Map<String, Object> syslogMap = new HashMap<>();
 
 		// 导入map中
-		syslogMap=fillToMap(syslogMap, fileds);
-		if(syslogMap!=null) {
+		syslogMap = fillToMap(syslogMap, fileds);
+		if (null != syslogMap && !syslogMap.isEmpty()) {
 			// sip 和 dip 进行 ip 富化
 			//GeoUtil.enrichmentIp(syslogMap);
 			// 添加公共头使得该条告警通过规则引擎
@@ -68,10 +65,10 @@ public class EventTrans {
 			syslogMap.put("sip", syslogMap.get("sip").toString());
 			syslogMap.put("dip", syslogMap.get("dip").toString());
 			syslogMap.put("organization_id", 0);
-			if(null!=syslogMap.get("proof") && StringUtils.isNotBlank(syslogMap.get("proof").toString())){
+			if(syslogMap.containsKey("proof") && null != syslogMap.get("proof") && !"".equals(syslogMap.get("proof"))){
 				Map<String, Object> proof = JsonUtil.jsonToMap(syslogMap.get("proof").toString());
-				if(null != proof && null!=proof.get("catalog_info") && StringUtils.isNotBlank(proof.get("catalog_info").toString())) {
-					syslogMap.put("attack_result", proof.get("catalog_info").toString());
+				if(null != proof && null != proof.get("catalog_info") && !"".equals(proof.get("catalog_info"))) {
+					syslogMap.put("attack_result", proof.get("catalog_info"));
 				}
 			}
 			//单位、行业、系统、adcode孵化
@@ -232,7 +229,9 @@ public class EventTrans {
 	private static Map<String, Object> fillToMap(Map<String, Object> map, String[] fields)
 			throws NullPointerException, ArrayIndexOutOfBoundsException {
 		Map<String, Object> map_tmp = new HashMap<String, Object>();
-		if(fields.length<29) {
+		if (fields.length < 29) {
+			LOG.error(String.format("[%s]: fieldSize<%s>, msgSize<%s>, message<%s>", "fillToMap",
+					fields.length, 29, "消息总长度与定义长度不一致."));
 			return null;
 		}
 		//字段内的%%%转换为|
