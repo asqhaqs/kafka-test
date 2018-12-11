@@ -210,7 +210,7 @@ public class AssetTrans {
 		try {
 			String sql = "INSERT INTO T_THIRD_ASSET_HARDWARE(\"res_name\",\"res_type\",\"res_code\","
 					+ "\"source_manufacturers_type\",\"res_model\",\"make_manufacturers_name\",\"phy_position\",\"os_name\",\"os_version\","
-					+ "\"source_manufacturers_info\",\"is_virtual\",\"ip\",\"apps\",\"extend_info\", \"status\") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)";
+					+ "\"source_manufacturers_info\",\"is_virtual\",\"ip\",\"apps\",\"extend_info\", \"status\", \"flow_status\") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,0)";
 			pre = pu.getPreparedStatement(sql);
 			
 			int batch_num_temp = 1;
