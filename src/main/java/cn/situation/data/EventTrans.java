@@ -16,7 +16,6 @@ public class EventTrans {
 	private static final Logger LOG = LogUtil.getInstance(EventTrans.class);
 	private static Map<Object,Map<String, Integer>> enrichmentAssetMap;
 	private static final String redisAlertKey = SystemConstant.REDIS_KEY_PREFIX + ":" + SystemConstant.REDIS_ALERT_KEY;
-	private static RedisCache<String, String> eventRedisCache = RedisUtil.getRedisCache(SystemConstant.EVENT_REDIS_CACHE);
 
 	static {
 		enrichmentAssetMap = getEnrichmentAsset();
@@ -88,6 +87,7 @@ public class EventTrans {
 		}
 		try {
 			if (!data.isEmpty()) {
+				RedisCache<String, String> eventRedisCache = RedisUtil.getRedisCache(SystemConstant.EVENT_REDIS_CACHE);
 				eventRedisCache.rpushList(redisAlertKey, data);
 			}
 			LOG.debug(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, data));

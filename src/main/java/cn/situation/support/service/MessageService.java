@@ -5,10 +5,7 @@ import cn.situation.util.*;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author lenzhao
@@ -28,7 +25,6 @@ public class MessageService {
     private static Map<String, Map<String, String>> metadataMappedTypeMap = SystemConstant.getMetadataMappedTypeMap();
     private static Map<String, Map<String, String>> metadataUnMappedFieldMap = SystemConstant.getMetadataUnMappedFieldMap();
     private static Map<String, String> metadataRedisKeyMap = new HashMap<>();
-    private static RedisCache<String, String> metadataRedisCache = RedisUtil.getRedisCache(SystemConstant.METADATA_REDIS_CACHE);
 
     static {
         String[] headFields = SystemConstant.MESSAGE_HEAD_FIELD.split(",");
@@ -161,6 +157,7 @@ public class MessageService {
         try {
             String redisKey = getOutRedisKey(metadataType);
             if (!StringUtil.isBlank(redisKey) && !dataList.isEmpty()) {
+                RedisCache<String, String> metadataRedisCache = RedisUtil.getRedisCache("metadata_" + (new Random().nextInt(3)));
                 metadataRedisCache.rpushList(redisKey, dataList);
             }
             LOG.debug(String.format("[%s]: dataList<%s>, size<%s>, fileName<%s>, redisKey<%s>, metadataType<%s>",

@@ -48,7 +48,9 @@ public class SystemConstant {
     }
 
     public static final String SPRING_APPLICATION_CONTEXT = "applicationContext.xml";
-    public static final String METADATA_REDIS_CACHE = "metadataRedisCache";
+//    public static final String METADATA_REDIS_CACHE_0 = "metadata1RedisCache";
+//    public static final String METADATA_REDIS_CACHE_1 = "metadata2RedisCache";
+//    public static final String METADATA_REDIS_CACHE_2 = "metadata3RedisCache";
     public static final String EVENT_REDIS_CACHE = "eventRedisCache";
 
     public static final String GEO_DATA_PATH = getProperty("geo.data.path", "geoipdata");
