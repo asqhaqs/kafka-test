@@ -32,30 +32,31 @@ public final class RedisCache<K, V> {
     public void rpushList(K key, List<V> dataList) {
         if (null != dataList && !dataList.isEmpty()) {
             ListOperations<K, V> listOperation = redisTemplate.opsForList();
-            long num = listOperation.rightPushAll(key, (V[]) dataList.toArray());
-            LOG.debug(String.format("[%s]: key<%s>, value<%s>, position<%s>", "rpushList", key, dataList, num));
+            listOperation.rightPushAll(key, (V[]) dataList.toArray());
+            LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpushList", key, dataList));
         }
     }
 
     public void pipRPush(String key, List<String> dataList) {
-        if (null != dataList && !dataList.isEmpty()) {
-            redisTemplate.executePipelined(new RedisCallback<Object>() {
-                @Nullable
-                @Override
-                public Object doInRedis(RedisConnection connection) throws DataAccessException {
-                    try {
+        try {
+            if (null != dataList && !dataList.isEmpty()) {
+                redisTemplate.executePipelined(new RedisCallback<Object>() {
+                    @Nullable
+                    @Override
+                    public Object doInRedis(RedisConnection connection) throws DataAccessException {
                         connection.openPipeline();
                         for (String data : dataList) {
-                            connection.rPush(key.getBytes(), data.getBytes());
+                            if (!StringUtil.isBlank(data)) {
+                                connection.rPush(key.getBytes(), data.getBytes());
+                            }
                         }
-                    } catch (Exception e) {
-                        LOG.error(e.getMessage(), e);
-                    } finally {
-                        connection.closePipeline();
+                        connection.openPipeline();
+                        return null;
                     }
-                    return null;
-                }
-            });
+                });
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
         }
     }
 
