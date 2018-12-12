@@ -23,17 +23,24 @@ public final class RedisCache<K, V> {
         this.redisTemplate = redisTemplate;
     }
 
-    public long rpush(K key, V value) {
-        long num = redisTemplate.opsForList().rightPush(key, value);
-        LOG.debug(String.format("[%s]: key<%s>, value<%s>, position<%s>", "rpush", key, value, num));
-        return num;
+    public void rpush(K key, V value) {
+        try {
+            redisTemplate.opsForList().rightPush(key, value);
+            LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpush", key, value));
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        }
     }
 
     public void rpushList(K key, List<V> dataList) {
-        if (null != dataList && !dataList.isEmpty()) {
-            ListOperations<K, V> listOperation = redisTemplate.opsForList();
-            listOperation.rightPushAll(key, (V[]) dataList.toArray());
-            LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpushList", key, dataList));
+        try {
+            if (null != dataList && !dataList.isEmpty()) {
+                ListOperations<K, V> listOperation = redisTemplate.opsForList();
+                listOperation.rightPushAll(key, (V[]) dataList.toArray());
+                LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpushList", key, dataList));
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
         }
     }
 
