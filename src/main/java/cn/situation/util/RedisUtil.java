@@ -25,7 +25,7 @@ public class RedisUtil {
         redisCacheMap.put("metadata_1", (RedisCache) ctx.getBean("metadata2RedisCache"));
         redisCacheMap.put("metadata_2", (RedisCache) ctx.getBean("metadata3RedisCache"));
         redisCacheMap.put("event_0", (RedisCache) ctx.getBean("event1RedisCache"));
-        redisCacheMap.put("event_1", (RedisCache) ctx.getBean("event2RedisCache"));
+//        redisCacheMap.put("event_1", (RedisCache) ctx.getBean("event2RedisCache"));
         ((ClassPathXmlApplicationContext) ctx).close();
     }
 

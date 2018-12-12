@@ -87,7 +87,7 @@ public class EventTrans {
 		}
 		try {
 			if (!data.isEmpty()) {
-				RedisCache<String, String> eventRedisCache = RedisUtil.getRedisCache("event_" + (new Random().nextInt(2)));
+				RedisCache<String, String> eventRedisCache = RedisUtil.getRedisCache("event_0");
 				eventRedisCache.rpushList(redisAlertKey, data);
 			}
 			LOG.debug(String.format("[%s]: dicName<%s>, value<%s>", "mapAndEnrichOperation", redisAlertKey, data));

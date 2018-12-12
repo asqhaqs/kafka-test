@@ -40,7 +40,7 @@ public final class RedisCache<K, V> {
                 LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpushList", key, dataList));
             }
         } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+            LOG.error(e.getMessage());
         }
     }
 
