@@ -82,6 +82,7 @@ public class FileUtil {
         String filePath = path.endsWith("/") ? (path + fileName) : (path + "/" + fileName);
         File file = new File(filePath);
         if (file.exists() && file.isFile()) {
+            LOG.info(String.format("[%s]: path<%s>, fileName<%s>", "delFile", path, fileName));
             file.delete();
         }
     }
