@@ -187,24 +187,31 @@ public class MessageService {
      * @return
      */
     private static Object typpeConvert(String value, String type) {
-        Object object = null;
-        if (!StringUtil.isBlank(value)) {
-            value = value.replaceAll("%%%", "|");
-            switch (type) {
-                case "String":
-                    object = value;
-                    break;
-                case "int":
+        Object object;
+        value = StringUtil.isBlank(value) ? "" : value.replace("%%%", "|");
+        switch (type) {
+            case "String":
+                object = value;
+                break;
+            case "int":
+                if (!StringUtil.isBlank(value)) {
                     object = value.startsWith("0x") ? Integer.valueOf(value.replace("0x", "")) :
                             Integer.valueOf(value);
-                    break;
-                case "long":
-                    object = Long.valueOf(value);
-                    break;
-                default:
-                    object = value;
-                    break;
-            }
+                } else {
+                    object = 0;
+                }
+                break;
+            case "long":
+                if (!StringUtil.isBlank(value)) {
+                    object = value.startsWith("0x") ? Long.valueOf(value.replace("0x", "")) :
+                            Long.valueOf(value);
+                } else {
+                    object = 0L;
+                }
+                break;
+            default:
+                object = value;
+                break;
         }
         return object;
     }
@@ -217,7 +224,7 @@ public class MessageService {
     private static void addUnMappedField(Map<String, String> unMappedFieldMap, Map<String, Object> map) {
         if (null != unMappedFieldMap && !unMappedFieldMap.isEmpty()) {
             for (Map.Entry<String, String> en : unMappedFieldMap.entrySet()) {
-                map.put(en.getKey(), null);
+                map.put(en.getKey(), typpeConvert(null, en.getValue()));
             }
         }
     }
