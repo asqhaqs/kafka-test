@@ -68,12 +68,12 @@ public class MessageService {
                 }
                 String msgType = values[2];
                 metadataType = messageTypeMap.get(msgType);
-                if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED) && !StringUtil.isBlank(metadataType)) {
-                    SystemConstant.MONITOR_STATISTIC.put(metadataType, (SystemConstant.MONITOR_STATISTIC.get(metadataType)+1));
-                }
                 if ("tcp".equals(metadataType)) {
                     // TCP/UDP特殊处理
                     metadataType = fileName.substring(0 ,3).toLowerCase();
+                }
+                if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED) && !StringUtil.isBlank(metadataType)) {
+                    SystemConstant.MONITOR_STATISTIC.put(metadataType, (SystemConstant.MONITOR_STATISTIC.get(metadataType)+1));
                 }
                 LOG.debug(String.format("[%s]: line<%s>, msgType<%s>, metadataType<%s>, size<%s>, fileName<%s>", "parseMetadata",
                         line, msgType, metadataType, values.length, fileName));
