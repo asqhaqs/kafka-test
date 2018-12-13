@@ -121,9 +121,13 @@ public class Worker implements Runnable {
         if (!file.exists() || !file.isFile() || file.length() == 0) {
             return;
         }
-        try (FileInputStream fileInputStream = new FileInputStream(file);
-             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
-             BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE))) {
+        FileInputStream fileInputStream = null;
+        InputStreamReader inputStreamReader = null;
+        BufferedReader reader = null;
+        try {
+            fileInputStream = new FileInputStream(file);
+            inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
+            reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE));
             String line;
             List<String> queue = new ArrayList<>();
             long startTime = System.currentTimeMillis();
@@ -148,6 +152,19 @@ public class Worker implements Runnable {
         } catch (Exception e) {
           LOG.error(e.getMessage(), e);
         } finally {
+            try {
+                if (null != reader) {
+                    reader.close();
+                }
+                if (null != inputStreamReader) {
+                    inputStreamReader.close();
+                }
+                if (null != fileInputStream) {
+                    fileInputStream.close();
+                }
+            } catch (Exception ie) {
+                LOG.error(ie.getMessage(), ie);
+            }
             FileUtil.delDir(file.getParent());
         }
     }

@@ -41,6 +41,7 @@ public final class RedisCache<K, V> {
                     listOperation.rightPushAll(key, (V[]) dataList.toArray());
                     LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpushList", key, dataList));
                 }
+                break;
             } catch (Exception e) {
                 LOG.error(String.format("[%s]: message<%s>", "rpushList", e.getMessage()));
                 if (SystemConstant.REDIS_OOM_MESSAGE.equals(e.getMessage())) {
