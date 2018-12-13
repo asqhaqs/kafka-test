@@ -104,14 +104,14 @@ public class Main {
                     }
                 }
                 try {
-                    Thread.sleep(Long.parseLong(SystemConstant.EXEC_INTERVAL_MS));
+                    Thread.sleep(Long.parseLong(SystemConstant.EXEC_SLEEP_MS));
                 } catch (InterruptedException ie) {
                     LOG.error(ie.getMessage(), ie);
                 }
             } catch (Exception e) {
                 LOG.error(e.getMessage(), e);
                 try {
-                    Thread.sleep(Long.parseLong(SystemConstant.EXCEPT_INTERVAL_MS));
+                    Thread.sleep(Long.parseLong(SystemConstant.EXCEPT_SLEEP_MS));
                 } catch (InterruptedException ie) {
                     LOG.error(ie.getMessage(), ie);
                 }

@@ -1,11 +1,15 @@
 
 package cn.situation.util;
 
+import cn.situation.cons.SystemConstant;
 import com.sun.istack.internal.Nullable;
 import org.slf4j.Logger;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.*;
+import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.List;
 
@@ -33,14 +37,25 @@ public final class RedisCache<K, V> {
     }
 
     public void rpushList(K key, List<V> dataList) {
-        try {
-            if (null != dataList && !dataList.isEmpty()) {
-                ListOperations<K, V> listOperation = redisTemplate.opsForList();
-                listOperation.rightPushAll(key, (V[]) dataList.toArray());
-                LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpushList", key, dataList));
+        while (true) {
+            try {
+                if (null != dataList && !dataList.isEmpty()) {
+                    ListOperations<K, V> listOperation = redisTemplate.opsForList();
+                    listOperation.rightPushAll(key, (V[]) dataList.toArray());
+                    LOG.debug(String.format("[%s]: key<%s>, value<%s>", "rpushList", key, dataList));
+                }
+            } catch (Exception e) {
+                LOG.error(String.format("[%s]: message<%s>", "rpushList", e.getMessage()));
+                if (SystemConstant.REDIS_OOM_MESSAGE.equals(e.getMessage())) {
+                    try {
+                        Thread.sleep(Long.parseLong(SystemConstant.REDIS_OOM_SLEEP_MS));
+                    } catch (InterruptedException ie) {
+                        LOG.error(ie.getMessage(), ie);
+                    }
+                } else {
+                    break;
+                }
             }
-        } catch (Exception e) {
-            LOG.error(e.getMessage());
         }
     }
 

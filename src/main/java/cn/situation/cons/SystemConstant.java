@@ -56,7 +56,7 @@ public class SystemConstant {
 
     public static final String WORKER_THREAD_NUM = getProperty("worker.thread.num", "10");
 
-    public static final String EXCEPT_INTERVAL_MS = getProperty("except.interval.ms", "");
+    public static final String EXCEPT_SLEEP_MS = getProperty("except.sleep.ms", "");
 
     public static final String REDIS_KEY_PREFIX = getProperty("redis.key.prefix", "logcenter");
     public static final String REDIS_ALERT_KEY = getProperty("alert.redis.key", "situation-ids");
@@ -78,7 +78,7 @@ public class SystemConstant {
 
     public static final String PACKAGE_SUFFIX = getProperty("package.suffix", "");
 
-    public static final String EXEC_INTERVAL_MS = getProperty("exec.interval.ms", "1000");
+    public static final String EXEC_SLEEP_MS = getProperty("exec.sleep.ms", "1000");
 
     public static final String LOCAL_FILE_DIR = getProperty("local.file.dir", "");
 
@@ -124,6 +124,9 @@ public class SystemConstant {
     public static final String QUEUE_CHECK_INTERVAL_MS = getProperty("queue.check.interval.ms", "10000");
     public static final String QUEUE_CHECK_INTERVAL_SIZE = getProperty("queue.check.interval.size", "1000");
     public static final String QUEUE_CHECK_POLICY = getProperty("queue.check.policy", "0");
+
+    public static final String REDIS_OOM_SLEEP_MS = getProperty("redis.oom.sleep.ms", "0");
+    public static final String REDIS_OOM_MESSAGE = "OOM command not allowed when used memory > 'maxmemory'.; nested exception is redis.clients.jedis.exceptions.JedisDataException: OOM command not allowed when used memory > 'maxmemory'.";
 
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();
