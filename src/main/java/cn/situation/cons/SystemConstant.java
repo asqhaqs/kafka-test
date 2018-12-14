@@ -126,7 +126,8 @@ public class SystemConstant {
     public static final String QUEUE_CHECK_POLICY = getProperty("queue.check.policy", "0");
 
     public static final String REDIS_OOM_SLEEP_MS = getProperty("redis.oom.sleep.ms", "0");
-    public static final String REDIS_OOM_MESSAGE = "OOM command not allowed when used memory > 'maxmemory'.; nested exception is redis.clients.jedis.exceptions.JedisDataException: OOM command not allowed when used memory > 'maxmemory'.";
+    public static final String REDIS_OOM_PUSHLIST_MESSAGE = "OOM command not allowed when used memory > 'maxmemory'.; nested exception is redis.clients.jedis.exceptions.JedisDataException: OOM command not allowed when used memory > 'maxmemory'.";
+    public static final String REDIS_OOM_PIPLINE_MESSAGE = "OOM command not allowed when used memory > 'maxmemory'.";
 
     public static Map<String, Map<String, String>> getMetadataFieldMap() {
         Map<String, Map<String, String>> messageFieldMap = new HashMap<>();

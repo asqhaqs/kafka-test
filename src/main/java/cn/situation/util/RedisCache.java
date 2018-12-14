@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.*;
+import redis.clients.jedis.Jedis;
 
 import java.util.List;
 
@@ -44,7 +45,7 @@ public final class RedisCache<K, V> {
                 break;
             } catch (Exception e) {
                 LOG.error(String.format("[%s]: message<%s>", "rpushList", e.getMessage()));
-                if (SystemConstant.REDIS_OOM_MESSAGE.equals(e.getMessage())) {
+                if (SystemConstant.REDIS_OOM_PUSHLIST_MESSAGE.equals(e.getMessage())) {
                     try {
                         Thread.sleep(Long.parseLong(SystemConstant.REDIS_OOM_SLEEP_MS));
                     } catch (InterruptedException ie) {
@@ -58,25 +59,43 @@ public final class RedisCache<K, V> {
     }
 
     public void pipRPush(String key, List<String> dataList) {
-        try {
-            if (null != dataList && !dataList.isEmpty()) {
-                redisTemplate.executePipelined(new RedisCallback<Object>() {
-                    @Nullable
-                    @Override
-                    public Object doInRedis(RedisConnection connection) throws DataAccessException {
-                        connection.openPipeline();
-                        for (String data : dataList) {
-                            if (!StringUtil.isBlank(data)) {
-                                connection.rPush(key.getBytes(), data.getBytes());
+        if (null != dataList && !dataList.isEmpty()) {
+            redisTemplate.executePipelined(new RedisCallback<Object>() {
+                @Nullable
+                @Override
+                public Object doInRedis(RedisConnection connection) throws DataAccessException {
+                    while (true) {
+                        Jedis jedis = (Jedis) connection.getNativeConnection();
+                        try {
+                            connection.openPipeline();
+                            for (String data : dataList) {
+                                if (!StringUtil.isBlank(data)) {
+                                    jedis.rpush(key.getBytes(), data.getBytes());
+                                }
+                            }
+                            connection.closePipeline();
+                            return null;
+                        } catch (Exception e) {
+                            LOG.error(String.format("[%s]: message<%s>", "pipRPush", e.getMessage()));
+                            try {
+                                jedis.close();
+                            } catch (Exception ie) {
+                                LOG.error(e.getMessage());
+                                jedis.disconnect();
+                            }
+                            if (SystemConstant.REDIS_OOM_PIPLINE_MESSAGE.equals(e.getMessage())) {
+                                try {
+                                    Thread.sleep(Long.parseLong(SystemConstant.REDIS_OOM_SLEEP_MS));
+                                } catch (InterruptedException ie) {
+                                    LOG.error(ie.getMessage(), ie);
+                                }
+                            } else {
+                                return null;
                             }
                         }
-                        connection.openPipeline();
-                        return null;
                     }
-                });
-            }
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+                }
+            });
         }
     }
 

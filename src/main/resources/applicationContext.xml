@@ -19,8 +19,8 @@
 		<property name="minIdle" value="${redis.poolMinIdle}" />
 		<property name="maxTotal" value="${redis.poolMaxTotal}" />
 		<property name="MaxWaitMillis" value="${redis.poolMaxWait}" />
-		<property name="testOnBorrow" value="true" />
-		<property name="testOnReturn" value="true" />
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="false" />
 	</bean>
 
 	<bean id="metadata1ConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"

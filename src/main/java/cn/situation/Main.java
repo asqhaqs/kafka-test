@@ -71,15 +71,6 @@ public class Main {
         SFTPUtil sftpUtil = new SFTPUtil();
         while (!Thread.currentThread ().isInterrupted ()) {
             try {
-                if ("1".equals(SystemConstant.IF_DOWNLOAD_EVENT)) {
-                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.EVENT_DIR,
-                            SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, eventFileNamePosition);
-                    for (String fileName : fileNameList) {
-                        sender.send(JsonUtil.pack2Json(SystemConstant.EVENT_DIR, fileName, SystemConstant.KIND_EVENT,
-                                SystemConstant.TYPE_EVENT), 0);
-                        eventFileNamePosition = FileUtil.getPositionByFileName(fileName);
-                    }
-                }
                 if ("1".equals(SystemConstant.IF_DOWNLOAD_METADATA)) {
                     String[] metaDris = SystemConstant.METAdDATA_DIR.split(",");
                     String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
@@ -92,6 +83,15 @@ public class Main {
                                     metaTypes[i]), 0);
                             metaFileNamePosition.put(metaTypes[i], FileUtil.getPositionByFileName(fileName));
                         }
+                    }
+                }
+                if ("1".equals(SystemConstant.IF_DOWNLOAD_EVENT)) {
+                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.EVENT_DIR,
+                            SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, eventFileNamePosition);
+                    for (String fileName : fileNameList) {
+                        sender.send(JsonUtil.pack2Json(SystemConstant.EVENT_DIR, fileName, SystemConstant.KIND_EVENT,
+                                SystemConstant.TYPE_EVENT), 0);
+                        eventFileNamePosition = FileUtil.getPositionByFileName(fileName);
                     }
                 }
                 if ("1".equals(SystemConstant.IF_DOWNLOAD_ASSET)) {
