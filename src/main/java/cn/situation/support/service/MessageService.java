@@ -195,7 +195,7 @@ public class MessageService {
                 break;
             case "int":
                 if (!StringUtil.isBlank(value)) {
-                    object = value.startsWith("0x") ? Integer.valueOf(value.replace("0x", "")) :
+                    object = value.startsWith("0x") ? Integer.valueOf(value.replace("0x", ""), 16) :
                             Integer.valueOf(value);
                 } else {
                     object = 0;
