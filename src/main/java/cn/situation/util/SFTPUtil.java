@@ -4,11 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.situation.cons.SystemConstant;
@@ -129,6 +125,37 @@ public class SFTPUtil {
             disconnect();
         }
         return fileNameList;
+    }
+
+    public Map<String, Long> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat, int position,
+                                               String kind, String type) {
+        LOG.info(String.format("[%s]: remotePath<%s>, fileFormat<%s>, fileEndFormat<%s>, position<%s>, kind<%s>, type<%s>",
+                "getRemoteFileName", remotePath, fileFormat, fileEndFormat, position, kind, type));
+        Map<String, Long> fileNameMap = new HashMap<>();
+        try {
+            connect();
+            Vector v = listFiles(remotePath);
+            if (v.size() > 0) {
+                Iterator it = v.iterator();
+                while (it.hasNext()) {
+                    LsEntry entry = (LsEntry) it.next();
+                    String fileName = entry.getFilename();
+                    SftpATTRS attrs = entry.getAttrs();
+                    if (!attrs.isDir() && DateUtil.getSftpFileMtime(attrs.getMtimeString()) >=
+                            Integer.parseInt(SystemConstant.SFTP_FILE_NO_CHANGE_INTERVAL)) {
+                        if (checkFileName(fileName, fileFormat, fileEndFormat) && filterFileName(fileName, position)) {
+                            fileNameMap.put(JsonUtil.pack2Json(remotePath, fileName, kind, type),
+                                    DateUtil.getSftpFileMtime(attrs.getMtimeString()));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        } finally {
+            disconnect();
+        }
+        return fileNameMap;
     }
 
     /**

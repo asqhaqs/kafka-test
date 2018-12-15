@@ -4,12 +4,11 @@ import cn.situation.cons.SystemConstant;
 import cn.situation.file.Worker;
 import cn.situation.schedule.MonitorTask;
 import cn.situation.util.*;
+import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -70,37 +69,57 @@ public class Main {
         LOG.info(String.format("[%s]: message<%s>", "main", "start work..."));
         SFTPUtil sftpUtil = new SFTPUtil();
         while (!Thread.currentThread ().isInterrupted ()) {
+            Map<String, Long> map = new HashMap<>();
             try {
                 if ("1".equals(SystemConstant.IF_DOWNLOAD_METADATA)) {
                     String[] metaDris = SystemConstant.METAdDATA_DIR.split(",");
                     String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
                     int size = metaDris.length;
                     for (int i = 0; i < size; i++) {
-                        List<String> fileNameList = sftpUtil.getRemoteFileName(metaDris[i],
-                                metaTypes[i], SystemConstant.PACKAGE_SUFFIX, metaFileNamePosition.get(metaTypes[i]));
-                        for (String fileName : fileNameList) {
-                            sender.send(JsonUtil.pack2Json(metaDris[i], fileName, SystemConstant.KIND_METADATA,
-                                    metaTypes[i]), 0);
-                            metaFileNamePosition.put(metaTypes[i], FileUtil.getPositionByFileName(fileName));
+                        Map<String, Long> fileNameMap = sftpUtil.getRemoteFileName(metaDris[i],
+                                metaTypes[i], SystemConstant.PACKAGE_SUFFIX, metaFileNamePosition.get(metaTypes[i]),
+                                SystemConstant.KIND_METADATA, metaTypes[i]);
+                        if (null != fileNameMap && !fileNameMap.isEmpty()) {
+                            map.putAll(fileNameMap);
                         }
                     }
                 }
                 if ("1".equals(SystemConstant.IF_DOWNLOAD_EVENT)) {
-                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.EVENT_DIR,
-                            SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, eventFileNamePosition);
-                    for (String fileName : fileNameList) {
-                        sender.send(JsonUtil.pack2Json(SystemConstant.EVENT_DIR, fileName, SystemConstant.KIND_EVENT,
-                                SystemConstant.TYPE_EVENT), 0);
-                        eventFileNamePosition = FileUtil.getPositionByFileName(fileName);
+                    Map<String, Long> fileNameMap = sftpUtil.getRemoteFileName(SystemConstant.EVENT_DIR,
+                            SystemConstant.EVENT_PREFIX, SystemConstant.PACKAGE_SUFFIX, eventFileNamePosition,
+                            SystemConstant.KIND_EVENT, SystemConstant.TYPE_EVENT);
+                    if (null != fileNameMap && !fileNameMap.isEmpty()) {
+                        map.putAll(fileNameMap);
                     }
                 }
                 if ("1".equals(SystemConstant.IF_DOWNLOAD_ASSET)) {
-                    List<String> fileNameList = sftpUtil.getRemoteFileName(SystemConstant.ASSET_DIR,
-                            SystemConstant.ASSET_PREFIX, SystemConstant.PACKAGE_SUFFIX, assetFileNamePosition);
-                    for (String fileName : fileNameList) {
-                        sender.send(JsonUtil.pack2Json(SystemConstant.ASSET_DIR, fileName, SystemConstant.KIND_ASSET,
-                                SystemConstant.TYPE_ASSET), 0);
+                    Map<String, Long> fileNameMap = sftpUtil.getRemoteFileName(SystemConstant.ASSET_DIR,
+                            SystemConstant.ASSET_PREFIX, SystemConstant.PACKAGE_SUFFIX, assetFileNamePosition,
+                            SystemConstant.KIND_ASSET, SystemConstant.TYPE_ASSET);
+                    if (null != fileNameMap && !fileNameMap.isEmpty()) {
+                        map.putAll(fileNameMap);
+                    }
+                }
+                List<Map.Entry<String,Long>> mapList = new ArrayList<>(map.entrySet());
+                mapList.sort(new Comparator<Map.Entry<String,Long>>() {
+                    public int compare(Map.Entry<String, Long> o1,
+                                       Map.Entry<String, Long> o2) {
+                        return o1.getValue().compareTo(o2.getValue());
+                    }
+                });
+                LOG.debug(String.format("[%s]: mapList<%s>", "main", mapList));
+                for(Map.Entry<String,Long> en : mapList){
+                    sender.send(en.getKey(), 0);
+                    JSONObject obj = JSONObject.fromObject(en.getKey());
+                    String fileName = obj.getString("fileName");
+                    String kind = obj.getString("kind");
+                    String type = obj.getString("type");
+                    if (SystemConstant.KIND_EVENT.equals(kind)) {
+                        eventFileNamePosition = FileUtil.getPositionByFileName(fileName);
+                    } else if (SystemConstant.KIND_ASSET.equals(kind)) {
                         assetFileNamePosition = FileUtil.getPositionByFileName(fileName);
+                    } else {
+                        metaFileNamePosition.put(type, FileUtil.getPositionByFileName(fileName));
                     }
                 }
                 try {
