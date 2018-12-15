@@ -25,7 +25,7 @@
 
 	<bean id="metadata1ConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
 		  p:host-name="${metadata1.redis.host}" p:port="${metadata1.redis.port}"
-		  p:pool-config-ref="poolConfig"  p:database="${metadata1.redis.database}" p:timeout="60000" />
+		  p:pool-config-ref="poolConfig"  p:database="${metadata1.redis.database}" p:timeout="${redis.timeout}" />
 	<bean id="metadata1RedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
 		<property name="connectionFactory" ref="metadata1ConnectionFactory" />
 		<property name="keySerializer">
@@ -41,7 +41,7 @@
 
 	<bean id="metadata2ConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
 		  p:host-name="${metadata2.redis.host}" p:port="${metadata2.redis.port}"
-		  p:pool-config-ref="poolConfig"  p:database="${metadata2.redis.database}" p:timeout="60000" />
+		  p:pool-config-ref="poolConfig"  p:database="${metadata2.redis.database}" p:timeout="${redis.timeout}" />
 	<bean id="metadata2RedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
 		<property name="connectionFactory" ref="metadata2ConnectionFactory" />
 		<property name="keySerializer">
@@ -57,7 +57,7 @@
 
 	<bean id="metadata3ConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
 		  p:host-name="${metadata3.redis.host}" p:port="${metadata3.redis.port}"
-		  p:pool-config-ref="poolConfig"  p:database="${metadata3.redis.database}" p:timeout="60000" />
+		  p:pool-config-ref="poolConfig"  p:database="${metadata3.redis.database}" p:timeout="${redis.timeout}" />
 	<bean id="metadata3RedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
 		<property name="connectionFactory" ref="metadata3ConnectionFactory" />
 		<property name="keySerializer">
@@ -73,7 +73,7 @@
 
 	<bean id="event1ConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
 		  p:host-name="${event1.redis.host}" p:port="${event1.redis.port}"
-		  p:pool-config-ref="poolConfig"  p:database="${event1.redis.database}" p:timeout="60000" />
+		  p:pool-config-ref="poolConfig"  p:database="${event1.redis.database}" p:timeout="${redis.timeout}" />
 	<bean id="event1RedisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
 		<property name="connectionFactory" ref="event1ConnectionFactory" />
 		<property name="keySerializer">
