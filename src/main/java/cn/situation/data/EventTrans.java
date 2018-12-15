@@ -1,5 +1,6 @@
 package cn.situation.data;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
@@ -99,22 +100,25 @@ public class EventTrans {
 	private static Map<Object,Map<String, Integer>> getEnrichmentAsset() {
 		Map<Object,Map<String, Integer>> dataMap = new HashMap<>();
 		int max_range_num = 1000;
-		PgUtil pu = new PgUtil();
-		PreparedStatement pre;
-		PreparedStatement pre_sys;
+		PgUtil pgUtil = new PgUtil();
+        Connection conn = pgUtil.getConnection();
+		PreparedStatement pre = null;
+		PreparedStatement pre_sys = null;
+		ResultSet res = null;
+		ResultSet res_sys = null;
 		String sql = "SELECT distinct ips.start_ip_value,ips.end_ip_value,c.id,c.industry_id,c.canton_id FROM t_ips ips,"
 				+ "t_company c WHERE ips.company_id = c.id";
 		String sql_sys = "SELECT id,domain,ips FROM t_website WHERE sys_type = 1";
 		try {
-			pre = pu.getPreparedStatement(sql);
-			ResultSet res = pre.executeQuery();
+			pre = conn.prepareStatement(sql);
+			res = pre.executeQuery();
 			while(res.next()) {
 				long start_num = res.getLong(1);
 				long end_num = res.getLong(2);
-				if(end_num - start_num > 1000) {
+				if (end_num - start_num > 1000) {
 					end_num = start_num + max_range_num;
 				}
-				for(long i = start_num; i <= end_num; i++) {
+				for (long i = start_num; i <= end_num; i++) {
 					Map<String, Integer> detailMap = new HashMap<>();
 					detailMap.put("organization_id", res.getInt(3));
 					detailMap.put("industry_id", res.getInt(4));
@@ -122,10 +126,8 @@ public class EventTrans {
 					dataMap.put(i, detailMap);
 				}
 			}
-			res.close();
-			
-			pre_sys = pu.getPreparedStatement(sql_sys);
-			ResultSet res_sys = pre_sys.executeQuery();
+			pre_sys = conn.prepareStatement(sql_sys);
+			res_sys = pre_sys.executeQuery();
 			while(res_sys.next()) {
 				String domain = res_sys.getString(2);
 				String ips = res_sys.getString(3);
@@ -162,11 +164,28 @@ public class EventTrans {
 					}
 				}
 			}
-			res_sys.close();
 		} catch (Throwable e) {
 			LOG.error(e.getMessage(), e);
-		}finally {
-			pu.destory();
+		} finally {
+			try {
+				if (null != res_sys) {
+					res_sys.close();
+				}
+				if (null != pre_sys) {
+					pre_sys.close();
+				}
+				if (null != res) {
+					res.close();
+				}
+				if (null != pre) {
+					pre.close();
+				}
+				if (null != conn) {
+				    conn.close();
+                }
+			} catch (Exception ie) {
+				LOG.error(ie.getMessage(), ie);
+			}
 		}
 		return dataMap;
 	}

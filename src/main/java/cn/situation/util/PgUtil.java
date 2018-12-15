@@ -1,9 +1,6 @@
 package cn.situation.util;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.slf4j.Logger;
 import cn.situation.cons.SystemConstant;
@@ -13,11 +10,9 @@ import cn.situation.cons.SystemConstant;
  * @author quanli
  */
 public class PgUtil {
-private final Logger logger = LogUtil.getInstance(PgUtil.class);
+	private static final Logger LOG = LogUtil.getInstance(PgUtil.class);
 	
 	private Connection conn = null;
-	private PreparedStatement pre = null;
-	private ResultSet res = null;
 	private static volatile BasicDataSource dbSource;
 	
 	static {
@@ -38,6 +33,9 @@ private final Logger logger = LogUtil.getInstance(PgUtil.class);
 		dbSource.setMinIdle(minidle);
 		dbSource.setMaxIdle(maxidle);
 		dbSource.setMaxTotal(maxTotal);
+		dbSource.setRemoveAbandonedOnBorrow(true);
+		dbSource.setRemoveAbandonedOnMaintenance(true);
+		dbSource.setRemoveAbandonedTimeout(60);
 		dbSource.setDefaultAutoCommit(true);
 		dbSource.setMaxWaitMillis(maxSeconds * 1000);
 	}
@@ -49,37 +47,10 @@ private final Logger logger = LogUtil.getInstance(PgUtil.class);
 	public Connection getConnection() {
 		try {
 			conn = dbSource.getConnection();
-			logger.debug(String.format("[%s]: conn<%s>", "getConnection", conn));
+			LOG.debug(String.format("[%s]: conn<%s>", "getConnection", conn));
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			LOG.error(e.getMessage(), e);
 		}
 		return conn;
 	}
-	
-	public PreparedStatement getPreparedStatement(String sql) throws Exception {
-		return getConnection().prepareStatement(sql);
-	}
-	
-	/**
-	 * 销毁连接信息
-	 */
-	public void destory() {
-		try {
-			if(res != null) {
-				res.close();
-				res = null;
-			}
-			if(pre != null) {
-				pre.close();
-				pre = null;
-			}
-			if(conn != null) {
-				conn.close();
-				conn = null;
-			}
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-	}
-	
 }
