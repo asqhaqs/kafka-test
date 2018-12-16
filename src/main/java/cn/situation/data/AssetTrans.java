@@ -148,7 +148,7 @@ public class AssetTrans {
 		return flag;
 	}
 
-	private static void updateAssets(List<String[]> assetList, Connection conn) {
+	private static synchronized void updateAssets(List<String[]> assetList, Connection conn) {
 		PreparedStatement pre = null;
 		try {
 			String sql = "UPDATE T_THIRD_ASSET_HARDWARE set \"res_name\"=?,\"res_type\"=?,\"res_code\"=?,"
