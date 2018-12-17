@@ -2,10 +2,13 @@ package cn.situation.util;
 
 import com.alibaba.fastjson.JSON;
 import net.sf.json.JSONObject;
+import org.slf4j.Logger;
 
 import java.util.*;
 
 public class JsonUtil {
+
+    private static final Logger LOG = LogUtil.getInstance(JsonUtil.class);
 
     /**
      * json字符串转换为object
@@ -19,7 +22,7 @@ public class JsonUtil {
         try {
             t = JSON.parseObject(json, clazz);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage(), e);
         }
         return t;
     }
@@ -43,7 +46,7 @@ public class JsonUtil {
         try {
             return JSON.parseObject(json, Map.class);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage(), e);
         }
         return null;
     }

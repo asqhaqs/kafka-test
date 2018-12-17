@@ -1,0 +1,9 @@
+```
+[program:collector-log]
+command=/opt/work/web/collector-log/bin/start_exec.sh
+autostart=true
+autorestart=true
+priority=50
+stopasgroup=true
+killasgroup=true
+```
