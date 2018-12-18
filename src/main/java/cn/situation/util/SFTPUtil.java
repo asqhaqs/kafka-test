@@ -132,6 +132,7 @@ public class SFTPUtil {
         LOG.info(String.format("[%s]: remotePath<%s>, fileFormat<%s>, fileEndFormat<%s>, position<%s>, kind<%s>, type<%s>",
                 "getRemoteFileName", remotePath, fileFormat, fileEndFormat, position, kind, type));
         Map<String, Long> fileNameMap = new HashMap<>();
+        long now = System.currentTimeMillis();
         try {
             connect();
             Vector v = listFiles(remotePath);
@@ -141,7 +142,7 @@ public class SFTPUtil {
                     LsEntry entry = (LsEntry) it.next();
                     String fileName = entry.getFilename();
                     SftpATTRS attrs = entry.getAttrs();
-                    if (!attrs.isDir() && DateUtil.getSftpFileMtime(attrs.getMtimeString()) >=
+                    if (!attrs.isDir() && (now - DateUtil.getSftpFileMtime(attrs.getMtimeString())) >=
                             Integer.parseInt(SystemConstant.SFTP_FILE_NO_CHANGE_INTERVAL)) {
                         if (checkFileName(fileName, fileFormat, fileEndFormat) && filterFileName(fileName, position)) {
                             fileNameMap.put(JsonUtil.pack2Json(remotePath, fileName, kind, type),
