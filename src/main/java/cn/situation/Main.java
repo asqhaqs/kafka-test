@@ -54,7 +54,7 @@ public class Main {
         sender.setHWM(Integer.valueOf(SystemConstant.ZMQ_SNDHWM));
 
         int threadNum = Integer.valueOf(SystemConstant.WORKER_THREAD_NUM);
-        for(int num = 0; num < threadNum; num++) {
+        for (int num = 0; num < threadNum; num++) {
             Worker worker = new Worker(context);
             new Thread(worker).start();
         }
@@ -108,7 +108,7 @@ public class Main {
                     }
                 });
                 LOG.debug(String.format("[%s]: mapList<%s>", "main", mapList));
-                for(Map.Entry<String,Long> en : mapList){
+                for (Map.Entry<String,Long> en : mapList) {
                     sender.send(en.getKey(), 0);
                     JSONObject obj = JSONObject.fromObject(en.getKey());
                     String fileName = obj.getString("fileName");

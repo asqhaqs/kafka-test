@@ -64,7 +64,7 @@ public class MessageService {
                 if (values.length <= messageHeadFieldSize) {
                     LOG.error(String.format("[%s]: line<%s>, size<%s>, headSize<%s>, fileName<%s>, message<%s>", "parseMetadata",
                             line, values.length, messageHeadFieldSize, fileName, "消息总长度应大于消息头长度."));
-                    return;
+                    continue;
                 }
                 String msgType = values[2];
                 metadataType = messageTypeMap.get(msgType);
@@ -94,7 +94,7 @@ public class MessageService {
                     LOG.error(String.format("[%s]: line<%s>, metadataType<%s>, size<%s>, msgSize<%s>, fileName<%s>, message<%s>",
                             "parseMetadata", line, metadataType, values.length,
                             (messageHeadFieldSize + messageFieldList.size()), fileName, "消息总长度与定义长度不一致."));
-                    return;
+                    continue;
                 }
                 for (int i = 0; i < messageHeadFieldSize; i++) {
                     String fieldName = messageHeadFieldList.get(i);

@@ -58,7 +58,7 @@ public class SqliteUtil {
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    public Map<String, Integer> executeQuery(String sql) {
+    public synchronized Map<String, Integer> executeQuery(String sql) {
         Map<String, Integer> map = new HashMap<>();
         try {
             resultSet = getStatement().executeQuery(sql);
