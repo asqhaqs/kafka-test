@@ -203,8 +203,8 @@ public class FileUtil {
      * @param fileName
      * @return
      */
-    public static int getPositionByFileName(String fileName) {
-        return Integer.parseInt(fileName.substring(fileName.lastIndexOf("_") + 1, fileName.indexOf(".")));
+    public static long getPositionByFileName(String fileName) {
+        return Long.parseLong(fileName.substring(fileName.lastIndexOf("_") + 1, fileName.indexOf(".")));
     }
     
     public static void main(String[] args) {

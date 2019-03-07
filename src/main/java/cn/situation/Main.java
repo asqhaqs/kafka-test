@@ -17,30 +17,30 @@ public class Main {
 
     private static final Logger LOG = LogUtil.getInstance(Main.class);
 
-    private static int eventFileNamePosition = 0;
-    private static Map<String, Integer> metaFileNamePosition = new HashMap<>();
-    private static int assetFileNamePosition = 0;
+    private static long eventFileNamePosition = 0;
+    private static Map<String, Long> metaFileNamePosition = new HashMap<>();
+    private static long assetFileNamePosition = 0;
 
     private static SqliteUtil sqliteUtil = new SqliteUtil();
 
     static {
-        Map<String, Integer> positionMap = sqliteUtil.executeQuery(sqliteUtil.getQuerySql());
+        Map<String, Long> positionMap = sqliteUtil.executeQuery(sqliteUtil.getQuerySql());
         LOG.info(String.format("[%s]: positionMap<%s>", "Main", positionMap));
         if (null != positionMap && positionMap.size() > 0) {
-            eventFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_EVENT, 0);
-            assetFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_ASSET, 0);
+            eventFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_EVENT, 0L);
+            assetFileNamePosition = positionMap.getOrDefault(SystemConstant.TYPE_ASSET, 0L);
             String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
             for (String type : metaTypes) {
-                metaFileNamePosition.put(type, positionMap.getOrDefault(type, 0));
+                metaFileNamePosition.put(type, positionMap.getOrDefault(type, 0L));
             }
         }
         if ("1".equals(SystemConstant.MONITOR_STATISTIC_ENABLED)) {
-            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_EVENT, 0);
-            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_ASSET, 0);
-            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_METADATA, 0);
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_EVENT, 0L);
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_ASSET, 0L);
+            SystemConstant.MONITOR_STATISTIC.put(SystemConstant.KIND_METADATA, 0L);
             String[] metaTypes = SystemConstant.TYPE_METADATA.split(",");
             for (String metaType : metaTypes) {
-                SystemConstant.MONITOR_STATISTIC.put(metaType, 0);
+                SystemConstant.MONITOR_STATISTIC.put(metaType, 0L);
             }
         }
         FileUtil.createDir(SystemConstant.LOCAL_FILE_DIR);

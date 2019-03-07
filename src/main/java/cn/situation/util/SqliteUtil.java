@@ -46,7 +46,7 @@ public class SqliteUtil {
     }
 
     public String getUpdateSql(String kind, String type, String fileName) {
-        int position = FileUtil.getPositionByFileName(fileName);
+        long position = FileUtil.getPositionByFileName(fileName);
         return "UPDATE t_position SET file_name='" + fileName + "',position=" + position + " WHERE kind='" + kind
                 + "' AND type='" + type + "'";
     }
@@ -58,13 +58,13 @@ public class SqliteUtil {
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    public synchronized Map<String, Integer> executeQuery(String sql) {
-        Map<String, Integer> map = new HashMap<>();
+    public synchronized Map<String, Long> executeQuery(String sql) {
+        Map<String, Long> map = new HashMap<>();
         try {
             resultSet = getStatement().executeQuery(sql);
             while ( resultSet.next() ) {
                 String type = resultSet.getString("type");
-                int position = resultSet.getInt("position");
+                Long position = resultSet.getLong("position");
                 map.put(type, position);
             }
         } catch (Exception e) {

@@ -127,7 +127,7 @@ public class SFTPUtil {
         return fileNameList;
     }
 
-    public Map<String, Long> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat, int position,
+    public Map<String, Long> getRemoteFileName(String remotePath, String fileFormat, String fileEndFormat, long position,
                                                String kind, String type) {
         LOG.info(String.format("[%s]: remotePath<%s>, fileFormat<%s>, fileEndFormat<%s>, position<%s>, kind<%s>, type<%s>",
                 "getRemoteFileName", remotePath, fileFormat, fileEndFormat, position, kind, type));
@@ -189,8 +189,8 @@ public class SFTPUtil {
     private void sortFileName(List<String> list) {
         if (list.size() > 0) {
             list.sort((a, b) -> {
-                int num1 = FileUtil.getPositionByFileName(a);
-                int num2 = FileUtil.getPositionByFileName(b);
+                long num1 = FileUtil.getPositionByFileName(a);
+                long num2 = FileUtil.getPositionByFileName(b);
                 if (num1 == num2)
                     return 0;
                 if (num1 > num2)
@@ -206,8 +206,8 @@ public class SFTPUtil {
      * @param position
      * @return
      */
-    private boolean filterFileName(String fileName, int position) {
-        int num = FileUtil.getPositionByFileName(fileName);
+    private boolean filterFileName(String fileName, long position) {
+        long num = FileUtil.getPositionByFileName(fileName);
         return num > position;
     }
 

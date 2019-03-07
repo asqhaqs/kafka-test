@@ -115,7 +115,7 @@ public class SystemConstant {
 
     public static final String INPUT_BUFFER_SIZE = getProperty("input.buffer.size", "");
 
-    public static final Map<String, Integer> MONITOR_STATISTIC = new ConcurrentHashMap<>();
+    public static final Map<String, Long> MONITOR_STATISTIC = new ConcurrentHashMap<>();
 
     public static final String SCHEDULE_CORE_POOL_SIZE = getProperty("schedule.core.pool.size", "1");
 
