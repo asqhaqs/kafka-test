@@ -1,15 +1,20 @@
 package cn.situation.service.impl;
 
-import cn.situation.exception.IndexerESNotRecoverableException;
-import cn.situation.exception.IndexerESRecoverableException;
-import cn.situation.service.ElasticSearchBatchService;
 import cn.situation.service.IMessageHandler;
-import org.springframework.beans.factory.annotation.Autowired;
+import cn.situation.util.HttpClientUtil;
+import cn.situation.util.LogUtil;
+import cn.situation.util.StringUtil;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 
 public class MessageHandlerImpl implements IMessageHandler {
 
-	@Autowired
-	private ElasticSearchBatchService elasticSearchBatchService = null;
+    private static final Logger LOG = LogUtil.getInstance(MessageHandlerImpl.class);
+
+	@Value("${es.bulk.url.list}")
+	private String esBulkUrlList;
 
 	@Override
 	public String transformMessage(String inputMessage, Long offset) throws Exception {
@@ -18,13 +23,30 @@ public class MessageHandlerImpl implements IMessageHandler {
 	}
 
 	@Override
-	public void addMessageToBatch(String inputMessage, String indexName, String indexType) throws Exception {
-		elasticSearchBatchService.addEventToBulkRequest(inputMessage, indexName, indexType);
+	public JSONObject addMessageToBatch(String inputMessage, String indexName, String indexType) throws Exception {
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("index", indexName);
+		jsonObject.put("type", indexType);
+		jsonObject.put("source", inputMessage);
+		return jsonObject;
 	}
 
 	@Override
-	public void postToElasticSearch() throws InterruptedException, IndexerESRecoverableException,
-			IndexerESNotRecoverableException {
-		elasticSearchBatchService.postToElasticSearch();
+	public boolean postToElasticSearch(JSONArray array) throws Exception {
+	    boolean result = false;
+        JSONObject bulkData = new JSONObject();
+        bulkData.put("data", array.toJSONString());
+        String[] esBulkUrls = esBulkUrlList.split(",");
+        for (String esBulkUrl : esBulkUrls) {
+            String resp = HttpClientUtil.doPost(esBulkUrl, bulkData.toJSONString());
+            LOG.info(String.format("[%s]: esBulkUrl<%s>, resp<%s>", "postToElasticSearch", esBulkUrl, resp));
+            if (!StringUtil.isBlank(resp)) {
+				JSONObject obj = JSONObject.parseObject(resp);
+				if (obj.getBoolean("result")) {
+					result = true;
+				}
+			}
+        }
+		return result;
 	}
 }

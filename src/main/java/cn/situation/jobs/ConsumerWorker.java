@@ -1,10 +1,10 @@
 package cn.situation.jobs;
 
-import cn.situation.exception.IndexerESNotRecoverableException;
-import cn.situation.exception.IndexerESRecoverableException;
 import cn.situation.service.IMessageHandler;
 import cn.situation.service.OffsetLoggingCallbackImpl;
 import cn.situation.util.LogUtil;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
@@ -57,9 +57,10 @@ public class ConsumerWorker implements Runnable {
 				long pollStartMillis = 0L;
 				ConsumerRecords<String, String> records = consumer.poll(pollIntervalMs);
 				Map<Integer, Long> partitionOffsetMap = new HashMap<>();
+				JSONArray array = new JSONArray();
 				for (ConsumerRecord<String, String> record : records) {
 					numMessagesInBatch++;
-					LOG.debug(String.format("[%s]: consumerId<%s>, partition<%s>, offset<%s>, value<%s>",
+					LOG.info(String.format("[%s]: consumerId<%s>, partition<%s>, offset<%s>, value<%s>",
 							"run", consumerId, record.partition(), record.offset(), record.value()));
 					if (isPollFirstRecord) {
 						isPollFirstRecord = false;
@@ -67,7 +68,8 @@ public class ConsumerWorker implements Runnable {
 					}
 					try {
 						String processedMessage = messageHandler.transformMessage(record.value(), record.offset());
-						messageHandler.addMessageToBatch(processedMessage, indexName, indexType);
+						JSONObject jsonObject = messageHandler.addMessageToBatch(processedMessage, indexName, indexType);
+						array.add(jsonObject);
 						partitionOffsetMap.put(record.partition(), record.offset());
 						numProcessedMessages++;
 					} catch (Exception e) {
@@ -77,8 +79,8 @@ public class ConsumerWorker implements Runnable {
 				}
 				long timeBeforePost = System.currentTimeMillis();
 				boolean moveToNextBatch = false;
-				if (!records.isEmpty()) {				
-					moveToNextBatch = postToElasticSearch();
+				if (!records.isEmpty()) {
+					moveToNextBatch = postToElasticSearch(array);
 					long timeToPost = System.currentTimeMillis() ;
 					double perMessageTimeMillis = (double) (timeToPost - pollStartMillis) / numProcessedMessages;
 					LOG.debug(String.format("[%s]: totalMessage<%s>, messageProcessed<%s>, messageSkipped<%s>, " +
@@ -94,21 +96,18 @@ public class ConsumerWorker implements Runnable {
 			}
 		} catch (WakeupException e) {
 			LOG.warn(String.format("[%s]: consumerId<%s>, WakeupException<%s>", "run", consumerId, e.getMessage()), e);
-		} catch (IndexerESNotRecoverableException e){
-			LOG.error(String.format("[%s]: consumerId<%s>, IndexerESNotRecoverableException<%s>", "run", consumerId, e.getMessage()), e);
-		} catch (Throwable e) {
+		}catch (Exception e) {
 			LOG.error(String.format("[%s]: consumerId<%s>, Exception<%s>", "run", consumerId, e.getMessage()), e);
 		} finally {
 			consumer.close();
 		}
 	}
 	
-	private boolean postToElasticSearch() throws InterruptedException, IndexerESNotRecoverableException {
-		boolean moveToTheNextBatch = true;
+	private boolean postToElasticSearch(JSONArray array) {
+		boolean moveToTheNextBatch = false;
 		try {
-			messageHandler.postToElasticSearch();
-		} catch (IndexerESRecoverableException e) {
-			moveToTheNextBatch = false;
+			moveToTheNextBatch = messageHandler.postToElasticSearch(array);
+		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
 		return moveToTheNextBatch;

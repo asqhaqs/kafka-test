@@ -44,9 +44,9 @@ public class ConsumerManager {
     @Value("${kafka.consumer.pool.count.list}")
     private String kafkaConsumerPoolCountList;
 
-    @Value("${elasticsearch.index.name.list}")
+    @Value("${es.index.name.list}")
     private String indexNameList;
-    @Value("${elasticsearch.index.type.list}")
+    @Value("${es.index.type.list}")
     private String indexTypeList;
 
     @Autowired
