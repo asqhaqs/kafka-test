@@ -4,8 +4,6 @@ BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
 
-# SERVER_NAME=collector-log
-
 SERVER_NAME=`sed '/application.name/!d;s/.*=//' classes/app.properties | tr -d '\r'`
 
 LOGS_DIR=$DEPLOY_DIR/logs

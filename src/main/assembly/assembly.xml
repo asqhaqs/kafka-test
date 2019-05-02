@@ -25,6 +25,15 @@
         <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>lib</outputDirectory>
+            <scope>runtime</scope>
+        </dependencySet>
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+            <scope>system</scope>
+            <includes>
+                <include>*:jar</include>
+            </includes>
         </dependencySet>
     </dependencySets>
 </assembly>

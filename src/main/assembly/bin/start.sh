@@ -4,29 +4,13 @@ BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
 
-# SERVER_NAME=collector-log
-
 SERVER_NAME=`sed '/application.name/!d;s/.*=//' classes/app.properties | tr -d '\r'`
-
-LOGS_DIR=$DEPLOY_DIR/logs
-
-if [ ! -d $LOGS_DIR ]; then
-    mkdir $LOGS_DIR
-fi
 
 PIDS=`ps -f | grep java | grep "$SERVER_NAME" |awk '{print $2}'`
 if [ -n "$PIDS" ]; then
     echo "ERROR: The $SERVER_NAME already started!"
     echo "PID: $PIDS"
     exit 1
-fi
-
-if [ -n "$SERVER_PORT" ]; then
-    SERVER_PORT_COUNT=`netstat -tln | grep $SERVER_PORT | wc -l`
-    if [ $SERVER_PORT_COUNT -gt 0 ]; then
-        echo "ERROR: The $SERVER_NAME port $SERVER_PORT already used!"
-        exit 1
-    fi
 fi
 
 STDOUT_FILE=/var/situation/${SERVER_NAME}.log
@@ -61,11 +45,7 @@ COUNT_DOWN=10
 while [ $COUNT_DOWN -gt 0 ]; do
     echo -e ".\c"
     sleep 1 
-    if [ -n "$SERVER_PORT" ]; then
-        COUNT=`netstat -an | grep $SERVER_PORT | wc -l`
-    else
-    	COUNT=`ps -ef | grep java | grep "$DEPLOY_DIR" | awk '{print $2}' | wc -l`
-    fi
+    COUNT=`ps -ef | grep java | grep "$DEPLOY_DIR" | awk '{print $2}' | wc -l`
     if [ $COUNT -gt 0 ]; then
         break
     fi

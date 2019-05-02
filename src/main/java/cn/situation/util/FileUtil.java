@@ -1,13 +1,9 @@
 package cn.situation.util;
 
-import cn.situation.cons.SystemConstant;
-import org.apache.tools.tar.TarEntry;
-import org.apache.tools.tar.TarInputStream;
 import org.slf4j.Logger;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 public class FileUtil {
 
@@ -46,7 +42,7 @@ public class FileUtil {
         List<String> content = new ArrayList<String>();
         FileInputStream fileInputStream = new FileInputStream(file);
         InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
-        BufferedReader reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE));
+        BufferedReader reader = new BufferedReader(inputStreamReader, 5242880);
         String lineContent;
         while ((lineContent = reader.readLine()) != null) {
             content.add(lineContent);
@@ -110,75 +106,6 @@ public class FileUtil {
                 oldFile.renameTo(newFile);
             }
         }
-    }
-    
-    /** 
-	     * 解压tar.gz 文件 
-	     * @param oriFilePath 要解压的tar.gz文件路径
-	     * @param outputDir 要解压到某个指定的目录下 
-	     * @throws IOException 
-	     */  
-    private static List<File> unTarGz(String oriFilePath, String outputDir) throws IOException {
-        List<File> fileList = new ArrayList<>();
-        TarInputStream tarIn = null;
-        try {
-            tarIn = new TarInputStream(new GZIPInputStream(
-                    new BufferedInputStream(new FileInputStream(oriFilePath))),
-                    1024 * 2);
-            createDirectory(outputDir,null); //创建输出目录
-            TarEntry entry;
-            while ((entry = tarIn.getNextEntry()) != null) {
-                if (entry.isDirectory()) {//是目录
-                    entry.getName();
-                    createDirectory(outputDir, entry.getName());//创建空目录
-                } else { //是文件
-                    OutputStream out = null;
-                    try {
-                        File tmpFile = new File(outputDir + "/" + entry.getName());
-                        out = new FileOutputStream(tmpFile);
-                        int length;
-                        byte[] b = new byte[2048];
-                        while ((length = tarIn.read(b)) != -1) {
-                            out.write(b, 0, length);
-                        }
-                        fileList.add(tmpFile);
-                    } finally {
-                     if (null != out) {
-                         out.close();
-                     }
-                    }
-                }
-            }
-        } finally {
-            if (null != tarIn) {
-                tarIn.close();
-            }
-        }
-        return fileList;
-    }
-
-    /**
-     * unTarGz包装器
-     * @param fileName
-     * @return
-     * @throws IOException
-     */
-    public static List<File> unTarGzWrapper(String fileName, boolean ifDelOriFile) {
-        List<File> fileList = new ArrayList<>();
-        try {
-            String outputDir = SystemConstant.LOCAL_FILE_DIR + fileName.substring(0, fileName.indexOf("."));
-            String oriFilePath =  SystemConstant.LOCAL_FILE_DIR + fileName;
-            LOG.info(String.format("[%s]: outputDir<%s>, oriFilePath<%s>, fileName<%s>", "unTarGzWrapper",
-                    outputDir, oriFilePath, fileName));
-            fileList = unTarGz(oriFilePath, outputDir);
-        } catch (Exception e ){
-            LOG.error(e.getMessage(), e);
-        }finally {
-            if (ifDelOriFile) {
-                delFile(SystemConstant.LOCAL_FILE_DIR, fileName);
-            }
-        }
-        return fileList;
     }
     
     /** 

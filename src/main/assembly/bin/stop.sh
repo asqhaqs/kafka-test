@@ -4,15 +4,7 @@ BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
 
-# SERVER_NAME=collector-log
-
 SERVER_NAME=`sed '/application.name/!d;s/.*=//' classes/app.properties | tr -d '\r'`
-
-LOGS_DIR=$DEPLOY_DIR/logs
-
-if [ ! -d $LOGS_DIR ]; then
-    mkdir $LOGS_DIR
-fi
 
 if [ -z "$SERVER_NAME" ]; then
     SERVER_NAME=`hostname`

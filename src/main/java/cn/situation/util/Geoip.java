@@ -27,12 +27,8 @@ public class Geoip implements Serializable {
 	static {
 		geoip = new Geoip();
 		try {
-			// Geoip geo = Geoip.getInstance();
 			logger.warn("load start");
 			long begin = System.currentTimeMillis();
-			// geoip.loadData(pro.getProperty("file_path"),
-			// "GeoLite2-City-Locations-en.csv",
-			// "GeoLite2-City-Blocks-IPv4.csv");
 			geoip.loadData(SystemConstant.GEO_DATA_PATH, "GeoLite2-City-Locations-en.csv",
 					"GeoLite2-City-Blocks-IPv4.csv");
 			long end = System.currentTimeMillis();
