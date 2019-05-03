@@ -44,4 +44,7 @@ public class SystemConstant {
 
     public static final String GEO_DATA_PATH = getProperty("geo.data.path", "");
 
+    public static final String REDIS_STRATEGY = "redis";
+    public static final String ES_STRATEGY = "es";
+
 }

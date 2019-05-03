@@ -1,16 +1,16 @@
 package cn.situation.service;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.util.Map;
 
 public interface IMessageHandler {
 
-    public JSONObject addMessageToBatch(String inputMessage, String indexName, String indexType) throws Exception;
+    public Map<String, String> addMessageToBatch(String inputMessage, String indexName, String indexType) throws Exception;
 
     public String transformMessage(String inputMessage, Long offset) throws Exception;
 
-    public boolean postToElasticSearch(JSONArray array) throws Exception;
-    
+    public boolean postToElasticSearch(List<Object> dataList) throws Exception;
 
+    public boolean postToRedis(String key, List<Object> dataList) throws Exception;
 
 }

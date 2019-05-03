@@ -48,6 +48,11 @@ public class ConsumerManager {
     private String indexNameList;
     @Value("${es.index.type.list}")
     private String indexTypeList;
+    @Value("${redis.key.name.list}")
+    private String redisKeyList;
+
+    @Value("${kafka.output.strategy}")
+    private String outStrategy;
 
     @Autowired
     @Qualifier("messageHandler")
@@ -93,18 +98,21 @@ public class ConsumerManager {
         String[] kafkaConsumerPoolCounts = kafkaConsumerPoolCountList.split(",");
         String[] indexNames = indexNameList.split(",");
         String[] indexTypes = indexTypeList.split(",");
+        String[] redisKeys = redisKeyList.split(",");
         for (int i = 0; i < kafkaTopics.length; i++) {
             String kafkaTopic = kafkaTopics[i];
             int consumerPoolCount = Integer.parseInt(kafkaConsumerPoolCounts[i]);
             String indexName = indexNames[i];
             String indexType = indexTypes[i];
+            String redisKey = redisKeys[i];
             ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(kafkaTopic + "-thread-%d").build();
             ExecutorService consumersThreadPool = Executors.newFixedThreadPool(consumerPoolCount, threadFactory);
             for (int consumerNumber = 0; consumerNumber < consumerPoolCount; consumerNumber++) {
                 ConsumerWorker consumer = new ConsumerWorker(
                         consumerInstanceName + "-" + kafkaTopic + "-" + consumerNumber,
                         kafkaTopic, kafkaProperties, kafkaPollIntervalMs,
-                        messageHandlerObjectFactory.getObject(), indexName, indexType);
+                        messageHandlerObjectFactory.getObject(), indexName,
+                        indexType, redisKey, outStrategy);
                 consumers.add(consumer);
                 consumersThreadPool.submit(consumer);
             }

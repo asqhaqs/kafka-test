@@ -1,19 +1,15 @@
 package cn.situation.jobs;
 
+import cn.situation.cons.SystemConstant;
 import cn.situation.service.IMessageHandler;
 import cn.situation.service.OffsetLoggingCallbackImpl;
 import cn.situation.util.LogUtil;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class ConsumerWorker implements Runnable {
 
@@ -26,9 +22,12 @@ public class ConsumerWorker implements Runnable {
 	private OffsetLoggingCallbackImpl offsetLoggingCallback;
 	private String indexName;
 	private String indexType;
+	private String redisKey;
+	private String outStrategy;
 
 	public ConsumerWorker(String consumerId,String kafkaTopic, Properties kafkaProperties,
-			long pollIntervalMs, IMessageHandler messageHandler, String indexName, String indexType) {
+			long pollIntervalMs, IMessageHandler messageHandler, String indexName, String indexType,
+						  String redisKey, String outStrategy) {
 		this.messageHandler = messageHandler;
 		kafkaProperties.put(ConsumerConfig.CLIENT_ID_CONFIG, consumerId);
 		kafkaProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -38,6 +37,8 @@ public class ConsumerWorker implements Runnable {
 		this.pollIntervalMs = pollIntervalMs;
 		this.indexName = indexName;
 		this.indexType = indexType;
+		this.redisKey = redisKey;
+		this.outStrategy = outStrategy;
 		consumer = new KafkaConsumer<>(kafkaProperties);
 		offsetLoggingCallback = new OffsetLoggingCallbackImpl();
 		LOG.info(String.format("[%s]: consumerId<%s>, kafkaTopic<%s>, kafkaProperties<%s>, indexName<%s>, indexType<%s>",
@@ -57,7 +58,7 @@ public class ConsumerWorker implements Runnable {
 				long pollStartMillis = 0L;
 				ConsumerRecords<String, String> records = consumer.poll(pollIntervalMs);
 				Map<Integer, Long> partitionOffsetMap = new HashMap<>();
-				JSONArray array = new JSONArray();
+				List<Object> dataList = new ArrayList<>();
 				for (ConsumerRecord<String, String> record : records) {
 					numMessagesInBatch++;
 					LOG.info(String.format("[%s]: consumerId<%s>, partition<%s>, offset<%s>, value<%s>",
@@ -68,8 +69,12 @@ public class ConsumerWorker implements Runnable {
 					}
 					try {
 						String processedMessage = messageHandler.transformMessage(record.value(), record.offset());
-						JSONObject jsonObject = messageHandler.addMessageToBatch(processedMessage, indexName, indexType);
-						array.add(jsonObject);
+						if (SystemConstant.ES_STRATEGY.equals(outStrategy)) {
+							Map<String, String> data = messageHandler.addMessageToBatch(processedMessage, indexName, indexType);
+							dataList.add(data);
+						} else if (SystemConstant.REDIS_STRATEGY.equals(outStrategy)) {
+							dataList.add(processedMessage);
+						}
 						partitionOffsetMap.put(record.partition(), record.offset());
 						numProcessedMessages++;
 					} catch (Exception e) {
@@ -80,7 +85,7 @@ public class ConsumerWorker implements Runnable {
 				long timeBeforePost = System.currentTimeMillis();
 				boolean moveToNextBatch = false;
 				if (!records.isEmpty()) {
-					moveToNextBatch = postToElasticSearch(array);
+					moveToNextBatch = postToElasticSearch(dataList);
 					long timeToPost = System.currentTimeMillis() ;
 					double perMessageTimeMillis = (double) (timeToPost - pollStartMillis) / numProcessedMessages;
 					LOG.debug(String.format("[%s]: totalMessage<%s>, messageProcessed<%s>, messageSkipped<%s>, " +
@@ -103,10 +108,14 @@ public class ConsumerWorker implements Runnable {
 		}
 	}
 	
-	private boolean postToElasticSearch(JSONArray array) {
+	private boolean postToElasticSearch(List<Object> dataList) {
 		boolean moveToTheNextBatch = false;
 		try {
-			moveToTheNextBatch = messageHandler.postToElasticSearch(array);
+			if (SystemConstant.ES_STRATEGY.equals(outStrategy)) {
+				moveToTheNextBatch = messageHandler.postToElasticSearch(dataList);
+			} else if (SystemConstant.REDIS_STRATEGY.equals(outStrategy)) {
+				moveToTheNextBatch = messageHandler.postToRedis(redisKey, dataList);
+			}
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
