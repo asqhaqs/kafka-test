@@ -58,7 +58,7 @@ public class ConsumerWorker implements Runnable {
 				long pollStartMillis = 0L;
 				ConsumerRecords<String, String> records = consumer.poll(pollIntervalMs);
 				Map<Integer, Long> partitionOffsetMap = new HashMap<>();
-				List<Object> dataList = new ArrayList<>();
+				List<String> msgList = new ArrayList<>();
 				for (ConsumerRecord<String, String> record : records) {
 					numMessagesInBatch++;
 					LOG.info(String.format("[%s]: consumerId<%s>, partition<%s>, offset<%s>, value<%s>",
@@ -69,12 +69,7 @@ public class ConsumerWorker implements Runnable {
 					}
 					try {
 						String processedMessage = messageHandler.transformMessage(record.value(), record.offset());
-						if (SystemConstant.ES_STRATEGY.equals(outStrategy)) {
-							Map<String, String> data = messageHandler.addMessageToBatch(processedMessage, indexName, indexType);
-							dataList.add(data);
-						} else if (SystemConstant.REDIS_STRATEGY.equals(outStrategy)) {
-							dataList.add(processedMessage);
-						}
+						msgList.add(processedMessage);
 						partitionOffsetMap.put(record.partition(), record.offset());
 						numProcessedMessages++;
 					} catch (Exception e) {
@@ -85,8 +80,8 @@ public class ConsumerWorker implements Runnable {
 				long timeBeforePost = System.currentTimeMillis();
 				boolean moveToNextBatch = false;
 				if (!records.isEmpty()) {
-					moveToNextBatch = postToElasticSearch(dataList);
-					long timeToPost = System.currentTimeMillis() ;
+					moveToNextBatch = postData(msgList);
+					long timeToPost = System.currentTimeMillis();
 					double perMessageTimeMillis = (double) (timeToPost - pollStartMillis) / numProcessedMessages;
 					LOG.debug(String.format("[%s]: totalMessage<%s>, messageProcessed<%s>, messageSkipped<%s>, " +
 							"time2CreateBatch<%s>, time2PostMs<%s>, perMessageTimeMs<%s>", "run", numMessagesInBatch,
@@ -108,13 +103,18 @@ public class ConsumerWorker implements Runnable {
 		}
 	}
 	
-	private boolean postToElasticSearch(List<Object> dataList) {
+	private boolean postData(List<String> msgList) {
 		boolean moveToTheNextBatch = false;
 		try {
 			if (SystemConstant.ES_STRATEGY.equals(outStrategy)) {
+				List<Object> dataList = new ArrayList<>();
+				for (String msg : msgList) {
+					Map<String, String> data = messageHandler.addMessageToBatch(msg, indexName, indexType);
+					dataList.add(data);
+				}
 				moveToTheNextBatch = messageHandler.postToElasticSearch(dataList);
 			} else if (SystemConstant.REDIS_STRATEGY.equals(outStrategy)) {
-				moveToTheNextBatch = messageHandler.postToRedis(redisKey, dataList);
+				moveToTheNextBatch = messageHandler.postToRedis(redisKey, msgList);
 			}
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);

@@ -11,6 +11,6 @@ public interface IMessageHandler {
 
     public boolean postToElasticSearch(List<Object> dataList) throws Exception;
 
-    public boolean postToRedis(String key, List<Object> dataList) throws Exception;
+    public boolean postToRedis(String key, List<String> dataList) throws Exception;
 
 }

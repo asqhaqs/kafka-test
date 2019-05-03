@@ -25,7 +25,7 @@ public class MessageHandlerImpl implements IMessageHandler {
 	private String isNeedJudgeIndex;
 
 	@Autowired
-	private RedisCache<String, Object> redisCache;
+	private RedisCache<String, String> redisCache;
 
 	@Override
 	public String transformMessage(String inputMessage, Long offset) throws Exception {
@@ -63,7 +63,7 @@ public class MessageHandlerImpl implements IMessageHandler {
 	}
 
 	@Override
-	public boolean postToRedis(String key, List<Object> dataList) throws Exception {
+	public boolean postToRedis(String key, List<String> dataList) throws Exception {
 		return redisCache.rpushList(key, dataList);
 	}
 }
