@@ -19,7 +19,6 @@ public class ProducerWorker implements Runnable {
 	private String topicName;
 	private KafkaProducer<String, byte[]> producer;
 	private long totalCount;
-	private static AtomicLong atomicLong = new AtomicLong(0);
 
 	static {
 		if (SystemConstant.IS_KERBEROS.equals("true")) {
@@ -48,6 +47,7 @@ public class ProducerWorker implements Runnable {
 	}
 
 	public ProducerWorker(String topicName, long totalCount) {
+		LOG.info(String.format("[%s]: topicName<%s>, totalCount<%s>", "ProducerWorker", topicName, totalCount));
 		this.topicName = topicName;
 		this.producer = new KafkaProducer<>(createProducerConfig());
 		this.totalCount = totalCount;
@@ -55,8 +55,11 @@ public class ProducerWorker implements Runnable {
 
 	@Override
 	public void run() {
-		while (atomicLong.incrementAndGet() < totalCount) {
-			File file = new File(SystemConstant.GEO_DATA_PATH + File.separator + topicName + ".txt");
+		int count = 1;
+		String fileName = SystemConstant.GEO_DATA_PATH + File.separator + topicName + ".txt";
+		LOG.info(String.format("[%s]: topicName<%s>, fileName<%s>", "run", topicName, fileName));
+		while (count <= totalCount) {
+			File file = new File(fileName);
 			if (!file.exists() || !file.isFile() || file.length() == 0) {
 				LOG.warn(String.format("[%s]: topicName<%s>, message<%s>", "run", topicName, "file not exists."));
 				return;
@@ -69,12 +72,12 @@ public class ProducerWorker implements Runnable {
 				inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
 				reader = new BufferedReader(inputStreamReader, Integer.parseInt(SystemConstant.INPUT_BUFFER_SIZE));
 				String line;
-				long i = 0;
+				int i = 0;
 				while ((line = reader.readLine()) != null) {
 					i++;
 					producer.send(new ProducerRecord<>(topicName, null, line.getBytes()));
-					LOG.info(String.format("[%s]: topicName<%s>, line<%s>", "run", topicName, i));
 				}
+				LOG.info(String .format("[%s]: topicName<%s>, fileName<%s>, line<%s>", "run", topicName, fileName, i));
 			} catch (Exception e) {
 				LOG.error(e.getMessage(), e);
 			} finally {
@@ -92,7 +95,8 @@ public class ProducerWorker implements Runnable {
 					LOG.error(ie.getMessage(), ie);
 				}
 			}
-			LOG.info(String.format("[%s]: topicName<%s>, totalCount<%s>, count<%s>", "run", topicName, totalCount, atomicLong.get()));
+			LOG.info(String.format("[%s]: topicName<%s>, totalCount<%s>, count<%s>", "run", topicName, totalCount, count));
+			count++;
 		}
 		producer.close();
 	}

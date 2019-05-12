@@ -8,4 +8,4 @@ LIB_DIR=$DEPLOY_DIR/lib
 
 CLS_DIR=$DEPLOY_DIR/classes
 
-java -classpath $CLS_DIR:$LIB_DIR/* cn.situation.KafkaProducerTest 1
+nohup java -classpath $CLS_DIR:$LIB_DIR/* cn.situation.KafkaProducerTest 100 > /dev/null 2>&1 &
