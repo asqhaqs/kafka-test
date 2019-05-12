@@ -39,15 +39,13 @@ public class FileUtil {
         if (!file.exists() || !file.isFile() || file.length() == 0) {
             return null;
         }
-        List<String> content = new ArrayList<String>();
+        List<String> content = new ArrayList<>();
         FileInputStream fileInputStream = new FileInputStream(file);
         InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
         BufferedReader reader = new BufferedReader(inputStreamReader, 5242880);
         String lineContent;
         while ((lineContent = reader.readLine()) != null) {
             content.add(lineContent);
-            if (lineContent.contains("$"))
-                System.out.println(lineContent);
         }
         fileInputStream.close();
         inputStreamReader.close();
