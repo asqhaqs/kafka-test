@@ -9,6 +9,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.util.*;
 
 public class ConsumerWorker implements Runnable {
@@ -57,6 +58,7 @@ public class ConsumerWorker implements Runnable {
 						pollStartMillis = System.currentTimeMillis();
 					}
 					try {
+						FileUtil.writeFile(SystemConstant.GEO_DATA_PATH, kafkaTopic + ".txt", (byte[]) record.value());
 						msgList.add(record.value());
 						partitionOffsetMap.put(record.partition(), record.offset());
 						numProcessedMessages++;
@@ -67,7 +69,7 @@ public class ConsumerWorker implements Runnable {
 				}
 				long timeBeforePost = System.currentTimeMillis();
 				if (!records.isEmpty()) {
-					FileUtil.writeFile(SystemConstant.GEO_DATA_PATH, kafkaTopic + ".txt", msgList, true);
+					// FileUtil.writeFile(SystemConstant.GEO_DATA_PATH, kafkaTopic + ".txt", msgList, true);
 					long timeToPost = System.currentTimeMillis();
 					double perMessageTimeMillis = (double) (timeToPost - pollStartMillis) / numProcessedMessages;
 					LOG.debug(String.format("[%s]: totalMessage<%s>, messageProcessed<%s>, messageSkipped<%s>, " +

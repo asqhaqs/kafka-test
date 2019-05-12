@@ -56,10 +56,28 @@ public class FileUtil {
         return content;
     }
 
-    public static void writeFile(String path, String fileName, String content) throws IOException {
+    public static byte[] getContent(String filePath) throws IOException {
+        InputStream in = new FileInputStream(filePath);
+        byte[] data = toByteArray(in);
+        in.close();
+        return data;
+    }
+
+    public static byte[] toByteArray(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024 * 4];
+        int n = 0;
+        while ((n = in.read(buffer)) != -1) {
+            out.write(buffer, 0, n);
+        }
+        return out.toByteArray();
+    }
+
+
+    public static void writeFile(String path, String fileName, byte[] content) throws IOException {
         FileOutputStream fos = new FileOutputStream(path + "/" + fileName);
         BufferedOutputStream buff = new BufferedOutputStream(fos);
-        buff.write(content.getBytes("UTF-8"));
+        buff.write(content);
         buff.flush();
         buff.close();
         fos.close();

@@ -57,25 +57,17 @@ public class ProducerWorker implements Runnable {
 	public void run() {
 		String fileName = SystemConstant.GEO_DATA_PATH + File.separator + topicName + ".txt";
 		LOG.info(String.format("[%s]: topicName<%s>, fileName<%s>", "run", topicName, fileName));
-		List<String> dataList = null;
+		byte[] data = null;
 		try {
-			dataList = FileUtil.getFileContentByLine(fileName, false);
+			data = FileUtil.getContent(fileName);
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
-		if (null != dataList && !dataList.isEmpty()) {
-			int count = 1;
-			LOG.info(String.format("[%s]: topicName<%s>, fileName<%s>, size<%s>", "run", topicName, fileName, dataList.size()));
-			while (count <= totalCount) {
-				int i = 1;
-				for (String data : dataList) {
-					producer.send(new ProducerRecord<>(topicName, null, data.getBytes()));
-					LOG.info(String.format("[%s]: topicName<%s>, fileName<%s>, line<%s>", "run", topicName, fileName, i));
-					i++;
-				}
-				LOG.info(String.format("[%s]: topicName<%s>, totalCount<%s>, count<%s>", "run", topicName, totalCount, count));
-				count++;
-			}
+		int count = 1;
+		while (count <= totalCount) {
+			producer.send(new ProducerRecord<>(topicName, null, data));
+			LOG.info(String.format("[%s]: topicName<%s>, totalCount<%s>, count<%s>", "run", topicName, totalCount, count));
+			count++;
 		}
 	}
 }
