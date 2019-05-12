@@ -38,6 +38,7 @@ public class ConsumerWorker implements Runnable {
 		try {
 			LOG.info(String.format("[%s]: consumerId<%s>, message<%s>", "run", consumerId, "Starting ConsumerWorker"));
 			consumer.subscribe(Arrays.asList(kafkaTopic), offsetLoggingCallback);
+			long count = 0;
 			while (true) {
 				boolean isPollFirstRecord = true;
 				int numProcessedMessages = 0;
@@ -74,11 +75,13 @@ public class ConsumerWorker implements Runnable {
 							numProcessedMessages, numSkippedIndexingMessages, timeBeforePost - pollStartMillis,
 							timeToPost - pollStartMillis, perMessageTimeMillis));
 				}
+				count = count + numProcessedMessages;
 				LOG.info(String.format("[%s]: partitionOffsetMap<%s>", "run", partitionOffsetMap));
 				consumer.commitAsync(offsetLoggingCallback);
+				LOG.info(String.format("[%s]: topicName<%s>, count<%s>", "run", kafkaTopic, count));
 			}
 		} catch (WakeupException e) {
-			LOG.warn(String.format("[%s]: consumerId<%s>, WakeupException<%s>", "run", consumerId, e.getMessage()), e);
+			LOG.warn(String.format("[%s]: consumerId<%s>, WakeupException<%s>", "run", consumerId, e.getMessage()));
 		}catch (Exception e) {
 			LOG.error(String.format("[%s]: consumerId<%s>, Exception<%s>", "run", consumerId, e.getMessage()), e);
 		} finally {
