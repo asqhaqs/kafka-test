@@ -44,7 +44,14 @@ public class SystemConstant {
 
     public static final String GEO_DATA_PATH = getProperty("geo.data.path", "");
 
-    public static final String REDIS_STRATEGY = "redis";
-    public static final String ES_STRATEGY = "es";
+    public static final String KAFKA_SERVER_JAAS_FILE = "kafka_server_jaas.conf";
+    public static final String KAFKA_KRB_FILE = "krb5.conf";
+    public static final String IS_KERBEROS = getProperty("kafka.isKerberos", "true");
+
+    public static final String BROKER_URL = getProperty("kafka.consumer.brokers.list", "127.0.0.1:9092");
+
+    public static final String INPUT_BUFFER_SIZE = getProperty("input.buffer.size", "");
+
+    public static final String TOPIC_LIST = getProperty("kafka.consumer.source.topic.list", "");
 
 }

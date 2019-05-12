@@ -38,7 +38,7 @@ else
 fi
 
 echo -e "Starting the $SERVER_NAME ...\c"
-nohup java $JAVA_OPTS -Dserver.name=$SERVER_NAME $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CLS_DIR:$LIB_JARS cn.situation.Main > /dev/null 2>&1 &
+nohup java $JAVA_OPTS -Dserver.name=$SERVER_NAME $JAVA_MEM_OPTS $JAVA_DEBUG_OPTS $JAVA_JMX_OPTS -classpath $CLS_DIR:$LIB_JARS cn.situation.Application > /dev/null 2>&1 &
 
 COUNT=0
 COUNT_DOWN=10

@@ -67,6 +67,25 @@ public class FileUtil {
         fos.close();
     }
 
+    public static void writeFile(String path, String fileName, List<Object> dataList, boolean append) {
+        try {
+            if (null == dataList || dataList.isEmpty()) {
+                return;
+            }
+            FileOutputStream fos = new FileOutputStream(path + File.separator + fileName, append);
+            BufferedOutputStream buff = new BufferedOutputStream(fos);
+            for (Object data : dataList) {
+                buff.write((byte[]) data);
+                buff.write(System.getProperty("line.separator").getBytes());
+            }
+            buff.flush();
+            buff.close();
+            fos.close();
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
+
     public static void createDir(String filePath) {
         File dir = new File(filePath);
         if (!dir.exists()) {

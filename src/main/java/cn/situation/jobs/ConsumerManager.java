@@ -1,20 +1,19 @@
 package cn.situation.jobs;
 
-import cn.situation.service.IMessageHandler;
+import cn.situation.cons.SystemConstant;
 import cn.situation.util.LogUtil;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,22 +40,10 @@ public class ConsumerManager {
     private long kafkaPollIntervalMs;
     @Value("${kafka.consumer.max.partition.fetch.bytes:1048576}")
     private int maxPartitionFetchBytes;
-    @Value("${kafka.consumer.pool.count.list}")
-    private String kafkaConsumerPoolCountList;
-
-    @Value("${es.index.name.list}")
-    private String indexNameList;
-    @Value("${es.index.type.list}")
-    private String indexTypeList;
-    @Value("${redis.key.name.list}")
-    private String redisKeyList;
-
-    @Value("${kafka.output.strategy}")
-    private String outStrategy;
-
-    @Autowired
-    @Qualifier("messageHandler")
-    private ObjectFactory<IMessageHandler> messageHandlerObjectFactory;
+    @Value("${kafka.consumer.pool.size.list}")
+    private String kafkaConsumerPoolSizeList;
+    @Value("${kafka.isKerberos:false}")
+    private Boolean isKerberos;
 
     @Resource(name = "applicationProperties")
     private Properties applicationProperties;
@@ -79,11 +66,18 @@ public class ConsumerManager {
         kafkaProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaBrokersList);
         kafkaProperties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroupName);
         kafkaProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        kafkaProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        kafkaProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
         kafkaProperties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, consumerSessionTimeoutMs);
         kafkaProperties.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, maxPartitionFetchBytes);
         kafkaProperties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-
+        if (isKerberos) {
+            System.setProperty("java.security.auth.login.config",
+                    SystemConstant.GEO_DATA_PATH + File.separator + SystemConstant.KAFKA_SERVER_JAAS_FILE);
+            System.setProperty("java.security.krb5.conf",
+                    SystemConstant.GEO_DATA_PATH + File.separator + SystemConstant.KAFKA_KRB_FILE);
+            kafkaProperties.put("security.protocol", "SASL_PLAINTEXT");
+            kafkaProperties.put("sasl.kerberos.service.name", "kafka");
+        }
         consumerKafkaPropertyPrefix = consumerKafkaPropertyPrefix.endsWith(PROPERTY_SEPARATOR) ?
                 consumerKafkaPropertyPrefix : consumerKafkaPropertyPrefix + PROPERTY_SEPARATOR;
         extractAndSetKafkaProperties(applicationProperties, kafkaProperties, consumerKafkaPropertyPrefix);
@@ -95,24 +89,16 @@ public class ConsumerManager {
         LOG.info("initConsumers() starting...");
         consumers = new ArrayList<>();
         String[] kafkaTopics = kafkaTopicList.split(",");
-        String[] kafkaConsumerPoolCounts = kafkaConsumerPoolCountList.split(",");
-        String[] indexNames = indexNameList.split(",");
-        String[] indexTypes = indexTypeList.split(",");
-        String[] redisKeys = redisKeyList.split(",");
+        String[] kafkaConsumerPoolCounts = kafkaConsumerPoolSizeList.split(",");
         for (int i = 0; i < kafkaTopics.length; i++) {
             String kafkaTopic = kafkaTopics[i];
             int consumerPoolCount = Integer.parseInt(kafkaConsumerPoolCounts[i]);
-            String indexName = indexNames[i];
-            String indexType = indexTypes[i];
-            String redisKey = redisKeys[i];
             ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(kafkaTopic + "-thread-%d").build();
             ExecutorService consumersThreadPool = Executors.newFixedThreadPool(consumerPoolCount, threadFactory);
             for (int consumerNumber = 0; consumerNumber < consumerPoolCount; consumerNumber++) {
                 ConsumerWorker consumer = new ConsumerWorker(
                         consumerInstanceName + "-" + kafkaTopic + "-" + consumerNumber,
-                        kafkaTopic, kafkaProperties, kafkaPollIntervalMs,
-                        messageHandlerObjectFactory.getObject(), indexName,
-                        indexType, redisKey, outStrategy);
+                        kafkaTopic, kafkaProperties, kafkaPollIntervalMs);
                 consumers.add(consumer);
                 consumersThreadPool.submit(consumer);
             }
