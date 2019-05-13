@@ -3,8 +3,10 @@ package cn.situation.jobs;
 import cn.situation.cons.SystemConstant;
 import cn.situation.service.OffsetLoggingCallbackImpl;
 import cn.situation.util.FileUtil;
+import cn.situation.util.KafkaProducerUtil;
 import cn.situation.util.LogUtil;
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
@@ -49,7 +51,7 @@ public class ConsumerWorker implements Runnable {
 				long pollStartMillis = 0L;
 				ConsumerRecords<String, byte[]> records = consumer.poll(pollIntervalMs);
 				Map<Integer, Long> partitionOffsetMap = new HashMap<>();
-				List<Object> msgList = new ArrayList<>();
+				List<byte[]> msgList = new ArrayList<>();
 				for (ConsumerRecord<String, byte[]> record : records) {
 					numMessagesInBatch++;
 					LOG.debug(String.format("[%s]: consumerId<%s>, partition<%s>, offset<%s>, value<%s>",
@@ -59,7 +61,7 @@ public class ConsumerWorker implements Runnable {
 						pollStartMillis = System.currentTimeMillis();
 					}
 					try {
-						FileUtil.writeFile(filePath, record.value(), false);
+						// FileUtil.writeFile(filePath, record.value(), false);
 						msgList.add(record.value());
 						partitionOffsetMap.put(record.partition(), record.offset());
 						numProcessedMessages++;
@@ -82,6 +84,11 @@ public class ConsumerWorker implements Runnable {
 				LOG.info(String.format("[%s]: partitionOffsetMap<%s>", "run", partitionOffsetMap));
 				consumer.commitAsync(offsetLoggingCallback);
 				LOG.info(String.format("[%s]: topicName<%s>, count<%s>", "run", kafkaTopic, count));
+//				for (int i = 0; i < 1000; i++) {
+//					for (byte[] msg : msgList) {
+//						KafkaProducerUtil.getInstance().send(new ProducerRecord<>(kafkaTopic, null, msg));
+//					}
+//				}
 			}
 		} catch (WakeupException e) {
 			LOG.warn(String.format("[%s]: consumerId<%s>, WakeupException<%s>", "run", consumerId, e.getMessage()));
