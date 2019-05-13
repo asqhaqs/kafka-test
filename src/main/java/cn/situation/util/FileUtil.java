@@ -57,30 +57,41 @@ public class FileUtil {
     }
 
     public static byte[] getContent(String filePath) throws IOException {
-        InputStream in = new FileInputStream(filePath);
-        byte[] data = toByteArray(in);
-        in.close();
-        return data;
-    }
-
-    public static byte[] toByteArray(InputStream in) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024 * 4];
-        int n = 0;
-        while ((n = in.read(buffer)) != -1) {
-            out.write(buffer, 0, n);
+        File file = new File(filePath);
+        long fileSize = file.length();
+        if (fileSize > Integer.MAX_VALUE) {
+            LOG.info("file too big...");
+            return null;
         }
-        return out.toByteArray();
+        FileInputStream fi = new FileInputStream(file);
+        byte[] buffer = new byte[(int) fileSize];
+        int offset = 0;
+        int numRead = 0;
+        while (offset < buffer.length && (numRead = fi.read(buffer, offset, buffer.length - offset)) >= 0) {
+            offset += numRead;
+        }
+        if (offset != buffer.length) {
+            throw new IOException("Could not completely read file " + file.getName());
+        }
+        fi.close();
+        return buffer;
     }
 
-
-    public static void writeFile(String path, String fileName, byte[] content) throws IOException {
-        FileOutputStream fos = new FileOutputStream(path + "/" + fileName);
-        BufferedOutputStream buff = new BufferedOutputStream(fos);
-        buff.write(content);
-        buff.flush();
-        buff.close();
-        fos.close();
+    public static void writeFile(String filePath, byte[] content, boolean append) {
+        try {
+            File file = new File(filePath);
+            if (!file.exists()) {
+                file.createNewFile();
+            } else {
+                return;
+            }
+            FileOutputStream fos = new FileOutputStream(filePath, append);
+            fos.write(content);
+            fos.flush();
+            fos.close();
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        }
     }
 
     public static void writeFile(String path, String fileName, List<Object> dataList, boolean append) {

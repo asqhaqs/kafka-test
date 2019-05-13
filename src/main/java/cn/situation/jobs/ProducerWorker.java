@@ -64,10 +64,12 @@ public class ProducerWorker implements Runnable {
 			LOG.error(e.getMessage(), e);
 		}
 		int count = 1;
-		while (count <= totalCount) {
-			producer.send(new ProducerRecord<>(topicName, null, data));
-			LOG.info(String.format("[%s]: topicName<%s>, totalCount<%s>, count<%s>", "run", topicName, totalCount, count));
-			count++;
+		if (null != data) {
+			while (count <= totalCount) {
+				producer.send(new ProducerRecord<>(topicName, null, data));
+				LOG.info(String.format("[%s]: topicName<%s>, totalCount<%s>, count<%s>", "run", topicName, totalCount, count));
+				count++;
+			}
 		}
 	}
 }

@@ -15,7 +15,7 @@ import java.util.*;
 public class ConsumerWorker implements Runnable {
 
 	private static final Logger LOG = LogUtil.getInstance(ConsumerWorker.class);
-	private final KafkaConsumer<String, Object> consumer;
+	private final KafkaConsumer<String, byte[]> consumer;
 	private final String kafkaTopic;
 	private final String consumerId;
 	private long pollIntervalMs;
@@ -40,25 +40,26 @@ public class ConsumerWorker implements Runnable {
 			LOG.info(String.format("[%s]: consumerId<%s>, message<%s>", "run", consumerId, "Starting ConsumerWorker"));
 			consumer.subscribe(Arrays.asList(kafkaTopic), offsetLoggingCallback);
 			long count = 0;
+			String filePath = SystemConstant.GEO_DATA_PATH + File.separator + kafkaTopic + ".txt";
 			while (true) {
 				boolean isPollFirstRecord = true;
 				int numProcessedMessages = 0;
 				int numSkippedIndexingMessages = 0;
 				int numMessagesInBatch = 0;
 				long pollStartMillis = 0L;
-				ConsumerRecords<String, Object> records = consumer.poll(pollIntervalMs);
+				ConsumerRecords<String, byte[]> records = consumer.poll(pollIntervalMs);
 				Map<Integer, Long> partitionOffsetMap = new HashMap<>();
 				List<Object> msgList = new ArrayList<>();
-				for (ConsumerRecord<String, Object> record : records) {
+				for (ConsumerRecord<String, byte[]> record : records) {
 					numMessagesInBatch++;
-					LOG.info(String.format("[%s]: consumerId<%s>, partition<%s>, offset<%s>, value<%s>",
-							"run", consumerId, record.partition(), record.offset(), record.value()));
+					LOG.debug(String.format("[%s]: consumerId<%s>, partition<%s>, offset<%s>, value<%s>",
+							"run", consumerId, record.partition(), record.offset(), Arrays.toString(record.value())));
 					if (isPollFirstRecord) {
 						isPollFirstRecord = false;
 						pollStartMillis = System.currentTimeMillis();
 					}
 					try {
-						FileUtil.writeFile(SystemConstant.GEO_DATA_PATH, kafkaTopic + ".txt", (byte[]) record.value());
+						FileUtil.writeFile(filePath, record.value(), false);
 						msgList.add(record.value());
 						partitionOffsetMap.put(record.partition(), record.offset());
 						numProcessedMessages++;
